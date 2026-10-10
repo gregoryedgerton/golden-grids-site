@@ -11,7 +11,7 @@ const HEADING = ["THESE ARE", "FAKE"];
 export function Gallery() {
   return (
     <div className="cell gallery">
-      <p className="gallery__kicker">The studies</p>
+      <p className="gallery__kicker">Case Studies</p>
       <h2 className="visually-hidden">{HEADING.join(" ")}</h2>
       {/* Capitals have nothing below the baseline, so the box ends there and
           the space under the heading is the space the eye sees. */}
