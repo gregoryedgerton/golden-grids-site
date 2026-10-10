@@ -7,12 +7,15 @@ export const PARAMETERS = [
   {
     term: "from · to",
     // One value, a range: positions on the Fibonacci sequence. It starts at
-    // 0, which the library accepts: from 0 to 1 is a grid of one cell. Its
+    // 0, which the library accepts. Position 0 is the sequence's zero and
+    // draws no cell, so from 0 to 1 is a grid of one cell and from 0 to 5 is
+    // five, not six. (GoldenGrid renders a single cell without complaint; the
+    // floor of two squares is for the layout functions the dial calls.) Its
     // ceiling is 91 in Swift and Kotlin and 78 wherever the numbers are
     // JavaScript's, React Native included: the 79th term is past the integers
     // JavaScript holds exactly.
     values: ["0 – 91"],
-    says: "Two positions on the Fibonacci sequence: where the grid starts and where it ends. Every position from one to the other is a cell, sized by its number in the sequence.*",
+    says: "Two positions on the Fibonacci sequence: where the grid starts and where it ends. Each position from 1 up is a cell, sized by its number in the sequence. Position 0 is the sequence’s zero and draws nothing, so 0 – 1 is a single cell.*",
     byline: "Grid cells are always squared except when the sequence is skipped. If a grid starts at 3 then cells 1 and 2 are combined into a single rectangular cell.",
     note: "* 0 – 78 in React and React Native.",
   },

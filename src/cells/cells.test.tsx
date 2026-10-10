@@ -238,7 +238,10 @@ describe("Parameters", () => {
     const item = screen.getByText("from · to").closest(".parameters__item") as HTMLElement;
     const says = item.querySelector(".parameters__says") as HTMLElement;
     expect(says).toHaveTextContent(/^Two positions on the Fibonacci sequence: where the grid starts and where it ends\./);
-    expect(says).toHaveTextContent(/Every position from one to the other is a cell, sized by its number in the sequence\.\*/);
+    expect(says).toHaveTextContent(/Each position from 1 up is a cell, sized by its number in the sequence\./);
+    // Zero is on the sequence and draws nothing: the count is never one more than the reader expects.
+    expect(says).toHaveTextContent(/Position 0 is the sequence’s zero and draws nothing, so 0 – 1 is a single cell\.\*/);
+    expect(says).not.toHaveTextContent(/every position/i);
     const note = says.querySelector("small.parameters__note") as HTMLElement;
     expect(note).toHaveTextContent("* 0 – 78 in React and React Native.");
     // The note closes the row, after the byline; the next row is placement.
