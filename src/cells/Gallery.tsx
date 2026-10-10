@@ -13,7 +13,9 @@ export function Gallery({ count }: { count: number }) {
     <div className="cell gallery">
       <p className="gallery__kicker">The studies</p>
       <h2 className="visually-hidden">{HEADING.join(" ")}</h2>
-      <FitText className="gallery__heading" lines={HEADING} leading={0.74} />
+      {/* Capitals have nothing below the baseline, so the box ends there and
+          the space under the heading is the space the eye sees. */}
+      <FitText className="gallery__heading" lines={HEADING} leading={0.74} toBaseline />
       <p className="gallery__body">
         The next {count === 1 ? "cell is a layout study" : `${count} cells are layout studies`}. Each takes a site you
         know and rebuilds it on Golden Grids under a parody name, to see how the grid carries a real layout. None is

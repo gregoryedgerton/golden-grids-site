@@ -264,6 +264,10 @@ describe("Gallery", () => {
       Number(/scale\(([\d.]+)\)/.exec(g.getAttribute("transform") as string)?.[1]),
     );
     expect(scales[1]).toBeGreaterThan(2 * (scales[0] as number));
+    // Capitals sit on the baseline: the heading's box ends there, so what follows is spaced from the letters.
+    // "THESE ARE" is nine glyphs, 450 wide, scaled to 1000; FAKE is 200 wide, scaled by 5 and 500 tall.
+    const first = (100 * (1000 / 450)) * 0.74;
+    expect(Number(container.querySelector(".gallery__heading")?.getAttribute("viewBox")?.split(" ")[3])).toBeCloseTo(first + 400, 6);
     // The count is no longer the cell's big type.
     expect(container.querySelector(".gallery__count")).toBeNull();
     expect(await axe(container)).toHaveNoViolations();
