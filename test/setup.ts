@@ -35,6 +35,19 @@ Object.defineProperty(SVGElement.prototype, "getBBox", {
   },
 });
 
+// Nor does jsdom say where a character sits along its line. Each starts
+// fifty units after the one before, as the box above has it.
+Object.defineProperty(SVGElement.prototype, "getStartPositionOfChar", {
+  writable: true,
+  configurable: true,
+  value: (index: number) => ({ x: index * 50, y: 0 }),
+});
+Object.defineProperty(SVGElement.prototype, "getEndPositionOfChar", {
+  writable: true,
+  configurable: true,
+  value: (index: number) => ({ x: (index + 1) * 50, y: 0 }),
+});
+
 afterEach(() => {
   document.head.querySelectorAll("link[data-face]").forEach((link) => link.remove());
   cleanup();

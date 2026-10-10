@@ -395,6 +395,15 @@ a {
   letter-spacing: -0.02em;
 }
 
+/* In a forced palette the cell's red gives way to the reader's own ground,
+   and white may not show on it at all. There the statement keeps the
+   reader's text colour and no other colour crosses it. */
+@media (forced-colors: active) {
+  .gallery__heading .fit__face {
+    fill: CanvasText;
+  }
+}
+
 .gallery__body {
   font-size: 3cqw;
   font-weight: 400;

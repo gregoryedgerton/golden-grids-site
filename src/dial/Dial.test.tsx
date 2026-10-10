@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { axe } from "vitest-axe";
 import { mediaListeners, setReducedMotion } from "../../test/media";
 import { WHEEL_IDLE_MS } from "./controller";
-import { useCellCurrent } from "./current";
+import { useCellAtRest, useCellCurrent } from "./current";
 import { Dial } from "./Dial";
 import type { Cell } from "./Dial";
 import { AHEAD, BEHIND, TEXTURE_PX, paintTile } from "./geometry";
@@ -61,6 +61,11 @@ function Says() {
   return <span data-says>{useCellCurrent() ? "focused" : "waiting"}</span>;
 }
 
+function Rests() {
+  const [current, atRest] = [useCellCurrent(), useCellAtRest()];
+  return <span data-rests>{atRest ? "at rest" : current ? "arriving" : "waiting"}</span>;
+}
+
 describe("Dial", () => {
   it("tells each cell's content whether its cell is the focused one", () => {
     const cells = makeCells(3).map((cell) => ({ ...cell, content: <Says /> }));
@@ -74,6 +79,42 @@ describe("Dial", () => {
   it("tells content outside any dial that it is not focused", () => {
     render(<Says />);
     expect(document.querySelector("[data-says]")).toHaveTextContent("waiting");
+  });
+
+  it("tells a cell's content when the dial has come to rest on it, which is later than when it becomes the focused one", () => {
+    setReducedMotion(false);
+    vi.useFakeTimers();
+    try {
+      const cells = makeCells(3).map((cell) => ({ ...cell, content: <Rests /> }));
+      render(<Dial cells={cells} />);
+      const said = () => [...document.querySelectorAll("[data-rests]")].map((s) => s.textContent);
+      // It opens at rest on its first cell.
+      expect(said()).toEqual(["at rest", "waiting", "waiting"]);
+
+      fireEvent.keyDown(document.body, { key: "ArrowDown" });
+      const seen: string[] = [];
+      for (let i = 0; i < 200; i++) {
+        act(() => void vi.advanceTimersByTime(16));
+        const now = said().join();
+        if (now !== seen.at(-1)) seen.push(now);
+      }
+      // Setting off, nothing is at rest. Half way there the next cell is the
+      // focused one, still arriving. Only at the end is it at rest.
+      expect(seen).toEqual(["arriving,waiting,waiting", "waiting,arriving,waiting", "waiting,at rest,waiting"]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("is at rest on each cell at once when motion is reduced, and tells content outside any dial that it is not", () => {
+    const cells = makeCells(3).map((cell) => ({ ...cell, content: <Rests /> }));
+    const { unmount } = render(<Dial cells={cells} />);
+    const said = () => [...document.querySelectorAll("[data-rests]")].map((s) => s.textContent);
+    fireEvent.keyDown(document.body, { key: "ArrowDown" });
+    expect(said()).toEqual(["waiting", "at rest", "waiting"]);
+    unmount();
+    render(<Rests />);
+    expect(said()).toEqual(["waiting"]);
   });
 
   it("shows the first cell as the only one that can be read or reached", async () => {

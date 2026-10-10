@@ -1,58 +1,22 @@
 import { COMMIT, SETTLE_MS, WHEEL_IDLE_MS, WHEEL_PUSH_PX, WHEEL_RISE, WHEEL_TICK_PX, createDial } from "./controller";
-import type { DialClock, DialController } from "./controller";
-
-/** A clock the test turns by hand. */
-function fakeClock() {
-  let time = 0;
-  let handle = 0;
-  const frames = new Map<number, (time: number) => void>();
-  const timers = new Map<number, { fire: () => void; at: number }>();
-  const clock: DialClock = {
-    now: () => time,
-    requestFrame: (tick) => {
-      frames.set(++handle, tick);
-      return handle;
-    },
-    cancelFrame: (h) => void frames.delete(h),
-    setTimer: (fire, ms) => {
-      timers.set(++handle, { fire, at: time + ms });
-      return handle;
-    },
-    clearTimer: (h) => void timers.delete(h),
-  };
-  /** Advance by `ms`, running due timers and one frame per 16 ms. */
-  const advance = (ms: number) => {
-    const end = time + ms;
-    while (time < end) {
-      time = Math.min(end, time + 16);
-      for (const [h, timer] of [...timers]) {
-        if (timer.at <= time) {
-          timers.delete(h);
-          timer.fire();
-        }
-      }
-      for (const [h, tick] of [...frames]) {
-        frames.delete(h);
-        tick(time);
-      }
-    }
-  };
-  return { clock, advance, frames, timers };
-}
+import type { DialController } from "./controller";
+import { fakeClock } from "../../test/clock";
 
 function setup(count = 10, startReduced = false) {
   const fake = fakeClock();
   const state = { reduced: startReduced };
   const depths: number[] = [];
   const focuses: number[] = [];
+  const rests: boolean[] = [];
   const dial = createDial({
     count,
     reduced: () => state.reduced,
     onDepth: (depth) => depths.push(depth),
     onFocus: (index) => focuses.push(index),
+    onRest: (resting) => rests.push(resting),
     clock: fake.clock,
   });
-  return { ...fake, dial, state, depths, focuses };
+  return { ...fake, dial, state, depths, focuses, rests };
 }
 
 /**
@@ -652,6 +616,95 @@ describe("createDial, with motion", () => {
     const { dial, frames, timers } = setup();
     dial.destroy();
     expect(frames.size + timers.size).toBe(0);
+  });
+});
+
+describe("createDial, at rest on a cell and away from it", () => {
+  it("starts at rest and says so to nobody", () => {
+    const { rests, advance } = setup();
+    advance(1000);
+    expect(rests).toEqual([]);
+  });
+
+  it("leaves rest when it sets off for another cell and is at rest again only when it has arrived", () => {
+    const { dial, advance, rests, focuses } = setup();
+    dial.step(1);
+    expect(rests).toEqual([false]);
+    // Past half way the next cell is the nearest, and the dial is still travelling.
+    while (focuses.length === 0) advance(16);
+    expect(dial.depth()).toBeLessThan(1);
+    expect(rests).toEqual([false]);
+    advance(2000);
+    expect(dial.depth()).toBe(1);
+    expect(rests).toEqual([false, true]);
+  });
+
+  it("says each once: more travel on the way is not a second departure", () => {
+    const { dial, advance, rests } = setup();
+    dial.step(1);
+    advance(48);
+    dial.step(1);
+    dial.wheel(0, 40);
+    advance(48);
+    dial.goTo(5);
+    expect(rests).toEqual([false]);
+    advance(3000);
+    expect(dial.depth()).toBe(5);
+    expect(rests).toEqual([false, true]);
+  });
+
+  it("is off rest under a finger, and at rest once it has settled after the finger lifts", () => {
+    const { dial, advance, rests } = setup();
+    dial.nudge(0.05);
+    dial.nudge(0.05);
+    expect(rests).toEqual([false]);
+    dial.release();
+    // Settling back to the cell it never really left.
+    expect(rests).toEqual([false]);
+    advance(2000);
+    expect(dial.depth()).toBe(0);
+    expect(rests).toEqual([false, true]);
+
+    dial.nudge(0.4);
+    dial.release();
+    advance(2000);
+    expect(dial.depth()).toBe(1);
+    expect(rests).toEqual([false, true, false, true]);
+  });
+
+  it("never leaves rest when motion is reduced: it is on one cell and then on another", () => {
+    const { dial, advance, rests, focuses } = setup(10, true);
+    dial.step(1);
+    dial.goTo(4);
+    dial.nudge(0.6);
+    dial.release();
+    dial.wheel(0, 40);
+    advance(1000);
+    expect(focuses.at(-1)).toBe(dial.depth());
+    expect(dial.depth()).toBeGreaterThan(4);
+    expect(rests).toEqual([]);
+  });
+
+  it("tells of the cell before it tells of the rest, when both come in one moment", () => {
+    const fake = fakeClock();
+    const state = { reduced: false };
+    const told: string[] = [];
+    const dial = createDial({
+      count: 10,
+      reduced: () => state.reduced,
+      onDepth: () => {},
+      onFocus: (index) => told.push(`focus ${index}`),
+      onRest: (resting) => told.push(resting ? "at rest" : "off"),
+      clock: fake.clock,
+    });
+    dial.step(1);
+    fake.advance(16);
+    // Not yet half way, so cell 0 is still the nearest. Motion is reduced now, and the next frame jumps to the end.
+    expect(dial.depth()).toBeLessThan(0.5);
+    state.reduced = true;
+    fake.advance(16);
+    expect(dial.depth()).toBe(1);
+    expect(told).toEqual(["off", "focus 1", "at rest"]);
   });
 });
 

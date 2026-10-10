@@ -62,6 +62,12 @@ export type DialOptions = {
   onDepth: (depth: number) => void;
   /** Called when the nearest cell changes. */
   onFocus: (index: number) => void;
+  /**
+   * Called with false when the dial leaves a cell it was resting on, under a
+   * finger or on its way to another, and with true when it has arrived on one
+   * and stopped. A dial starts at rest, on its first cell.
+   */
+  onRest: (resting: boolean) => void;
   clock: DialClock;
 };
 
@@ -82,7 +88,7 @@ export type DialController = {
   destroy: () => void;
 };
 
-export function createDial({ count, reduced, onDepth, onFocus, clock }: DialOptions): DialController {
+export function createDial({ count, reduced, onDepth, onFocus, onRest, clock }: DialOptions): DialController {
   const last = count - 1;
   const clamp = (v: number) => Math.min(Math.max(v, 0), last);
 
@@ -93,6 +99,8 @@ export function createDial({ count, reduced, onDepth, onFocus, clock }: DialOpti
   /** Continuous input counted but not shown, under reduced motion. */
   let pending = 0;
   let focus = 0;
+  /** Whether the dial is on a cell and going nowhere. */
+  let resting = true;
   let frame = 0;
   let stamp = 0;
   let timer = 0;
@@ -116,6 +124,12 @@ export function createDial({ count, reduced, onDepth, onFocus, clock }: DialOpti
     }
   };
 
+  const rest = (now: boolean) => {
+    if (now === resting) return;
+    resting = now;
+    onRest(now);
+  };
+
   const stop = () => {
     if (frame) clock.cancelFrame(frame);
     frame = 0;
@@ -125,6 +139,8 @@ export function createDial({ count, reduced, onDepth, onFocus, clock }: DialOpti
     depth = target;
     frame = 0;
     emit();
+    // After the focus, so nothing is told it is at rest on a cell it has not been told is its own.
+    rest(true);
   };
 
   const tick = (time: number) => {
@@ -148,6 +164,7 @@ export function createDial({ count, reduced, onDepth, onFocus, clock }: DialOpti
       return;
     }
     if (frame) return;
+    rest(false);
     stamp = clock.now();
     frame = clock.requestFrame(tick);
   };
@@ -162,6 +179,7 @@ export function createDial({ count, reduced, onDepth, onFocus, clock }: DialOpti
     stop();
     depth = clamp(depth + steps);
     target = depth;
+    rest(false);
     emit();
   };
 
