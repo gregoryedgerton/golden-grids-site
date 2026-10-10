@@ -1,0 +1,21 @@
+{
+  "number": 16,
+  "published": "2026-10-10",
+  "brand": "GIFpark",
+  "reference": "Action Park",
+  "subject": "Home, a ride gallery and guest stories",
+  "url": "https://gregoryedgerton.github.io/golden-grids-study-16-actionpark/",
+  "colors": {
+    "ground": "#4a1fa8",
+    "ink": "#ffd21f",
+    "accent": "#ff7a1a"
+  },
+  "font": {
+    "family": "Montserrat",
+    "weight": 900,
+    "italic": true
+  },
+  "icon": {
+    "path": "M4 4v12M4 5c9 0 7 10 16 10M2 20c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0"
+  }
+}
