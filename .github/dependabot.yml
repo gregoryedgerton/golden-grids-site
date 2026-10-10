@@ -1,0 +1,14 @@
+version: 2
+updates:
+  # The title screen prints the library's version from the installed copy, so
+  # a new release of the library has to reach the lockfile to reach the page.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: fix
+      prefix-development: chore
+    groups:
+      development:
+        dependency-type: development

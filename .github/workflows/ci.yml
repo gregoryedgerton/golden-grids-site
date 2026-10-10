@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  # On every pull request, so the gate is passed before a merge rather than
+  # reported after one.
+  pull_request:
+  workflow_dispatch:
+
+# Deny by default; each job asks for exactly what it needs.
+permissions: {}
+
+# One run per ref, and a run on main is never cancelled mid-flight: the tag is
+# pushed before the GitHub release is created, so a killed run would leave a
+# tag with nothing attached to it.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    # Read-only on purpose. This job runs every dependency's code and must
+    # never hold a token that can write to the repository.
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # commitlint reads the pull request's own commits.
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Commit messages
+        if: github.event_name == 'pull_request'
+        run: npx commitlint --from "${{ github.event.pull_request.base.sha }}" --to "${{ github.event.pull_request.head.sha }}" --verbose
+      - run: npm run lint
+      - run: npm run typecheck
+      # With coverage, so the 100% threshold is the gate.
+      - run: npm run test:coverage
+      - run: npm run build
+      - name: Keep the built site for the deploy job
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  release:
+    name: Release
+    needs: test
+    # Only main releases.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      # To push the tag and create the release.
+      contents: write
+      # To comment on the issues and pull requests a release closes.
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # semantic-release reads the whole history to work out what changed
+          # since the last tag.
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy:
+    name: Deploy
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
