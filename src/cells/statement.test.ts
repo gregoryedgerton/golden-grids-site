@@ -295,8 +295,9 @@ describe("the statement", () => {
     expect(pending()).toEqual([0, 0]);
   });
 
-  it("is said afresh, after a rest, to a reader who is back before the black crossing they left has finished", () => {
-    const { statement, to, advance, looks, latest, pending } = started();
+  it("is said afresh, with no rest first, to a reader who is back before the black crossing they left has finished", () => {
+    const { statement, to, advance, looks, latest, pending, clock } = started();
+    const waits = vi.spyOn(clock, "setTimer");
     to(SAID_MS);
     to(SAID_MS);
     to(300);
@@ -304,16 +305,16 @@ describe("the statement", () => {
     to(100);
     statement.enter();
     expect(pending()).toEqual([0, 1]);
-    // The black crossing they left finishes, and it rests black.
+    // The black crossing they left finishes, and white starts across it in the same moment: a frame, and no timer.
     to(SAID_MS - 400);
     expect(latest()).toEqual(BLACK);
-    expect(pending()).toEqual([1, 0]);
-    // Then the whole of it: white, a rest, black, and no more.
-    to(SAID_MS);
+    expect(pending()).toEqual([0, 1]);
     to(150);
     expect(latest()).toEqual({ ink: "black", crossed: [0.75, 0, 0] });
     to(SAID_MS - 150);
     expect(latest()).toEqual(WHITE);
+    // White rests, as it always does, and black ends it.
+    expect(pending()).toEqual([1, 0]);
     to(SAID_MS);
     to(SAID_MS);
     expect(latest()).toEqual(BLACK);
@@ -321,6 +322,27 @@ describe("the statement", () => {
     expect(pending()).toEqual([0, 0]);
     advance(20_000);
     expect(looks).toHaveLength(done);
+    // Two rests were waited out in all, each after white: the first saying's and the second's.
+    expect(waits.mock.calls.map(([, ms]) => ms)).toEqual([SAID_MS, SAID_MS]);
+  });
+
+  it("goes straight on to that fresh saying under reduced motion too: black to the last word, and THESE white with it", () => {
+    const { statement, to, looks, pending } = started(true);
+    to(SAID_MS);
+    to(SAID_MS);
+    to(400);
+    statement.leave();
+    statement.enter();
+    const before = looks.length;
+    to(300);
+    to(440);
+    // FAKE went black on its beat, the crossing ended, and the next began with THESE: one timer, for ARE's beat.
+    expect(looks.slice(before)).toEqual([
+      { ink: "white", crossed: [1, 1, 1] },
+      BLACK,
+      { ink: "black", crossed: [1, 0, 0] },
+    ]);
+    expect(pending()).toEqual([1, 0]);
   });
 
   it("changes each word whole, on its beat, when motion is reduced, and runs nothing in between", () => {
