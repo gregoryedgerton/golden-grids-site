@@ -118,21 +118,40 @@ describe("Title, and the video behind it", () => {
     expect(frame()).toBeNull();
   });
 
-  it("does not play for a reader who has asked for reduced motion", () => {
+  const picture = () => document.querySelector(".bgvideo__still");
+
+  it("shows a still from the video, and no player, for a reader who has asked for reduced motion", () => {
     setReducedMotion(true);
     render(focused(true));
     expect(frame()).toBeNull();
-    // The scrim stays, so the cell looks the same without the picture.
+    expect(picture()).toHaveAttribute("src", expect.stringMatching(/title-still.*\.jpg$/));
     expect(document.querySelector(".bgvideo__scrim")).toBeInTheDocument();
   });
 
-  it("stops if reduced motion is turned on while it plays, and starts if it is turned off", () => {
+  it("keeps the still while another cell is focused, since it does not move", () => {
+    setReducedMotion(true);
+    render(focused(false));
+    expect(picture()).toBeInTheDocument();
+    expect(frame()).toBeNull();
+  });
+
+  it("shows no still while motion is allowed, playing or not", () => {
+    const { rerender } = render(focused(true));
+    expect(picture()).toBeNull();
+    rerender(focused(false));
+    expect(picture()).toBeNull();
+    expect(frame()).toBeNull();
+  });
+
+  it("swaps the video for the still if reduced motion is turned on while it plays, and back", () => {
     render(focused(true));
     expect(frame()).toBeInTheDocument();
     act(() => setReducedMotion(true));
     expect(frame()).toBeNull();
+    expect(picture()).toBeInTheDocument();
     act(() => setReducedMotion(false));
     expect(frame()).toBeInTheDocument();
+    expect(picture()).toBeNull();
   });
 });
 

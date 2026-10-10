@@ -32,6 +32,7 @@ for (const { art, file, width, height, scale } of shots) {
   const tab = await context.newPage();
   await tab.goto(`${page}?art=${art}`);
   await tab.waitForSelector("body[data-ready]");
+  if ((await tab.getAttribute("body", "data-ready")) !== "yes") throw new Error(`${art}: the artwork's picture did not load.`);
   await tab.locator("#stage").screenshot({ path: resolve(out, file) });
   await context.close();
   console.log("wrote", file);
