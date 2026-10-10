@@ -14,7 +14,9 @@ import type { DialClock } from "../dial/controller";
  * It starts once the dial has come to rest on the cell. When the cell loses
  * the focus, a crossing under way runs to its end and the statement stays
  * the colour it reached, white or black: it is never left part one and part
- * the other, and it does not go on behind the reader's back.
+ * the other, and it does not go on behind the reader's back. That holds
+ * while the cell is off the dial too, which is why none of this lives in
+ * the cell.
  *
  * Under reduced motion nothing travels across a word. Each word takes the
  * new colour whole, on its beat.
@@ -77,42 +79,50 @@ export function crossedAt(elapsed: number, stepped: boolean): number[] {
 export type StatementOptions = {
   /** Read at every moment of a crossing, so a change of preference takes effect at once. */
   reduced: () => boolean;
-  /** Called with every new look. */
-  onLook: (look: Look) => void;
   clock: DialClock;
 };
 
-export type StatementController = {
+/**
+ * The statement, kept apart from the cell that shows it. The dial mounts only
+ * the cells near the focus, so the cell comes and goes as the reader travels.
+ * What is being said has to finish, and the colour it reached has to be kept,
+ * whether or not anything is showing it at the time.
+ */
+export type Statement = {
   /** The dial has come to rest on the statement's cell: say it, and keep saying it. */
   enter: () => void;
-  /** The cell has lost the focus: finish what is being said, and say no more. */
+  /** The cell has lost the focus, or is off the dial: finish what is being said, and say no more. */
   leave: () => void;
-  /** Stop everything pending. */
-  destroy: () => void;
+  /** What it looks like now. The same object until it changes. */
+  look: () => Look;
+  /** Calls `changed` at every new look, until the function it returns is called. */
+  subscribe: (changed: () => void) => () => void;
 };
 
-export function createStatement({ reduced, onLook, clock }: StatementOptions): StatementController {
-  let ink: Ink = "black";
-  let crossed = untouched();
+export function createStatement({ reduced, clock }: StatementOptions): Statement {
+  let look = AT_FIRST;
+  const watching = new Set<() => void>();
   /** Whether the cell has the focus, so the statement is to be said again after each rest. */
   let wanted = false;
   /** When the crossing under way began, or null between crossings. */
   let began: number | null = null;
-  let frame = 0;
+  /** The wait before a crossing, or for the next beat of one under reduced motion. */
   let timer = 0;
+
+  const show = (next: Look) => {
+    look = next;
+    for (const changed of [...watching]) changed();
+  };
 
   /** Rest in the colour just reached for as long as it took to say, then say it again. */
   const finish = () => {
     began = null;
-    ink = opposite(ink);
-    crossed = untouched();
-    onLook({ ink, crossed });
+    show({ ink: opposite(look.ink), crossed: untouched() });
     if (wanted) timer = clock.setTimer(begin, SAID_MS);
   };
 
   /** One moment of a crossing: show how far it has come, and arrange the next. */
   const moment = () => {
-    frame = 0;
     timer = 0;
     const elapsed = clock.now() - (began as number);
     if (elapsed >= SAID_MS) {
@@ -120,17 +130,14 @@ export function createStatement({ reduced, onLook, clock }: StatementOptions): S
       return;
     }
     const stepped = reduced();
-    const now = crossedAt(elapsed, stepped);
-    if (now.some((share, word) => share !== crossed[word])) {
-      crossed = now;
-      onLook({ ink, crossed });
-    }
+    const crossed = crossedAt(elapsed, stepped);
+    if (crossed.some((share, word) => share !== look.crossed[word])) show({ ink: look.ink, crossed });
     if (stepped) {
       // Nothing changes until the next word's beat, or the end, so nothing runs until then.
       const next = SPOKEN.map(({ at }) => at).find((at) => at > elapsed) ?? SAID_MS;
       timer = clock.setTimer(moment, next - elapsed);
     } else {
-      frame = clock.requestFrame(moment);
+      clock.requestFrame(moment);
     }
   };
 
@@ -155,11 +162,10 @@ export function createStatement({ reduced, onLook, clock }: StatementOptions): S
         timer = 0;
       }
     },
-    destroy() {
-      if (frame) clock.cancelFrame(frame);
-      if (timer) clock.clearTimer(timer);
-      frame = 0;
-      timer = 0;
+    look: () => look,
+    subscribe(changed) {
+      watching.add(changed);
+      return () => void watching.delete(changed);
     },
   };
 }

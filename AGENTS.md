@@ -32,6 +32,11 @@ colour for as long again, black crosses it the same way, and the two repeat.
   statement stays the colour it reached. Flag anything that can leave it part
   white and part black, or that lets it go on, or start, while another cell
   has the focus.
+- That holds while the cell is off the dial. The dial mounts only the cells
+  near the focus, so the gallery's cell is removed when the reader is three or
+  more cells past it and made again when they return. The statement is
+  therefore kept outside the cell, one for the page, made in `buildCells`.
+  Flag any of its state that moves into the cell, where it would be lost.
 - Under reduced motion nothing travels across a word: each word changes
   colour whole, on its beat. The owner asked for exactly that, the colour
   still changing and the slide hidden. Do not flag the change of colour; do

@@ -8,9 +8,10 @@ function subscribe(changed: () => void) {
   return () => media.removeEventListener("change", changed);
 }
 
-const read = () => window.matchMedia(QUERY).matches;
+/** Whether the reader has asked for reduced motion, as the setting stands now. For what runs outside a component. */
+export const prefersReducedMotion = () => window.matchMedia(QUERY).matches;
 
 /** Whether the reader has asked for reduced motion. Follows the setting while the page is open. */
 export function useReducedMotion(): boolean {
-  return useSyncExternalStore(subscribe, read);
+  return useSyncExternalStore(subscribe, prefersReducedMotion);
 }
