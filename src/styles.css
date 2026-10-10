@@ -187,16 +187,19 @@ a {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 3cqw;
+  /* With a wider face than the one asked for, the two halves stack rather than run off the cell. */
+  flex-wrap: wrap;
+  gap: 1.2cqw 3cqw;
   font-size: 2.3cqw;
   letter-spacing: 0.03em;
-  white-space: nowrap;
 }
 
 .title__video {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 2cqw;
+  gap: 1.2cqw 2cqw;
+  min-width: 0;
 }
 
 .title__video button {
