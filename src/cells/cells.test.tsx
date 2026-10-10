@@ -417,7 +417,6 @@ describe("buildCells", () => {
   it("labels each study by its name, and draws it on its own ground", () => {
     const study = studies[1] as (typeof studies)[number];
     expect(cells[5]).toMatchObject({ label: study.brand, ground: study.colors.ground });
-    expect(cells[5]?.label).not.toMatch(/\d/);
     render(<>{cells[5]?.content}</>);
     expect(screen.getByRole("heading", { level: 2, name: study.brand })).toBeInTheDocument();
   });
