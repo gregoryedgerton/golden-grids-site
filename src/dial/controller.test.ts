@@ -672,6 +672,21 @@ describe("createDial, at rest on a cell and away from it", () => {
     expect(rests).toEqual([false, true, false, true]);
   });
 
+  it("is at rest again when a finger lifts with motion newly reduced and the dial already on a cell", () => {
+    const { dial, advance, rests, frames, state } = setup();
+    // Dragged back from the first cell: there is nowhere to go, and the finger has still taken it off rest.
+    dial.nudge(-0.3);
+    expect(dial.depth()).toBe(0);
+    expect(rests).toEqual([false]);
+    state.reduced = true;
+    dial.release();
+    // No snap is needed and no frame is asked for, but the dial is on its cell and the finger is gone.
+    expect(frames.size).toBe(0);
+    expect(rests).toEqual([false, true]);
+    advance(1000);
+    expect(rests).toEqual([false, true]);
+  });
+
   it("never leaves rest when motion is reduced: it is on one cell and then on another", () => {
     const { dial, advance, rests, focuses } = setup(10, true);
     dial.step(1);
