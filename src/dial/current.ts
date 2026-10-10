@@ -9,14 +9,15 @@ export function useCellCurrent(): boolean {
 }
 
 /**
- * Whether the cell this is rendered in is the dial's focused cell and the
- * dial has come to rest on it. A cell is the focused one from half way
- * through the travel to it; it is at rest only once that travel is over.
- * False outside a dial.
+ * Whether the dial is landing on the cell this is rendered in: the cell is
+ * the focused one, and the dial is at rest on it or on its way to rest on it
+ * with nothing holding it. Not so for a cell the dial is passing on its way
+ * to another, nor for one under a finger, which may yet go either way. False
+ * outside a dial.
  */
-export const CellAtRest = createContext(false);
+export const CellLanding = createContext(false);
 
-/** For content that should start only once its cell has locked into place. */
-export function useCellAtRest(): boolean {
-  return useContext(CellAtRest);
+/** For content that should start as its cell arrives to stay. */
+export function useCellLanding(): boolean {
+  return useContext(CellLanding);
 }

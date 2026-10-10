@@ -63,11 +63,12 @@ export type DialOptions = {
   /** Called when the nearest cell changes. */
   onFocus: (index: number) => void;
   /**
-   * Called with false when the dial leaves a cell it was resting on, under a
-   * finger or on its way to another, and with true when it has arrived on one
-   * and stopped. A dial starts at rest, on its first cell.
+   * Called with the cell the dial is heading for: the one it is at rest on or
+   * travelling to. Called with null while a finger holds the dial, which may
+   * yet let it go to either side. A dial starts headed for its first cell,
+   * at rest on it.
    */
-  onRest: (resting: boolean) => void;
+  onHeading: (index: number | null) => void;
   clock: DialClock;
 };
 
@@ -88,7 +89,7 @@ export type DialController = {
   destroy: () => void;
 };
 
-export function createDial({ count, reduced, onDepth, onFocus, onRest, clock }: DialOptions): DialController {
+export function createDial({ count, reduced, onDepth, onFocus, onHeading, clock }: DialOptions): DialController {
   const last = count - 1;
   const clamp = (v: number) => Math.min(Math.max(v, 0), last);
 
@@ -99,8 +100,8 @@ export function createDial({ count, reduced, onDepth, onFocus, onRest, clock }: 
   /** Continuous input counted but not shown, under reduced motion. */
   let pending = 0;
   let focus = 0;
-  /** Whether the dial is on a cell and going nowhere. */
-  let resting = true;
+  /** The cell the dial is at rest on or travelling to, or null while a finger holds it. */
+  let heading: number | null = 0;
   let frame = 0;
   let stamp = 0;
   let timer = 0;
@@ -124,10 +125,10 @@ export function createDial({ count, reduced, onDepth, onFocus, onRest, clock }: 
     }
   };
 
-  const rest = (now: boolean) => {
-    if (now === resting) return;
-    resting = now;
-    onRest(now);
+  const head = (to: number | null) => {
+    if (to === heading) return;
+    heading = to;
+    onHeading(to);
   };
 
   const stop = () => {
@@ -139,8 +140,6 @@ export function createDial({ count, reduced, onDepth, onFocus, onRest, clock }: 
     depth = target;
     frame = 0;
     emit();
-    // After the focus, so nothing is told it is at rest on a cell it has not been told is its own.
-    rest(true);
   };
 
   const tick = (time: number) => {
@@ -158,13 +157,13 @@ export function createDial({ count, reduced, onDepth, onFocus, onRest, clock }: 
   const travel = (to: number) => {
     target = clamp(to);
     pending = 0;
+    head(target);
     if (reduced()) {
       stop();
       arrive();
       return;
     }
     if (frame) return;
-    rest(false);
     stamp = clock.now();
     frame = clock.requestFrame(tick);
   };
@@ -179,7 +178,7 @@ export function createDial({ count, reduced, onDepth, onFocus, onRest, clock }: 
     stop();
     depth = clamp(depth + steps);
     target = depth;
-    rest(false);
+    head(null);
     emit();
   };
 
@@ -192,8 +191,9 @@ export function createDial({ count, reduced, onDepth, onFocus, onRest, clock }: 
       const to = clamp(Math.round(depth) + (Math.abs(counted) >= COMMIT ? Math.sign(counted) : 0));
       if (to !== depth) travel(to);
       // Already on the cell, with nowhere to go. The finger may have taken
-      // the dial off rest before the preference changed, and it has lifted.
-      else rest(true);
+      // hold of the dial before the preference changed; it has lifted, and
+      // this cell is where the dial is headed again.
+      else head(to);
       return;
     }
     // The cell the input last passed, and the one it is heading for. A long

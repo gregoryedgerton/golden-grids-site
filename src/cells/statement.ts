@@ -4,19 +4,20 @@ import type { DialClock } from "../dial/controller";
  * The gallery's opening statement, THESE ARE FAKE, over time: which colour
  * it is, and how far the other colour has come across each of its words.
  *
- * While its cell has the focus the statement is said over and over. A colour
- * crosses the three words in turn, inside the letters and from the left of
- * each word; a word starts when it would be said and takes as long as it
- * takes to say. The statement then rests in that colour for as long again,
- * the time it takes to read it once more, and the other colour crosses it
- * the same way. White comes first, then black, and round.
+ * It is said once each time the reader comes to its cell, beginning as the
+ * dial lands there. White crosses the three words in turn, inside the letters
+ * and from the left of each word; a word starts when it would be said and
+ * takes as long as it takes to say. The statement rests white for as long
+ * again, the time it takes to read it once more, black crosses it the same
+ * way, and it stays black. It is not said again until the reader has left
+ * the cell and come back.
  *
- * It starts once the dial has come to rest on the cell. When the cell loses
- * the focus, a crossing under way runs to its end and the statement stays
- * the colour it reached, white or black: it is never left part one and part
- * the other, and it does not go on behind the reader's back. That holds
- * while the cell is off the dial too, which is why none of this lives in
- * the cell.
+ * When the cell loses the focus, a crossing under way runs to its end and
+ * the statement stays the colour it reached, white or black: it is never
+ * left part one and part the other, and nothing more is said behind the
+ * reader's back. A statement left white is crossed by black when the reader
+ * returns, and that is all it then has to say. All of this holds while the
+ * cell is off the dial too, which is why none of it lives in the cell.
  *
  * Under reduced motion nothing travels across a word. Each word takes the
  * new colour whole, on its beat.
@@ -35,15 +36,8 @@ export const SPOKEN = [
   { at: 700, lasts: 440 },
 ] as const;
 
-/** How long the statement takes to say: to the end of its last word. Each rest is as long again. */
+/** How long the statement takes to say: to the end of its last word. The rest between two crossings is as long again. */
 export const SAID_MS = SPOKEN[2].at + SPOKEN[2].lasts;
-
-/**
- * From the dial coming to rest on the cell to the first word. Short: the dial
- * is told it has arrived a little after it looks still, and the first word
- * should seem to answer the cell locking into place.
- */
-export const LEAD_MS = 120;
 
 /** What the statement looks like at one moment. */
 export type Look = {
@@ -89,9 +83,14 @@ export type StatementOptions = {
  * whether or not anything is showing it at the time.
  */
 export type Statement = {
-  /** The dial has come to rest on the statement's cell: say it, and keep saying it. */
+  /**
+   * The dial is landing on the statement's cell. The first time since the
+   * cell last lost the focus, the statement is said, at once. Any other time
+   * it is the dial stirring on a cell it never left, and nothing is said
+   * again.
+   */
   enter: () => void;
-  /** The cell has lost the focus, or is off the dial: finish what is being said, and say no more. */
+  /** The cell has lost the focus, or is off the dial: finish the crossing under way, and say no more. */
   leave: () => void;
   /** What it looks like now. The same object until it changes. */
   look: () => Look;
@@ -102,11 +101,13 @@ export type Statement = {
 export function createStatement({ reduced, clock }: StatementOptions): Statement {
   let look = AT_FIRST;
   const watching = new Set<() => void>();
-  /** Whether the cell has the focus, so the statement is to be said again after each rest. */
-  let wanted = false;
+  /** Whether the reader has been away since the statement was last said to them, or has never been here. */
+  let fresh = true;
+  /** How many crossings are still to be made for the reader who is here, after the one under way. */
+  let due = 0;
   /** When the crossing under way began, or null between crossings. */
   let began: number | null = null;
-  /** The wait before a crossing, or for the next beat of one under reduced motion. */
+  /** The rest before a crossing, or the wait for the next beat of one under reduced motion. */
   let timer = 0;
 
   const show = (next: Look) => {
@@ -114,19 +115,15 @@ export function createStatement({ reduced, clock }: StatementOptions): Statement
     for (const changed of [...watching]) changed();
   };
 
-  /** Rest in the colour just reached for as long as it took to say, then say it again. */
-  const finish = () => {
-    began = null;
-    show({ ink: opposite(look.ink), crossed: untouched() });
-    if (wanted) timer = clock.setTimer(begin, SAID_MS);
-  };
-
   /** One moment of a crossing: show how far it has come, and arrange the next. */
   const moment = () => {
     timer = 0;
     const elapsed = clock.now() - (began as number);
     if (elapsed >= SAID_MS) {
-      finish();
+      began = null;
+      show({ ink: opposite(look.ink), crossed: untouched() });
+      // Rest in the colour just reached for as long as it took to say, then go on if there is more to say.
+      if (due > 0) timer = clock.setTimer(cross, SAID_MS);
       return;
     }
     const stepped = reduced();
@@ -141,20 +138,27 @@ export function createStatement({ reduced, clock }: StatementOptions): Statement
     }
   };
 
-  function begin() {
+  /** Begin one of the crossings that are due. */
+  function cross() {
+    due -= 1;
     began = clock.now();
     moment();
   }
 
   return {
     enter() {
-      wanted = true;
-      // Already being said, or about to be.
-      if (began !== null || timer) return;
-      timer = clock.setTimer(begin, LEAD_MS);
+      if (!fresh) return;
+      fresh = false;
+      // Black has to go white and come back. White, left so by a reader who
+      // went before it was done, has only to come back.
+      const ends = began === null ? look.ink : opposite(look.ink);
+      due = ends === "black" ? 2 : 1;
+      // At once, unless the crossing the reader left behind is still under way: then after it.
+      if (began === null) cross();
     },
     leave() {
-      wanted = false;
+      fresh = true;
+      due = 0;
       // A crossing under way is left to finish. Between crossings there is
       // nothing to finish, so the one that was to come is called off.
       if (began === null && timer) {

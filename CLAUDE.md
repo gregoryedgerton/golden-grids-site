@@ -76,12 +76,13 @@ domain is live.
   an injected clock), `Dial.tsx` (the page wiring).
 - `src/cells/` is what is on it. `index.tsx` sets the order; the sign-up is
   always last. `statement.ts` is THESE ARE FAKE over time: the pace of the
-  three words, and a controller on an injected clock, as the dial's is. There
-  is one statement for the page, made in `buildCells` and handed to the cell:
-  cells are mounted only near the focus, and what a cell keeps is lost when
-  it goes.
+  three words, and a controller on an injected clock, as the dial's is. It is
+  said once a visit, white and then black. There is one statement for the
+  page, made in `buildCells` and handed to the cell: cells are mounted only
+  near the focus, and what a cell keeps is lost when it goes.
 - A cell's content reads `useCellCurrent()` to know its cell is the focused
-  one, and `useCellAtRest()` to know the dial has stopped on it
+  one, and `useCellLanding()` to know the dial is landing on it: at rest on
+  it or coming to rest on it, not passing it and not under a finger
   (`src/dial/current.ts`). The title's video runs on the first, the gallery's
   statement starts on the second.
 - `src/studies/*.json` are the studies, validated by `src/studies/index.ts`.
