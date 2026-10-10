@@ -1,0 +1,20 @@
+{
+  "number": 14,
+  "brand": "GIFdepot",
+  "reference": "The Home Depot",
+  "subject": "Home, a category, a list and a product page",
+  "url": "https://gregoryedgerton.github.io/golden-grids-study-14-homedepot/",
+  "colors": {
+    "ground": "#f96302",
+    "ink": "#ffffff",
+    "accent": "#000000"
+  },
+  "font": {
+    "family": "Inter",
+    "weight": 800,
+    "italic": false
+  },
+  "icon": {
+    "path": "M4 9l5-5h7l-3 3 2 2-2.5 2.5-2-2L5.5 20 3 17.5l7.5-7.5-2-2z"
+  }
+}
