@@ -15,6 +15,7 @@ body {
 .dial__stage {
   position: absolute;
   inset: 0;
+  bottom: var(--bar, 0px);
   overflow: hidden;
   /* The dial takes every swipe, so the page behind it never scrolls. A pinch
      still zooms. */
@@ -96,4 +97,16 @@ body {
   font-weight: 400;
   font-variant-numeric: tabular-nums;
   text-align: center;
+}
+
+/* No room beside the focused cell: the buttons take a bar under the stage. */
+.dial[data-nav="bar"] {
+  --bar: calc(60px + env(safe-area-inset-bottom));
+}
+
+.dial[data-nav="bar"] .dial__nav {
+  right: 50%;
+  bottom: max(4px, env(safe-area-inset-bottom));
+  translate: 50% 0;
+  background: none;
 }

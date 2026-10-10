@@ -1,4 +1,4 @@
-import { AHEAD, BEHIND, SQUARES, TEXTURE_PX, TURN, layoutFor, mountedAround, paintTile, placeAt, trailFor } from "./geometry";
+import { AHEAD, BEHIND, NAV_PX, SQUARES, TEXTURE_PX, TURN, layoutFor, mountedAround, navFits, paintTile, placeAt, trailFor } from "./geometry";
 
 /** Every number in a CSS transform, in order. */
 const numbers = (css: string) => (css.match(/-?\d+(\.\d+)?(e-?\d+)?/g) as string[]).map(Number);
@@ -40,6 +40,27 @@ describe("trailFor", () => {
     expect(trailFor(1440, 900)).toBe("right");
     expect(trailFor(900, 900)).toBe("right");
     expect(trailFor(390, 800)).toBe("bottom");
+  });
+});
+
+describe("navFits", () => {
+  it("finds room beside the focused cell on a wide page and below it on a tall one", () => {
+    expect(navFits(1440, 900)).toBe(true);
+    expect(navFits(390, 800)).toBe(true);
+  });
+
+  it("finds none on a square page or one nearly square", () => {
+    expect(navFits(400, 400)).toBe(false);
+    expect(navFits(900 + NAV_PX.width - 1, 900)).toBe(false);
+    expect(navFits(900, 900 + NAV_PX.height - 1)).toBe(false);
+  });
+
+  it("needs exactly the buttons' own width or height", () => {
+    expect(navFits(900 + NAV_PX.width, 900)).toBe(true);
+    expect(navFits(900, 900 + NAV_PX.height)).toBe(true);
+    // Their width is what matters beside the cell, their height below it.
+    expect(NAV_PX.width).toBeGreaterThan(NAV_PX.height);
+    expect(navFits(900 + NAV_PX.height, 900)).toBe(false);
   });
 });
 

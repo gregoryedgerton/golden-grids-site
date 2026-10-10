@@ -104,8 +104,28 @@ describe("Dial", () => {
     expect(current().style.transform).toBe("");
     size(390, 800);
     act(() => observer?.callback());
-    expect(observer?.observed).toEqual([stage()]);
+    expect(observer?.observed).toEqual([document.querySelector(".dial"), stage()]);
     expect(current().style.transform).toBe(paintTile(0, 0, 390, 800).transform);
+  });
+
+  it("keeps the buttons off the focused cell: in its spare corner where there is one, in a bar where there is not", () => {
+    render(<Dial cells={makeCells(3)} />);
+    const dial = document.querySelector(".dial") as HTMLElement;
+    expect(dial).toHaveAttribute("data-nav", "corner");
+    const [observer] = (ResizeObserver as unknown as { instances: { callback: () => void }[] }).instances;
+    // A square page: the cell fills it, and its bottom corner is the cell's own.
+    size(400, 400);
+    act(() => observer?.callback());
+    expect(dial).toHaveAttribute("data-nav", "bar");
+    size(390, 800);
+    act(() => observer?.callback());
+    expect(dial).toHaveAttribute("data-nav", "corner");
+  });
+
+  it("starts with the buttons in a bar on a page that opens square", () => {
+    size(600, 600);
+    render(<Dial cells={makeCells(3)} />);
+    expect(document.querySelector(".dial")).toHaveAttribute("data-nav", "bar");
   });
 
   it("goes deeper and back with the buttons, and stops at both ends", () => {
