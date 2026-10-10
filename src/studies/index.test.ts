@@ -75,6 +75,15 @@ describe("parseStudy", () => {
     expect(parseStudy(without("icon"), "./07.json").icon).toBe("grid");
   });
 
+  it("keeps colours of their own for the name's first letters when a study gives them, and has none when it does not", () => {
+    const letters = ["#ffffff", "#0a0b0d", "#ffbe2e"];
+    expect(parseStudy({ ...valid, colors: { ...valid.colors, letters } }, "./07.json").colors.letters).toEqual(letters);
+    expect(parseStudy(valid, "./07.json").colors).not.toHaveProperty("letters");
+    // One for every letter of the name's first word is the most there can be.
+    const whole = Array.from({ length: "GIFbase".length }, () => "#ffffff");
+    expect(parseStudy({ ...valid, colors: { ...valid.colors, letters: whole } }, "./07.json").colors.letters).toEqual(whole);
+  });
+
   it("does not carry fields it does not know", () => {
     expect(parseStudy({ ...valid, note: "x" }, "./07.json")).not.toHaveProperty("note");
   });
@@ -106,6 +115,13 @@ describe("parseStudy", () => {
     ["no accent", { ...valid, colors: { ground: "#0052ff", ink: "#ffffff" } }, "colors.accent must be a six-digit hex colour"],
     ["a name too close to the ground", { ...valid, colors: { ...valid.colors, ink: "#3366ff" } }, "colors.ink has less than 3:1 contrast with the ground"],
     ["an accent too close to the ground", { ...valid, colors: { ...valid.colors, accent: "#1a52ee" } }, "colors.accent has less than 3:1 contrast with the ground"],
+    ["letters that are not a list", { ...valid, colors: { ...valid.colors, letters: "#ffffff" } }, "colors.letters must be a list of one to 7 colours, one for each of the name's first letters"],
+    ["an empty list of letters", { ...valid, colors: { ...valid.colors, letters: [] } }, "colors.letters must be a list of one to 7 colours"],
+    ["more letters than the name has", { ...valid, colors: { ...valid.colors, letters: Array.from({ length: 8 }, () => "#ffffff") } }, "colors.letters must be a list of one to 7 colours"],
+    ["more letters than the first word of a longer name has", { ...valid, brand: "GIFab Records", colors: { ...valid.colors, letters: Array.from({ length: 6 }, () => "#ffffff") } }, "colors.letters must be a list of one to 5 colours"],
+    ["a letter that is not a hex colour", { ...valid, colors: { ...valid.colors, letters: ["#ffffff", "red"] } }, "colors.letters[1] must be a six-digit hex colour"],
+    ["a letter that is not a string", { ...valid, colors: { ...valid.colors, letters: [7] } }, "colors.letters[0] must be a six-digit hex colour"],
+    ["a letter too close to the ground", { ...valid, colors: { ...valid.colors, letters: ["#ffffff", "#3366ff"] } }, "colors.letters[1] has less than 3:1 contrast with the ground"],
     ["no font", without("font"), "font is missing"],
     ["a font that is not an object", { ...valid, font: null }, "font is missing"],
     ["a family that could not be an address", { ...valid, font: { ...valid.font, family: "Inter&x=1" } }, "font.family must be a Google Fonts family name"],
@@ -187,6 +203,14 @@ describe("the studies in this folder", () => {
     expect(days).toEqual([...days].sort().reverse());
     expect(studies.find((s) => s.number === 15)?.published).toBe("2026-10-09");
     expect(studies.find((s) => s.number === 3)?.published).toBe("2026-10-05");
+  });
+
+  it("set GIF.org's G, I and F in the red, black and blue of its mark, and the rest of the name in its ink", () => {
+    const org = studies.find((s) => s.number === 17);
+    expect(org).toMatchObject({
+      brand: "GIF.org",
+      colors: { ink: "#222222", letters: ["#d62021", "#222222", "#237bbd"] },
+    });
   });
 
   it("no longer include the first two studies", () => {

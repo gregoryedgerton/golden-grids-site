@@ -14,6 +14,8 @@ const GUESS = 0.58;
 
 /** No line indented. One array, so a caller that passes none does not look changed on every render. */
 const NO_INDENT: number[] = [];
+/** No letter in a colour of its own. */
+const NO_TINTS: string[] = [];
 
 type Box = { x: number; y: number; width: number; height: number };
 
@@ -69,11 +71,13 @@ export type Vanish = { x: number; y: number };
  *
  * `gradient` fills each line from its top to its bottom with those colours.
  *
- * `strong` marks that many characters at the start of the first line as
- * `fit__strong`, for a heavier figure or initial. `toBaseline` ends the
- * drawing's box at the last line's baseline rather than under its descenders,
- * which then hang below it: what follows can be spaced from where the letters
- * sit, not from the tail of a p.
+ * `tints` sets the first letters of the first line in colours of their own,
+ * one each and in order, for a name whose opening letters take the colours
+ * of a mark. Only the letters take them, never the copies behind.
+ *
+ * `toBaseline` ends the drawing's box at the last line's baseline rather than
+ * under its descenders, which then hang below it: what follows can be spaced
+ * from where the letters sit, not from the tail of a p.
  */
 export function FitText({
   lines,
@@ -84,7 +88,7 @@ export function FitText({
   uniform = false,
   vanish,
   gradient,
-  strong = 0,
+  tints = NO_TINTS,
   toBaseline = false,
 }: {
   lines: string[];
@@ -95,7 +99,7 @@ export function FitText({
   uniform?: boolean;
   vanish?: Vanish;
   gradient?: string[];
-  strong?: number;
+  tints?: string[];
   toBaseline?: boolean;
 }) {
   const refs = useRef<(SVGTextElement | null)[]>([]);
@@ -112,9 +116,10 @@ export function FitText({
     const key = measured.map(({ x, y, width, height }) => [x, y, width, height].join()).join(";");
     setFitted((before) => (before?.key === key ? before : { key, boxes: measured }));
     // `text` stands for `lines`: the same words are the same measurement,
-    // unless more or fewer of them are marked, which may be set heavier.
+    // unless more or fewer of their letters are set apart, which can move
+    // the others. Their colours move nothing.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, strong]);
+  }, [text, tints.length]);
 
   useLayoutEffect(measure, [measure]);
 
@@ -135,12 +140,16 @@ export function FitText({
   const stacked = stack(lines, fitted?.boxes, leading, indent, uniform);
   const { placed } = stacked;
   const height = toBaseline ? stacked.baseline : stacked.height;
-  /** A line's words, with the start of the first line marked if asked. */
-  const words = (line: string, i: number) =>
-    strong > 0 && i === 0 ? (
+  /** A line's letters, the first few of the first line each in a colour of its own if any were given. */
+  const letters = (line: string, i: number) =>
+    i === 0 && tints.length > 0 ? (
       <>
-        <tspan className="fit__strong">{line.slice(0, strong)}</tspan>
-        {line.slice(strong)}
+        {[...line].slice(0, tints.length).map((letter, k) => (
+          <tspan key={k} fill={tints[k]}>
+            {letter}
+          </tspan>
+        ))}
+        {[...line].slice(tints.length).join("")}
       </>
     ) : (
       line
@@ -186,7 +195,7 @@ export function FitText({
             >
               {placed.map((line, i) => (
                 <text key={i} className="fit__shadow" fontSize={MEASURED_AT} transform={place(line)}>
-                  {words(line.line, i)}
+                  {line.line}
                 </text>
               ))}
             </g>
@@ -199,7 +208,7 @@ export function FitText({
               const offset = ((copies - k) * DEPTH_STEP) / line.scale;
               return (
                 <text key={k} className="fit__shadow" fontSize={MEASURED_AT} x={lean * offset} y={offset}>
-                  {words(line.line, i)}
+                  {line.line}
                 </text>
               );
             })}
@@ -211,7 +220,7 @@ export function FitText({
             fontSize={MEASURED_AT}
             fill={gradient ? `url(#${gradientId})` : undefined}
           >
-            {words(line.line, i)}
+            {letters(line.line, i)}
           </text>
         </g>
       ))}

@@ -31,6 +31,7 @@ Nothing else changes: the gallery comes from the folder and runs from the latest
 - `number` orders the gallery, latest first, and is not shown. `published` is the day the study first went live, as `YYYY-MM-DD`; it is shown on the study's cell.
 - `brand` is the parody name, written exactly. It is never case-transformed.
 - `colors.ink` sets the name and `colors.accent` the icon and the rule; each needs 3:1 contrast with `ground`. Small text takes whichever of them reads at 4.5:1, or white or black.
+- `colors.letters` is optional: a list of colours for the name's first letters, one each and in order, for a name that opens in the colours of a mark (GIF.org's red G, black I and blue F). Each needs 3:1 with `ground`, and the rest of the name is in `ink`.
 - `font.family` is a Google Fonts family under an open licence. Only the letters of the name are requested.
 - `icon` is one of the names in `src/ui/icons.tsx`. If none fits, the file can draw its own: `"icon": { "path": "M3 20 12 4l9 16z" }` is SVG path data on a 24-unit grid, drawn as a line. Left out, the study gets a golden rectangle.
 
