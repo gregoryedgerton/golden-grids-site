@@ -338,19 +338,13 @@ a {
   line-height: 1.2;
 }
 
-.parameters__byline {
-  display: block;
-  margin-top: 1.4cqw;
-  padding-top: 1.4cqw;
-  border-top: 0.3cqw solid var(--mark);
-  font-size: 2.6cqw;
-}
-
+/* The small print under a value: what its asterisk points to. */
 .parameters__note {
   display: block;
-  margin-top: 1cqw;
+  margin-top: 1.2cqw;
   font-size: 2.1cqw;
   font-weight: 300;
+  line-height: 1.2;
 }
 
 .parameters__takes {

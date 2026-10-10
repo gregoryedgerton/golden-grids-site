@@ -34,8 +34,8 @@ export function Vision() {
         ))}
       </ul>
       <p className="vision__body">
-        Rows and columns have had a good run, but let’s make room for new ideas. You still need them, let’s push the
-        envelope. {LENS} What you put on them is your business, at least you won’t be boring.
+        Rows and columns have had a good run, but let’s make room for new ideas. You still need them, but let’s push
+        the envelope. {LENS} What you put on them is your business, at least you won’t be boring.
       </p>
     </div>
   );

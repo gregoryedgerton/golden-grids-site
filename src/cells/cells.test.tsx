@@ -169,7 +169,7 @@ describe("Vision", () => {
     const { container } = render(<Vision />);
     const body = container.querySelector(".vision__body") as HTMLElement;
     expect(body).toHaveTextContent(/^Rows and columns have had a good run, but let’s make room for new ideas\./);
-    expect(body).toHaveTextContent(/You still need them, let’s push the envelope\./);
+    expect(body).toHaveTextContent(/You still need them, but let’s push the envelope\./);
     // The owner's own punctuation: commas.
     expect(body).not.toHaveTextContent(";");
     expect(body).toHaveTextContent(LENS);
@@ -212,12 +212,13 @@ describe("Vision", () => {
 describe("Parameters", () => {
   it("is a reference to read: three parameters, their values and what each does", async () => {
     const { container } = render(<Parameters />);
-    expect(screen.getByRole("heading", { level: 2, name: "The parameters" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Parameters" })).toBeInTheDocument();
     expect(screen.getAllByRole("term").map((t) => t.textContent)).toEqual(["from · to", "placement", "clockwise"]);
     for (const { term, values, says } of PARAMETERS) {
       const list = screen.getByRole("list", { name: `Values for ${term}` });
       expect(within(list).getAllByRole("listitem").map((li) => li.textContent)).toEqual([...values]);
-      expect(screen.getByText(says, { exact: false })).toBeInTheDocument();
+      const item = screen.getByText(term).closest(".parameters__item") as HTMLElement;
+      expect(item.querySelector(".parameters__says")).toHaveTextContent(says);
     }
     // Each term has two descriptions: what it takes, then what it does.
     const item = screen.getByText("placement").closest(".parameters__item") as HTMLElement;
@@ -228,47 +229,43 @@ describe("Parameters", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
-  it("treats skipping as a byline of the range, not as a parameter", () => {
-    render(<Parameters />);
-    expect(screen.queryByRole("term", { name: "skip" })).toBeNull();
-    expect(PARAMETERS.map((p) => p.term)).not.toContain("skip");
+  it("describes the range in the owner's words, with skipping as part of it and not a parameter or a byline", () => {
+    const { container } = render(<Parameters />);
     const range = screen.getByText("from · to").closest(".parameters__item") as HTMLElement;
-    const byline = range.querySelector(".parameters__says .parameters__byline") as HTMLElement;
-    expect(byline).toHaveTextContent(
-      "Grid cells are always squared except when the sequence is skipped. If a grid starts at 3 then cells 1 and 2 are combined into a single rectangular cell.",
+    // toHaveTextContent with a string would pass on a part of it; this is the whole of it.
+    expect(range.querySelector(".parameters__says")?.textContent).toBe(
+      "Determines number of boxes a grid contains using Fibonacci indexes for box count and values for box proportions. Grid cells are always squares except when the sequence is skipped. If a grid starts at index 4 then previous indexes are combined into a single rectangular box.",
     );
-    // The text is the owner's, with no label put in front of it.
-    expect(byline.querySelector("b")).toBeNull();
-    // Only the range has one.
-    expect(document.querySelectorAll(".parameters__byline")).toHaveLength(1);
+    expect(PARAMETERS.map((p) => p.term)).not.toContain("skip");
+    expect(container.querySelector(".parameters__byline")).toBeNull();
+    // One paragraph: nothing set apart inside the description.
+    expect(range.querySelector(".parameters__says")?.children).toHaveLength(0);
   });
 
-  it("gives the range as one value with a dash, 0 – 91, and the lower React ceiling as an asterisked note", () => {
+  it("puts the asterisk on the range itself, 0 – 91*, and the note it points to right under it", () => {
     render(<Parameters />);
     const range = within(screen.getByRole("list", { name: "Values for from · to" })).getAllByRole("listitem");
-    // One chip, read as a range, not two numbers. It starts at 0: from 0 to 1 is a grid of one cell.
-    expect(range.map((li) => li.textContent)).toEqual(["0 – 91"]);
+    // One chip, read as a range, not two numbers. It starts at 0: from 0 to 1 is a grid of one box.
+    expect(range.map((li) => li.textContent)).toEqual(["0 – 91*"]);
     const item = screen.getByText("from · to").closest(".parameters__item") as HTMLElement;
-    const says = item.querySelector(".parameters__says") as HTMLElement;
-    expect(says).toHaveTextContent(/^Two positions on the Fibonacci sequence: where the grid starts and where it ends\./);
-    expect(says).toHaveTextContent(/Each position from 1 up is a cell, sized by its number in the sequence\./);
-    // Zero is on the sequence and draws nothing: the count is never one more than the reader expects.
-    expect(says).toHaveTextContent(/Position 0 is the sequence’s zero and draws nothing, so 0 – 1 is a single cell\.\*/);
-    expect(says).not.toHaveTextContent(/every position/i);
-    const note = says.querySelector("small.parameters__note") as HTMLElement;
+    const takes = item.querySelector(".parameters__takes") as HTMLElement;
+    const note = takes.querySelector("small.parameters__note") as HTMLElement;
     expect(note).toHaveTextContent("* 0 – 78 in React and React Native.");
-    // The note closes the row, after the byline; the next row is placement.
-    expect(says.lastElementChild).toBe(note);
-    expect(note.previousElementSibling).toHaveClass("parameters__byline");
-    expect(item.lastElementChild).toBe(says);
+    // Straight after the list the asterisk is in, and the last thing said about what the range takes.
+    expect(note.previousElementSibling?.tagName).toBe("UL");
+    expect(takes.lastElementChild).toBe(note);
+    // The description carries no asterisk now, and no note.
+    const says = item.querySelector(".parameters__says") as HTMLElement;
+    expect(says).not.toHaveTextContent("*");
+    expect(says.querySelector("small")).toBeNull();
     expect(item.nextElementSibling).toHaveTextContent(/^placement/);
-    expect(item).not.toHaveTextContent(/five squares|1 to 5/);
   });
 
-  it("puts a note only where there is one", () => {
+  it("puts a note, and an asterisk, only where there is one", () => {
     const { container } = render(<Parameters />);
     expect(container.querySelectorAll(".parameters__note")).toHaveLength(1);
     expect(PARAMETERS.filter((p) => "note" in p)).toHaveLength(1);
+    expect(PARAMETERS.flatMap((p) => [...p.values]).filter((value) => value.includes("*"))).toEqual(["0 – 91*"]);
   });
 
   it("is not a grid", () => {
@@ -303,12 +300,11 @@ describe("Gallery", () => {
   it("then says what a study is, and that none is the site it looks like", () => {
     const { container } = render(<Gallery />);
     const body = container.querySelector(".gallery__body") as HTMLElement;
-    // It says what a study is, not what the cells after it are: the last of those is the sign-up.
-    expect(body).toHaveTextContent(/^A layout study rebuilds a real site on Golden Grids under a parody name/);
+    // The owner's words, whole. It says what studies are, not what the cells after it are: the last of those is the sign-up.
+    expect(body.textContent?.replace(/\s+/g, " ").trim()).toBe(
+      "Layout studies look at an existing website, brand or general concept and reimagine it with Golden Grids under a parody name. None of these studies are affiliated with the brands mentioned, and nothing in them can be bought, booked or signed up for.",
+    );
     expect(body).not.toHaveTextContent(/cells? that follow|next/i);
-    expect(body).not.toHaveTextContent(/you know/);
-    expect(body).toHaveTextContent(/None is affiliated with the site it studies/);
-    expect(body).toHaveTextContent(/nothing in them can be bought, booked or signed up for\.$/);
     // In that order: the heading, then the disclaimer.
     const order = [...(container.querySelector(".gallery") as HTMLElement).children].map((c) => c.getAttribute("class"));
     expect(order).toEqual(["gallery__kicker", "visually-hidden", "fit gallery__heading", "gallery__body"]);
