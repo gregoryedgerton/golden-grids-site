@@ -46,7 +46,7 @@ jobs:
       - run: npm run test:coverage
       - run: npm run build
       - name: Keep the built site for the deploy job
-        if: github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
@@ -54,8 +54,8 @@ jobs:
   release:
     name: Release
     needs: test
-    # Only main releases.
-    if: github.event_name != 'pull_request'
+    # Only main releases. A manual run of another branch tests it and stops.
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       # To push the tag and create the release.
@@ -82,7 +82,9 @@ jobs:
   deploy:
     name: Deploy
     needs: test
-    if: github.event_name != 'pull_request'
+    # Only main is published. The workflow can be run by hand on any branch,
+    # and that must never replace the live site.
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       pages: write
