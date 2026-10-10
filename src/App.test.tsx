@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { axe } from "vitest-axe";
 import { setReducedMotion } from "../test/media";
 import { App } from "./App";
@@ -32,6 +32,21 @@ describe("App", () => {
     // And it is still their choice when they come back.
     fireEvent.keyDown(document.body, { key: "ArrowUp" });
     expect(document.querySelector(".bgvideo iframe")).toBeInTheDocument();
+  });
+
+  it("keeps the video stopped after a trip deep enough to remove the title cell", () => {
+    setReducedMotion(true);
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Play video" }));
+    fireEvent.click(screen.getByRole("button", { name: "Pause video" }));
+    for (let i = 0; i < 5; i++) fireEvent.keyDown(document.body, { key: "ArrowDown" });
+    expect(document.querySelector(".title")).toBeNull();
+    fireEvent.keyDown(document.body, { key: "Home" });
+    expect(document.querySelector(".bgvideo iframe")).toBeNull();
+    // Reduced motion would have left it stopped anyway; the reader's choice does so with motion allowed too.
+    act(() => setReducedMotion(false));
+    expect(document.querySelector(".bgvideo iframe")).toBeNull();
+    expect(screen.getByRole("button", { name: "Play video" })).toBeInTheDocument();
   });
 
   it("offers the sign-up only in the last cell", () => {
