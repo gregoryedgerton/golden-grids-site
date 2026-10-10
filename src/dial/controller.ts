@@ -191,6 +191,9 @@ export function createDial({ count, reduced, onDepth, onFocus, onRest, clock }: 
       // left the dial between two.
       const to = clamp(Math.round(depth) + (Math.abs(counted) >= COMMIT ? Math.sign(counted) : 0));
       if (to !== depth) travel(to);
+      // Already on the cell, with nowhere to go. The finger may have taken
+      // the dial off rest before the preference changed, and it has lifted.
+      else rest(true);
       return;
     }
     // The cell the input last passed, and the one it is heading for. A long
