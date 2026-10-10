@@ -56,7 +56,9 @@ domain is live.
   interactive, the rest are inert. The dial has Previous and Next buttons and
   announces the focused cell. axe runs in the test suite.
 - **Reduced motion.** Under `prefers-reduced-motion` the dial jumps whole
-  steps with no travel.
+  steps with no travel. The gallery's statement still changes colour, a word
+  at a time on its beat, and nothing travels across a word: the owner asked
+  for the colour to stay and the slide to go.
 - **Directions.** Up or left goes deeper, down or right goes back. No
   calibration.
 - **Studies are data.** One file per study in `src/studies/`; the gallery
@@ -73,7 +75,12 @@ domain is live.
   `input.ts` (what each gesture means), `controller.ts` (depth over time, with
   an injected clock), `Dial.tsx` (the page wiring).
 - `src/cells/` is what is on it. `index.tsx` sets the order; the sign-up is
-  always last.
+  always last. `statement.ts` is THESE ARE FAKE over time: the pace of the
+  three words, and a controller on an injected clock, as the dial's is.
+- A cell's content reads `useCellCurrent()` to know its cell is the focused
+  one, and `useCellAtRest()` to know the dial has stopped on it
+  (`src/dial/current.ts`). The title's video runs on the first, the gallery's
+  statement starts on the second.
 - `src/studies/*.json` are the studies, validated by `src/studies/index.ts`.
 - `src/ui/FitText.tsx` fits display type to its box. A cell's square is
   100cqw on a side at any size, so cell styles are written in `cqw`.

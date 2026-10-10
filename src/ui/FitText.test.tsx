@@ -1,4 +1,5 @@
 import { act, render } from "@testing-library/react";
+import { fills } from "../../test/fills";
 import { FitText } from "./FitText";
 
 const svg = (container: HTMLElement) => container.querySelector("svg") as SVGSVGElement;
@@ -305,5 +306,238 @@ describe("FitText", () => {
     expect(live[0]?.observed).toEqual([...container.querySelectorAll("text.fit__face")]);
     unmount();
     expect(observers().every((o) => o.disconnected)).toBe(true);
+  });
+});
+
+const FROM = "#111111";
+const TO = "#eeeeee";
+
+/** The line each such fill is measured along: where it starts and ends, in the line's own units. */
+const along = (container: HTMLElement) =>
+  [...container.querySelectorAll("[gradientUnits]")].map((g) =>
+    ["gradientUnits", "x1", "y1", "x2", "y2"].map((name) => g.getAttribute(name)),
+  );
+
+type Positions = { getStartPositionOfChar: (i: number) => DOMPoint; getEndPositionOfChar: (i: number) => DOMPoint };
+const positions = SVGElement.prototype as unknown as Positions;
+
+/** Say where the characters of a line sit: character `i` runs from `edges[i]` to `edges[i + 1]`. */
+function placeChars(edges: number[]) {
+  const start = vi.spyOn(positions, "getStartPositionOfChar").mockImplementation((i) => ({ x: edges[i] }) as DOMPoint);
+  const end = vi.spyOn(positions, "getEndPositionOfChar").mockImplementation((i) => ({ x: edges[i + 1] }) as DOMPoint);
+  return { start, end };
+}
+
+describe("FitText, with a colour crossing its words", () => {
+  // Five characters of fifty units: "ab" runs from 0 to 100 and "cd" from 150 to 250, so the two meet at 125.
+  const wiped = (crossed: number[]) => <FitText lines={["ab cd"]} wipe={{ from: FROM, to: TO, crossed }} />;
+
+  it("is one colour until another starts across it, and the other once every word is crossed", () => {
+    const { container, rerender } = render(wiped([0, 0]));
+    expect(fills(container)).toEqual([FROM]);
+    // One plain colour needs nothing defined for it.
+    expect(container.querySelector("defs")).toBeNull();
+    rerender(wiped([1, 1]));
+    expect(fills(container)).toEqual([TO]);
+    expect(container.querySelector("defs")).toBeNull();
+  });
+
+  it("sets the new colour as far as it has come across a word, from the word's left, with a hard edge", () => {
+    const { container, rerender } = render(wiped([0.5, 0]));
+    // Half of "ab" is 50 of the line's 250: the new colour to there and the old one from there, with nothing between.
+    expect(fills(container)).toEqual([
+      [
+        [0, TO],
+        [0.2, TO],
+        [0.2, FROM],
+        [1, FROM],
+      ],
+    ]);
+    // Measured along the line in the line's own units, so it holds at any size the line is drawn.
+    expect(along(container)).toEqual([["userSpaceOnUse", "0", "0", "250", "0"]]);
+    rerender(wiped([0.9, 0]));
+    expect(fills(container)[0]?.[1]).toEqual([0.36, TO]);
+  });
+
+  it("takes the words one at a time: a crossed word is the new colour to the middle of the space after it", () => {
+    const { container, rerender } = render(wiped([1, 0]));
+    expect(fills(container)).toEqual([
+      [
+        [0, TO],
+        [0.5, TO],
+        [0.5, FROM],
+        [1, FROM],
+      ],
+    ]);
+    // Then the second word, from its own left: 150 and half of its 100.
+    rerender(wiped([1, 0.5]));
+    expect(fills(container)).toEqual([
+      [
+        [0, TO],
+        [0.8, TO],
+        [0.8, FROM],
+        [1, FROM],
+      ],
+    ]);
+    // A later word can be crossed while an earlier one is not: each has a stretch of its own.
+    rerender(wiped([0, 0.5]));
+    expect(fills(container)).toEqual([
+      [
+        [0, FROM],
+        [0.5, FROM],
+        [0.5, TO],
+        [0.8, TO],
+        [0.8, FROM],
+        [1, FROM],
+      ],
+    ]);
+  });
+
+  it("counts the words through the lines, and gives each line a fill of its own", () => {
+    const { container } = render(<FitText lines={["ab cd", "ef"]} wipe={{ from: FROM, to: TO, crossed: [1, 1, 0.5] }} />);
+    expect(fills(container)).toEqual([
+      TO,
+      [
+        [0, TO],
+        [0.5, TO],
+        [0.5, FROM],
+        [1, FROM],
+      ],
+    ]);
+    expect(along(container)).toEqual([["userSpaceOnUse", "0", "0", "100", "0"]]);
+
+    const both = render(<FitText lines={["ab cd", "ef"]} wipe={{ from: FROM, to: TO, crossed: [0.5, 0, 0.5] }} />);
+    const ids = [...both.container.querySelectorAll("[gradientUnits]")].map((g) => g.getAttribute("id"));
+    expect(new Set(ids).size).toBe(2);
+    // Two drawings on one page do not share a fill either.
+    expect(ids).not.toContain(container.querySelector("[gradientUnits]")?.getAttribute("id"));
+    expect([...both.container.querySelectorAll("text.fit__face")].map((face) => face.getAttribute("fill"))).toEqual(
+      ids.map((id) => `url(#${id})`),
+    );
+  });
+
+  it("gives a word with no number none of the colour, and holds a number to between none and all", () => {
+    const whole = render(wiped([1, 0]));
+    const short = render(wiped([1]));
+    expect(fills(short.container)).toEqual(fills(whole.container));
+    const wild = render(wiped([7, -3]));
+    expect(fills(wild.container)).toEqual(fills(whole.container));
+    const over = render(wiped([1, 1, 1, 1]));
+    expect(fills(over.container)).toEqual([TO]);
+  });
+
+  it("puts the edge where the browser says the letters are", () => {
+    // "ab" is narrow, from 0 to 60, the space is wide, and "cd" runs from 200 to 250. They meet at 130.
+    placeChars([0, 30, 60, 200, 230, 250]);
+    const { container, rerender } = render(wiped([0.5, 0]));
+    expect(fills(container)[0]?.[1]).toEqual([0.12, TO]);
+    rerender(wiped([1, 0]));
+    expect(fills(container)[0]?.[1]).toEqual([0.52, TO]);
+    rerender(wiped([1, 0.5]));
+    expect(fills(container)[0]?.[1]).toEqual([0.9, TO]);
+  });
+
+  it("reaches as far as the letters do on both sides, wherever their box starts", () => {
+    // The box starts 12 in, so it ends at 262, past the last character's own end.
+    measureAs(50, 100, 12);
+    const inset = render(wiped([1, 0]));
+    expect(along(inset.container)).toEqual([["userSpaceOnUse", "0", "0", "262", "0"]]);
+    expect(fills(inset.container)[0]?.[1]).toEqual([Number((125 / 262).toFixed(4)), TO]);
+    inset.unmount();
+    // And a box that starts before the first character does.
+    measureAs(50, 100, -8);
+    const hung = render(wiped([1, 0]));
+    expect(along(hung.container)).toEqual([["userSpaceOnUse", "-8", "0", "250", "0"]]);
+    expect(fills(hung.container)[0]?.[1]).toEqual([Number((133 / 258).toFixed(4)), TO]);
+  });
+
+  it("leaves no sliver of the other colour on a word that is wholly one colour, even where a letter overhangs its place", () => {
+    // The first letter's ink starts 6 before its place: the box says so, the character's position does not.
+    measureAs(50, 100, -6);
+    const { container, rerender } = render(wiped([0, 0]));
+    expect(fills(container)).toEqual([FROM]);
+    rerender(wiped([1, 1]));
+    expect(fills(container)).toEqual([TO]);
+    // Part of the way, the old colour runs from the edge to the end of the word's stretch, overhang and all.
+    rerender(wiped([1, 0.5]));
+    expect(fills(container)[0]?.at(-1)).toEqual([1, FROM]);
+    expect(fills(container)[0]?.[0]).toEqual([0, TO]);
+  });
+
+  it("guesses evenly if the browser will not say where the letters are, rather than fail", () => {
+    placeChars([0, 30, 60, 200, 230, 250]).start.mockImplementation(() => {
+      throw new DOMException("no such character", "IndexSizeError");
+    });
+    const { container, unmount } = render(wiped([0.5, 0]));
+    // Not the 0.12 the browser's own places gave: five even characters, so half of "ab" is a fifth of the line.
+    expect(fills(container)[0]?.[1]).toEqual([0.2, TO]);
+    unmount();
+    // The even characters are laid along the line's box, wherever that starts.
+    measureAs(50, 100, 12);
+    const inset = render(wiped([0.5, 0]));
+    expect(along(inset.container)).toEqual([["userSpaceOnUse", "12", "0", "262", "0"]]);
+    expect(fills(inset.container)[0]?.[1]).toEqual([0.2, TO]);
+  });
+
+  it("guesses where the words are while a line cannot be measured, and asks nothing of it", () => {
+    measureAs(0);
+    const { start, end } = placeChars([0, 30, 60, 200, 230, 250]);
+    const { container } = render(wiped([1, 0]));
+    // Five glyphs guessed at 58 units each.
+    expect(along(container)).toEqual([["userSpaceOnUse", "0", "0", "290", "0"]]);
+    expect(fills(container)[0]?.[1]).toEqual([0.5, TO]);
+    expect(start).not.toHaveBeenCalled();
+    expect(end).not.toHaveBeenCalled();
+  });
+
+  it("tells the words apart only when a colour is to cross them, and measures again when one is", () => {
+    const { start } = placeChars([0, 30, 60, 200, 230, 250]);
+    const measure = measureAs(50);
+    const { container, rerender } = render(<FitText lines={["ab cd"]} />);
+    expect(start).not.toHaveBeenCalled();
+    expect(container.querySelector("text.fit__face")).not.toHaveAttribute("fill");
+
+    rerender(wiped([0.5, 0]));
+    expect(start).toHaveBeenCalled();
+    expect(fills(container)[0]?.[1]).toEqual([0.12, TO]);
+
+    // How far the colour has come, and which colours they are, move nothing: no line is measured again.
+    const measured = measure.mock.calls.length;
+    const asked = start.mock.calls.length;
+    rerender(wiped([0.75, 0]));
+    rerender(<FitText lines={["ab cd"]} wipe={{ from: "#222222", to: "#dddddd", crossed: [1, 0.25] }} />);
+    expect(measure.mock.calls.length).toBe(measured);
+    expect(start.mock.calls.length).toBe(asked);
+    expect(fills(container)[0]?.[1]).toEqual([0.85, "#dddddd"]);
+
+    rerender(<FitText lines={["ab cd"]} />);
+    expect(container.querySelector("text.fit__face")).not.toHaveAttribute("fill");
+    expect(container.querySelector("defs")).toBeNull();
+  });
+
+  it("measures the words again when a face arrives and moves them", () => {
+    const { container } = render(wiped([1, 0]));
+    expect(fills(container)[0]?.[1]).toEqual([0.5, TO]);
+    placeChars([0, 30, 60, 200, 230, 250]);
+    resized();
+    expect(fills(container)[0]?.[1]).toEqual([0.52, TO]);
+  });
+
+  it("colours the letters only, never the copies behind, and takes the place of a gradient", () => {
+    const { container, rerender } = render(
+      <FitText lines={["ab cd"]} extrude={2} gradient={["#ff0000", "#00ff00"]} wipe={{ from: FROM, to: TO, crossed: [1, 1] }} />,
+    );
+    expect(fills(container)).toEqual([TO]);
+    for (const shadow of container.querySelectorAll("text.fit__shadow")) expect(shadow).not.toHaveAttribute("fill");
+    rerender(
+      <FitText lines={["ab cd"]} extrude={2} gradient={["#ff0000", "#00ff00"]} wipe={{ from: FROM, to: TO, crossed: [0.5, 0] }} />,
+    );
+    expect(fills(container)[0]?.[1]).toEqual([0.2, TO]);
+    for (const shadow of container.querySelectorAll("text.fit__shadow")) expect(shadow).not.toHaveAttribute("fill");
+  });
+
+  it("keeps a line that has no words the colour the letters are", () => {
+    const { container } = render(<FitText lines={[" ", "ab"]} wipe={{ from: FROM, to: TO, crossed: [1] }} />);
+    expect(fills(container)).toEqual([FROM, TO]);
   });
 });

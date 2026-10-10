@@ -18,9 +18,90 @@ const NO_INDENT: number[] = [];
 const NO_TINTS: string[] = [];
 
 type Box = { x: number; y: number; width: number; height: number };
+/** Where a word starts and ends along its line, in the line's own units. */
+type Span = { start: number; end: number };
 
 function guess(line: string): Box {
   return { x: 0, y: -MEASURED_AT * 0.8, width: Math.max(1, line.length) * MEASURED_AT * GUESS, height: MEASURED_AT };
+}
+
+/** The words of a line: where each begins among its characters, and how many it has. */
+function wordsOf(line: string) {
+  return [...line.matchAll(/\S+/g)].map((word) => ({ index: word.index, length: word[0].length }));
+}
+
+/** Where each word of a line would start and end if every character were one width: all there is to go on until the line can be measured. */
+function estimate(line: string, box: Box): Span[] {
+  const each = box.width / Math.max(1, line.length);
+  return wordsOf(line).map(({ index, length }) => ({ start: box.x + index * each, end: box.x + (index + length) * each }));
+}
+
+/** Where each word of a line starts and ends, as the browser has set it. */
+function spansOf(element: SVGTextElement, line: string, box: Box): Span[] {
+  try {
+    return wordsOf(line).map(({ index, length }) => ({
+      start: element.getStartPositionOfChar(index).x,
+      end: element.getEndPositionOfChar(index + length - 1).x,
+    }));
+  } catch {
+    // A browser that will not say. The estimate is close, and a throw here would take the whole page down.
+    return estimate(line, box);
+  }
+}
+
+/** A second colour on its way across the words. */
+export type Wipe = {
+  /** The colour the letters are. */
+  from: string;
+  /** The colour crossing them. */
+  to: string;
+  /**
+   * How much of each word it has crossed, from the word's left: 0 is none of
+   * it, 1 all. Words are what spaces part, counted through the lines in
+   * order; a word with no number has none of the colour.
+   */
+  crossed: number[];
+};
+
+/** What fills a line: one colour, or colours side by side, each from one place along the line to the next. */
+type Paint = { fill: string } | { x1: number; x2: number; stops: { offset: number; color: string }[] };
+
+/**
+ * The fill of a line a colour is crossing. Each word has a zone of its own,
+ * and zones meet half way through the space between two words. In a zone the
+ * new colour runs from the zone's start to an edge and the old one from there
+ * on. The edge moves through the word's letters; with none or all of the word
+ * crossed it sits at the end of the zone instead, so no sliver of the other
+ * colour is left on a letter that overhangs its place.
+ */
+function paintOf(spans: Span[], crossed: number[], box: Box, from: string, to: string): Paint {
+  const left = Math.min(box.x, ...spans.map((span) => span.start));
+  const right = Math.max(box.x + box.width, ...spans.map((span) => span.end));
+  const bounds = [left, ...spans.slice(1).map((span, j) => ((spans[j] as Span).end + span.start) / 2), right];
+  /** Stretches of one colour, each up to a place along the line, in order. */
+  const runs: { upTo: number; color: string }[] = [];
+  const run = (upTo: number, color: string) => {
+    const before = runs.at(-1);
+    if (upTo <= (before?.upTo ?? left)) return;
+    if (before?.color === color) before.upTo = upTo;
+    else runs.push({ upTo, color });
+  };
+  spans.forEach((span, j) => {
+    const share = Math.min(1, Math.max(0, crossed[j] ?? 0));
+    const [start, end] = [bounds[j] as number, bounds[j + 1] as number];
+    run(share === 0 ? start : share === 1 ? end : span.start + share * (span.end - span.start), to);
+    run(end, from);
+  });
+  if (runs.length < 2) return { fill: runs[0]?.color ?? from };
+  const along = (x: number) => (x - left) / (right - left);
+  return {
+    x1: left,
+    x2: right,
+    stops: runs.flatMap(({ upTo, color }, k) => [
+      { offset: along(k === 0 ? left : (runs[k - 1] as { upTo: number }).upTo), color },
+      { offset: along(upTo), color },
+    ]),
+  };
 }
 
 /**
@@ -45,7 +126,7 @@ function stack(lines: string[], boxes: Box[] | undefined, leading: number, inden
     height = top + box.height * scale;
     // A line is drawn from its baseline, which the measured box starts above.
     baseline = top - box.y * scale;
-    return { line, scale, x: (inset - box.x) * scale, y: baseline };
+    return { line, box, scale, x: (inset - box.x) * scale, y: baseline };
   });
   return { placed, height, baseline };
 }
@@ -75,6 +156,13 @@ export type Vanish = { x: number; y: number };
  * one each and in order, for a name whose opening letters take the colours
  * of a mark. Only the letters take them, never the copies behind.
  *
+ * `wipe` draws the letters in one colour with another part of the way across
+ * each word, from the word's left, with a hard edge inside the letters. It is
+ * one fill, not a second drawing laid over the first, so no rim of the old
+ * colour shows round the new. It takes the place of the letters' own colour
+ * and of `gradient`, and is not for use with `tints`. Moving it is the
+ * caller's business: this draws one moment.
+ *
  * `toBaseline` ends the drawing's box at the last line's baseline rather than
  * under its descenders, which then hang below it: what follows can be spaced
  * from where the letters sit, not from the tail of a p.
@@ -89,6 +177,7 @@ export function FitText({
   vanish,
   gradient,
   tints = NO_TINTS,
+  wipe,
   toBaseline = false,
 }: {
   lines: string[];
@@ -100,26 +189,37 @@ export function FitText({
   vanish?: Vanish;
   gradient?: string[];
   tints?: string[];
+  wipe?: Wipe;
   toBaseline?: boolean;
 }) {
   const refs = useRef<(SVGTextElement | null)[]>([]);
-  const [fitted, setFitted] = useState<{ key: string; boxes: Box[] } | null>(null);
+  const [fitted, setFitted] = useState<{ key: string; boxes: Box[]; spans?: Span[][] } | null>(null);
   const text = lines.join("\n");
+  /** Whether the words are told apart, which is only when a colour is to cross them. */
+  const worded = wipe !== undefined;
   // An id that is safe inside url(#…).
   const gradientId = `fit${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
 
   const measure = useCallback(() => {
-    const measured = refs.current.slice(0, lines.length).map((element) => (element as SVGTextElement).getBBox());
+    const elements = refs.current.slice(0, lines.length) as SVGTextElement[];
+    const measured = elements.map((element) => element.getBBox());
     // Nothing has a width while the element is not rendered; keep the guess.
     if (measured.some((box) => !box.width || !box.height)) return;
+    const spans = worded
+      ? elements.map((element, i) => spansOf(element, lines[i] as string, measured[i] as Box))
+      : undefined;
     // The same measurement is the same state, so a face that changes nothing draws nothing.
-    const key = measured.map(({ x, y, width, height }) => [x, y, width, height].join()).join(";");
-    setFitted((before) => (before?.key === key ? before : { key, boxes: measured }));
+    const key = [
+      ...measured.map(({ x, y, width, height }) => [x, y, width, height].join()),
+      ...(spans ?? []).map((line) => line.map(({ start, end }) => [start, end].join()).join("/")),
+    ].join(";");
+    setFitted((before) => (before?.key === key ? before : { key, boxes: measured, spans }));
     // `text` stands for `lines`: the same words are the same measurement,
     // unless more or fewer of their letters are set apart, which can move
-    // the others. Their colours move nothing.
+    // the others, or the words start or stop being told apart. Colours, and
+    // how far one has come across a word, move nothing.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, tints.length]);
+  }, [text, tints.length, worded]);
 
   useLayoutEffect(measure, [measure]);
 
@@ -154,8 +254,25 @@ export function FitText({
     ) : (
       line
     );
+  /** Each line's fill while a colour is crossing its words. Words are counted through the lines. */
+  let counted = 0;
+  const paints = wipe
+    ? placed.map(({ line, box }, i) => {
+        const spans = fitted?.spans?.[i] ?? estimate(line, box);
+        const paint = paintOf(spans, wipe.crossed.slice(counted), box, wipe.from, wipe.to);
+        counted += spans.length;
+        return paint;
+      })
+    : undefined;
   const copies = Math.abs(extrude);
   const place = ({ x, y, scale }: { x: number; y: number; scale: number }) => `translate(${x} ${y}) scale(${scale})`;
+
+  /** What a line's own letters are filled with: a colour crossing them, the gradient, or the colour they inherit. */
+  const faceFill = (i: number) => {
+    const paint = paints?.[i];
+    if (paint) return "stops" in paint ? `url(#${gradientId}w${i})` : paint.fill;
+    return gradient ? `url(#${gradientId})` : undefined;
+  };
 
   const lean = extrude < 0 ? -1 : 1;
   // Stepped copies get room in the drawing's box. Copies that recede to a
@@ -179,6 +296,29 @@ export function FitText({
               <stop key={i} offset={gradient.length > 1 ? i / (gradient.length - 1) : 0} stopColor={color} />
             ))}
           </linearGradient>
+        </defs>
+      )}
+      {paints?.some((paint) => "stops" in paint) && (
+        <defs>
+          {paints.map(
+            (paint, i) =>
+              "stops" in paint && (
+                // Along the line, in the line's own units, whatever size the line is drawn at.
+                <linearGradient
+                  key={i}
+                  id={`${gradientId}w${i}`}
+                  gradientUnits="userSpaceOnUse"
+                  x1={paint.x1}
+                  y1="0"
+                  x2={paint.x2}
+                  y2="0"
+                >
+                  {paint.stops.map((stop, k) => (
+                    <stop key={k} offset={stop.offset} stopColor={stop.color} />
+                  ))}
+                </linearGradient>
+              ),
+          )}
         </defs>
       )}
       {vanish &&
@@ -218,7 +358,7 @@ export function FitText({
             }}
             className="fit__face"
             fontSize={MEASURED_AT}
-            fill={gradient ? `url(#${gradientId})` : undefined}
+            fill={faceFill(i)}
           >
             {letters(line.line, i)}
           </text>

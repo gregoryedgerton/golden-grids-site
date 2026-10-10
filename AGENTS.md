@@ -16,7 +16,32 @@ only the focused cell may hold focusable content: every other cell is inert.
 
 **Motion is opt-out.** Under `prefers-reduced-motion` the dial moves in whole
 steps with no travel between them. Flag any animation, transition or
-`requestAnimationFrame` loop that does not consult the preference.
+`requestAnimationFrame` loop that does not consult the preference. A colour
+that changes in place is not travel; the gallery's statement, below, is the
+one case of it.
+
+**The gallery's opening statement is said.** By the owner's direction, while
+its cell is the focused one white crosses THESE, ARE and FAKE in turn, inside
+the letters and from the left of each word. A word starts when it would be
+said and takes about as long as it takes to say. The statement rests in that
+colour for as long again, black crosses it the same way, and the two repeat.
+
+- It starts only once the dial has come to rest on the cell. A cell is the
+  nearest one from half way through the travel to it, and that is too soon.
+- When the cell loses the focus, a crossing under way finishes and the
+  statement stays the colour it reached. Flag anything that can leave it part
+  white and part black, or that lets it go on, or start, while another cell
+  has the focus.
+- Under reduced motion nothing travels across a word: each word changes
+  colour whole, on its beat. The owner asked for exactly that, the colour
+  still changing and the slide hidden. Do not flag the change of colour; do
+  flag an edge that moves through a word, or a frame requested, under the
+  preference.
+- The colour is one fill with a hard edge, drawn by `FitText`, never a second
+  copy of the letters laid over the first.
+- White and the cell's own ink each keep 3:1 against the cell's red. Under a
+  forced palette the statement keeps the reader's text colour and nothing
+  crosses it.
 
 **The title's video is YouTube's.** It is played through YouTube's embedded
 player and never copied into the repository or the build. The one exception is

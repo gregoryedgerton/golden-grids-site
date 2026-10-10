@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { clock } from "./clock";
 import { createDial } from "./controller";
-import type { DialClock, DialController } from "./controller";
-import { CellCurrent } from "./current";
+import type { DialController } from "./controller";
+import { CellAtRest, CellCurrent } from "./current";
 import { TEXTURE_PX, mountedAround, navFits, paintTile } from "./geometry";
 import { dragSteps, keyMove, ownsDrag, ownsKey, pastSlop, swipeAxis, wheelPixels } from "./input";
 import type { Axis } from "./input";
@@ -17,14 +18,6 @@ export type Cell = {
   /** The colour of the cell's square. */
   ground: string;
   content: ReactNode;
-};
-
-const clock: DialClock = {
-  now: () => performance.now(),
-  requestFrame: (tick) => requestAnimationFrame(tick),
-  cancelFrame: (handle) => cancelAnimationFrame(handle),
-  setTimer: (fire, ms) => window.setTimeout(fire, ms),
-  clearTimer: (handle) => window.clearTimeout(handle),
 };
 
 type Swipe = { id: number; x: number; y: number; axis: Axis | null };
@@ -50,6 +43,8 @@ function DialOf({ cells }: { cells: Cell[] }) {
   const reduced = useReducedMotion();
   const reducedRef = useRef(reduced);
   const [focus, setFocus] = useState(0);
+  /** Whether the dial is on its focused cell and going nowhere. */
+  const [rested, setRested] = useState(true);
   const rootRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   /** Whether the buttons are in a bar of their own, below the stage, instead of over its corner. */
@@ -89,6 +84,7 @@ function DialOf({ cells }: { cells: Cell[] }) {
         paint();
       },
       onFocus: setFocus,
+      onRest: setRested,
       clock,
     });
     dialRef.current = created;
@@ -225,7 +221,9 @@ function DialOf({ cells }: { cells: Cell[] }) {
               onClick={current ? undefined : () => dial().goTo(index)}
             >
               <div className="dial__content" inert={!current}>
-                <CellCurrent value={current}>{cell.content}</CellCurrent>
+                <CellCurrent value={current}>
+                  <CellAtRest value={current && rested}>{cell.content}</CellAtRest>
+                </CellCurrent>
               </div>
             </section>
           );
