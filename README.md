@@ -4,7 +4,7 @@ The marketing site for [Golden Grids](https://github.com/gregoryedgerton/golden-
 
 It is one page: a spiral dial. Swipe up or left, scroll, or use the arrow keys to go deeper; the opposites go back. The dial runs through a title, a statement of what the library is, its parameters, a gallery of the layout studies, and ends at a mailing-list sign-up.
 
-Live at <https://gregoryedgerton.github.io/golden-grids-site/>.
+The site is private for now: the repository is private and nothing is deployed. Setting the repository variable `PUBLISH_SITE` to `true` (with GitHub Pages enabled, source GitHub Actions) publishes `main` to GitHub Pages.
 
 ## Adding a study
 
@@ -48,4 +48,5 @@ npm run dev
 Every change arrives by pull request and merges only when the Codex review of
 its head commit reports no issues and CI is green. CI runs commitlint, ESLint,
 `tsc`, the tests with a 100% coverage threshold, and the build. `main` is
-released by semantic-release and deployed to GitHub Pages.
+released by semantic-release, and deployed to GitHub Pages when `PUBLISH_SITE`
+is on.
