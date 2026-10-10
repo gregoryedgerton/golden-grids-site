@@ -382,6 +382,21 @@ describe("createDial, with motion", () => {
     expect(run(90 / WHEEL_RISE)).toBe(2);
   });
 
+  it("measures that fall from the push's peak, which comes after the event that turned the dial", () => {
+    const run = (dip: number) => {
+      const { dial, advance } = setup(20);
+      // Three pixels are enough to turn the dial; the push goes on to ninety.
+      for (const size of [3, 40, 90, dip, 100]) {
+        dial.wheel(0, size);
+        advance(16);
+      }
+      advance(3000);
+      return dial.depth();
+    };
+    expect(run(90 / WHEEL_RISE + 1)).toBe(1);
+    expect(run(90 / WHEEL_RISE)).toBe(2);
+  });
+
   it("takes a climb to more than three times the ebb, from at least a push's size, and nothing less", () => {
     /** A scroll that has fallen away to an ebb, then one more event. */
     const after = (ebb: number, next: number) => {
@@ -458,6 +473,70 @@ describe("createDial, with motion", () => {
     }
     advance(3000);
     expect(dial.depth()).toBe(1);
+  });
+
+  it("gathers travel on each axis by itself, so drift across a scroll that is starting does not undo it", () => {
+    const { dial, advance } = setup(20);
+    // Two pixels down, two to the left, one more down: three pixels down in all, and that is a scroll.
+    dial.wheel(0, 2);
+    dial.wheel(-2, 0);
+    dial.wheel(0, 1);
+    advance(3000);
+    expect(dial.depth()).toBe(1);
+  });
+
+  it("gives a scroll the axis that first has a scroll's worth, not the axis of its first event", () => {
+    const { dial, advance } = setup(20);
+    dial.goTo(5);
+    advance(3000);
+    // A stray pixel to the left, then the scroll itself, downward.
+    dial.wheel(-1, 0);
+    dial.wheel(0, 5);
+    // It is a scroll down, so more travel to the left is off its axis and turns nothing.
+    for (let i = 0; i < 6; i++) {
+      dial.wheel(-4, 1);
+      advance(16);
+    }
+    advance(3000);
+    expect(dial.depth()).toBe(6);
+  });
+
+  it("takes the axis with more gathered when both have a scroll's worth at once, and the vertical one if they are level", () => {
+    const { dial, advance } = setup(20);
+    const scroll = (x: number, y: number) => {
+      dial.goTo(10);
+      advance(3000);
+      dial.wheel(x, y);
+      advance(3000);
+      return dial.depth();
+    };
+    // More to the left than down: back.
+    expect(scroll(-5, 4)).toBe(9);
+    // More down than to the left: deeper.
+    expect(scroll(-4, 5)).toBe(11);
+    // Level: down.
+    expect(scroll(-4, 4)).toBe(11);
+  });
+
+  it("takes a second push as gentle as the scroll it follows, but not a stumble in a gentler scroll still", () => {
+    const run = (sizes: number[]) => {
+      const { dial, advance } = setup(20);
+      for (const size of sizes) {
+        dial.wheel(0, size);
+        advance(16);
+      }
+      advance(3000);
+      return dial.depth();
+    };
+    // Four pixels, down to one, and four again: two pushes of a wheel that reports little.
+    expect(run([4, 1, 4])).toBe(2);
+    // Not quite as large as the first: still the first.
+    expect(run([4, 1, 3.9])).toBe(1);
+    // A scroll made a pixel at a time, with one event that falters. A pixel
+    // after it is not a push; a scroll's worth is.
+    expect(run([1, 1, 1, 0.3, 1])).toBe(1);
+    expect(run([1, 1, 1, 0.3, WHEEL_TICK_PX - 0.1])).toBe(1);
+    expect(run([1, 1, 1, 0.3, WHEEL_TICK_PX])).toBe(2);
   });
 
   it("keeps a scroll to the axis it began on, so a hand that drifts sideways does not scroll back", () => {

@@ -34,14 +34,23 @@ Down, Right, Page Down and Space keys go deeper; the opposites go back. Keys
 typed into a form field never move the dial.
 
 **A scroll turns the dial one cell.** The smallest notch a wheel reports is a
-scroll, and a scroll is one cell and no more, the tail of a flick and a wheel
-held spinning included. Within an unbroken stream of wheel events the dial
-turns again for two things only: a second push (the stream has fallen to a
-third of its peak and then climbs to more than three times its lowest), and
-the wheel turned the other way. Otherwise it turns again only once the wheel
-has gone quiet. A scroll keeps to the axis it began on. Flag anything that
-lets a steady or dying stream of wheel events carry the dial across several
-cells, lose a scroll the reader made, or leave the dial between two cells.
+scroll (three pixels of travel make one), and a scroll is one cell and no
+more, the tail of a flick and a wheel held spinning included. Within an
+unbroken stream of wheel events the dial turns again for two things only:
+
+- a second push: the stream has fallen to a third of its peak, then an event
+  is more than three times its lowest since, and is as large as a push has to
+  be. That is 8 px, or the first push's own peak if it was gentler than that,
+  and never less than a scroll's worth. The size is there because the faint
+  end of a hard flick can hand over a few pixels at once;
+- the wheel turned the other way on the scroll's axis.
+
+Otherwise it turns again only once the wheel has gone quiet. A scroll has one
+axis: before it turns the dial, travel is gathered on each axis by itself and
+the first to have a scroll's worth is the scroll's; after, only that axis is
+read. Flag anything that lets a steady or dying stream of wheel events carry
+the dial across several cells, lose a scroll the reader made, or leave the
+dial between two cells.
 
 **A study is data.** Adding a study is one file in `src/studies/`. Flag a
 change that needs a second edit elsewhere to add one, and any study entry
