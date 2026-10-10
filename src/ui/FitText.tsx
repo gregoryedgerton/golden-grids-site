@@ -111,9 +111,10 @@ export function FitText({
     // The same measurement is the same state, so a face that changes nothing draws nothing.
     const key = measured.map(({ x, y, width, height }) => [x, y, width, height].join()).join(";");
     setFitted((before) => (before?.key === key ? before : { key, boxes: measured }));
-    // `text` stands for `lines`: the same words are the same measurement.
+    // `text` stands for `lines`: the same words are the same measurement,
+    // unless more or fewer of them are marked, which may be set heavier.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text]);
+  }, [text, strong]);
 
   useLayoutEffect(measure, [measure]);
 
@@ -211,6 +212,7 @@ export function FitText({
             ref={(element) => {
               refs.current[i] = element;
             }}
+            className="fit__face"
             fontSize={MEASURED_AT}
             fill={gradient ? `url(#${gradientId})` : undefined}
           >
