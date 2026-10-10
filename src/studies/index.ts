@@ -4,7 +4,7 @@ import type { Face } from "../ui/fonts";
 
 /**
  * The studies, read from this folder. Adding a study is adding one JSON file
- * here: the gallery, its count and its order follow.
+ * here: the gallery and its order follow.
  *
  * Every file is checked as it is read, so a missing field or a pair of
  * colours that cannot be read fails the tests, not the page.

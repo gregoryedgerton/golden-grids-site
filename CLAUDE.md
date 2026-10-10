@@ -35,8 +35,9 @@ repository is private and the site is public.
   steps with no travel.
 - **Directions.** Up or left goes deeper, down or right goes back. No
   calibration.
-- **Studies are data.** One file per study in `src/studies/`; the gallery,
-  the count and the order derive from the folder, latest study first.
+- **Studies are data.** One file per study in `src/studies/`; the gallery
+  and its order derive from the folder, latest study first. The page states
+  no count of them.
 - **Brand.** Parody names are written exactly and never case-transformed in
   CSS. GIFcommit is the presenter and the npm scope.
 - **Copy.** Plain and exact. No jokes at a reference's expense, no verdicts on
