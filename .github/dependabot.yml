@@ -14,6 +14,27 @@ updates:
       # than version 10 of this preset needs, and the release job fails on it.
       - dependency-name: conventional-changelog-conventionalcommits
         update-types: ["version-update:semver-major"]
+      # eslint-plugin-jsx-a11y accepts ESLint up to 9, and npm refuses to
+      # install 10 beside it. Lift these two when the plugin supports 10.
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@eslint/js"
+        update-types: ["version-update:semver-major"]
+      # typescript-eslint accepts TypeScript below 6.1. Lift this when it
+      # supports 7.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
     groups:
+      # Minor and patch updates of the tooling arrive together. A major
+      # arrives alone, so one that cannot be taken does not hold up the rest.
       development:
         dependency-type: development
+        update-types: ["minor", "patch"]
+
+  # The versions of the actions the workflow runs.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
