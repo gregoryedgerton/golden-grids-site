@@ -122,8 +122,13 @@ export function createStatement({ reduced, clock }: StatementOptions): Statement
     if (elapsed >= SAID_MS) {
       began = null;
       show({ ink: opposite(look.ink), crossed: untouched() });
-      // Rest in the colour just reached for as long as it took to say, then go on if there is more to say.
-      if (due > 0) timer = clock.setTimer(cross, SAID_MS);
+      if (due === 0) return;
+      // White rests for as long as it took to say before black crosses it.
+      // Black has nothing to rest for: more is due only to a reader who came
+      // back while the crossing they had left was finishing, and they have
+      // waited for it already.
+      if (look.ink === "white") timer = clock.setTimer(cross, SAID_MS);
+      else cross();
       return;
     }
     const stepped = reduced();
@@ -153,7 +158,7 @@ export function createStatement({ reduced, clock }: StatementOptions): Statement
       // went before it was done, has only to come back.
       const ends = began === null ? look.ink : opposite(look.ink);
       due = ends === "black" ? 2 : 1;
-      // At once, unless the crossing the reader left behind is still under way: then after it.
+      // At once, unless the crossing the reader left behind is still under way: then as soon as it ends.
       if (began === null) cross();
     },
     leave() {

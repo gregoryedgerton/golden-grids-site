@@ -32,7 +32,11 @@ does not repeat: the owner asked that it not loop once it is back to black.
   it. The owner asked for no wait, so do not flag that it starts while the
   cell is still arriving. Do flag it starting for a cell the dial is only
   passing on its way to another, or for one under a finger that has not let
-  go, and any delay put back in front of the first word.
+  go (with motion reduced too, where a finger moves nothing until it lifts),
+  and any delay put back in front of the first word.
+- The only rest is white's, before black crosses it. A reader who comes back
+  while the crossing they left is still finishing is owed a saying, and it
+  begins the moment that crossing ends, not a rest later.
 - It is said again only to a reader who has left the cell and come back. The
   dial stirring on a cell the reader never left, a finger taking it and
   letting it go, says nothing again.
