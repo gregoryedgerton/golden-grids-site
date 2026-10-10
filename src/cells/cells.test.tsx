@@ -135,12 +135,21 @@ describe("Title, and the video behind it", () => {
 });
 
 describe("Vision", () => {
-  it("is about the four platforms, and no longer says one layout model", async () => {
+  it("is headed 4platforms, one word set large, and no longer says one layout model", async () => {
     const { container } = render(<Vision />);
-    expect(screen.getByRole("heading", { level: 2, name: "Four platforms." })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "4platforms" })).toBeInTheDocument();
+    // One line, so it is as wide as the cell.
+    expect([...container.querySelectorAll(".vision__heading .fit__line")].map((g) => g.textContent)).toEqual(["4platforms"]);
     expect(container).not.toHaveTextContent(/one layout model/i);
-    expect(screen.getByText(/same boxes on all four/)).toBeInTheDocument();
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("teases rows and columns instead of promising the same boxes, and ends on not being boring", () => {
+    const { container } = render(<Vision />);
+    const body = container.querySelector(".vision__body") as HTMLElement;
+    expect(body).toHaveTextContent(/^Rows and columns had a good run\./);
+    expect(body).toHaveTextContent(/at least you won’t be boring\.$/);
+    expect(body).not.toHaveTextContent(/same boxes|all four/);
   });
 
   it("names each platform beside its mark, drawn in one colour and hidden as decoration", () => {
