@@ -12,7 +12,7 @@ import { PARAMETERS, Parameters } from "./Parameters";
 import { Signup } from "./Signup";
 import { StudyCell } from "./StudyCell";
 import { Title } from "./Title";
-import { Vision } from "./Vision";
+import { PLATFORMS, Vision } from "./Vision";
 
 const espn = parseStudy(
   {
@@ -135,11 +135,30 @@ describe("Title, and the video behind it", () => {
 });
 
 describe("Vision", () => {
-  it("states what the library is under one heading", async () => {
+  it("is about the four platforms, and no longer says one layout model", async () => {
     const { container } = render(<Vision />);
-    expect(screen.getByRole("heading", { level: 2, name: "One layout model, four platforms." })).toBeInTheDocument();
-    expect(screen.getByText(/React, React Native, SwiftUI and\s+Jetpack Compose/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Four platforms." })).toBeInTheDocument();
+    expect(container).not.toHaveTextContent(/one layout model/i);
+    expect(screen.getByText(/same boxes on all four/)).toBeInTheDocument();
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("names each platform beside its mark, drawn in one colour and hidden as decoration", () => {
+    render(<Vision />);
+    const items = screen.getAllByRole("listitem");
+    expect(items.map((li) => li.textContent)).toEqual(["React", "React Native", "SwiftUI", "Jetpack Compose"]);
+    expect(PLATFORMS.map((p) => p.logo)).toEqual(["react", "react", "apple", "android"]);
+    for (const item of items) {
+      const mark = item.querySelector("svg") as SVGSVGElement;
+      expect(mark).toHaveAttribute("aria-hidden", "true");
+      expect(mark).toHaveAttribute("fill", "currentColor");
+      expect(mark.querySelectorAll("path")).toHaveLength(1);
+      expect(mark.querySelector("[fill], [stroke]")).toBeNull();
+    }
+    // React and React Native share React's mark; the other two differ from it and from each other.
+    const drawn = items.map((li) => li.querySelector("path")?.getAttribute("d"));
+    expect(drawn[0]).toBe(drawn[1]);
+    expect(new Set(drawn).size).toBe(3);
   });
 });
 
