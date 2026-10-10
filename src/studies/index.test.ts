@@ -1,8 +1,9 @@
-import { contrast, latestFirst, parseStudy, readable, studies } from "./index";
+import { contrast, isDate, latestFirst, parseStudy, readable, studies, writeDate } from "./index";
 import type { Study } from "./index";
 
 const valid = {
   number: 7,
+  published: "2026-10-07",
   brand: "GIFbase",
   reference: "Coinbase",
   subject: "A signed-in exchange app",
@@ -84,6 +85,11 @@ describe("parseStudy", () => {
     ["no number", without("number"), "number must be a whole number from 1"],
     ["a fractional number", { ...valid, number: 1.5 }, "number must be a whole number from 1"],
     ["number zero", { ...valid, number: 0 }, "number must be a whole number from 1"],
+    ["no publish date", without("published"), "published must be a real date, as YYYY-MM-DD"],
+    ["a date in words", { ...valid, published: "October 7, 2026" }, "published must be a real date, as YYYY-MM-DD"],
+    ["a date that is a number", { ...valid, published: 20261007 }, "published must be a real date, as YYYY-MM-DD"],
+    ["a day that does not exist", { ...valid, published: "2026-02-31" }, "published must be a real date, as YYYY-MM-DD"],
+    ["a month that does not exist", { ...valid, published: "2026-13-01" }, "published must be a real date, as YYYY-MM-DD"],
     ["no brand", without("brand"), 'brand must be a parody name starting "GIF"'],
     ["a brand that is not a parody name", { ...valid, brand: "Coinbase" }, 'brand must be a parody name starting "GIF"'],
     ["a brand in the wrong case", { ...valid, brand: "gifbase" }, 'brand must be a parody name starting "GIF"'],
@@ -120,6 +126,26 @@ describe("parseStudy", () => {
   });
 });
 
+describe("isDate and writeDate", () => {
+  it("accepts a real day written YYYY-MM-DD, leap days included", () => {
+    expect(isDate("2026-10-09")).toBe(true);
+    expect(isDate("2028-02-29")).toBe(true);
+  });
+
+  it("refuses anything else", () => {
+    for (const value of ["", "2026-10-9", "10/09/2026", "2026-02-30", "2027-02-29", "2026-00-10", "2026-10-09T00:00:00Z"]) {
+      expect(isDate(value)).toBe(false);
+    }
+  });
+
+  it("writes a day the way a cell shows it, whatever the reader's time zone", () => {
+    expect(writeDate("2026-10-09")).toBe("Oct 9, 2026");
+    // The first and last days of a year stay in that year.
+    expect(writeDate("2026-01-01")).toBe("Jan 1, 2026");
+    expect(writeDate("2026-12-31")).toBe("Dec 31, 2026");
+  });
+});
+
 describe("latestFirst", () => {
   const study = (number: number, brand: string) => ({ ...parseStudy(valid, "x"), number, brand }) as Study;
 
@@ -152,6 +178,15 @@ describe("the studies in this folder", () => {
     expect(depot?.icon).toHaveProperty("path");
     expect(vidia?.icon).toHaveProperty("path");
     expect(studies.indexOf(vidia as Study)).toBeLessThan(studies.indexOf(depot as Study));
+  });
+
+  it("each say when they were published, none later than the one after it in the gallery", () => {
+    expect(studies.every((s) => isDate(s.published))).toBe(true);
+    // Latest first by number, so the dates never go up as the gallery goes on.
+    const days = studies.map((s) => s.published);
+    expect(days).toEqual([...days].sort().reverse());
+    expect(studies.find((s) => s.number === 15)?.published).toBe("2026-10-09");
+    expect(studies.find((s) => s.number === 3)?.published).toBe("2026-10-05");
   });
 
   it("no longer include the first two studies", () => {

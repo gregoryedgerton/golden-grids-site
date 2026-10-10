@@ -15,6 +15,7 @@ Add one file to `src/studies/`, named for its number and subject:
 ```json
 {
   "number": 14,
+  "published": "2026-10-09",
   "brand": "GIFdepot",
   "reference": "The Home Depot",
   "subject": "A product page",
@@ -27,6 +28,7 @@ Add one file to `src/studies/`, named for its number and subject:
 
 Nothing else changes: the gallery comes from the folder and runs from the latest study to the oldest.
 
+- `number` orders the gallery, latest first, and is not shown. `published` is the day the study first went live, as `YYYY-MM-DD`; it is shown on the study's cell.
 - `brand` is the parody name, written exactly. It is never case-transformed.
 - `colors.ink` sets the name and `colors.accent` the icon and the rule; each needs 3:1 contrast with `ground`. Small text takes whichever of them reads at 4.5:1, or white or black.
 - `font.family` is a Google Fonts family under an open licence. Only the letters of the name are requested.
