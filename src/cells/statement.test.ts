@@ -6,11 +6,8 @@ function setup(startReduced = false) {
   const fake = fakeClock();
   const state = { reduced: startReduced };
   const looks: Look[] = [];
-  const statement = createStatement({
-    reduced: () => state.reduced,
-    onLook: (look) => looks.push(look),
-    clock: fake.clock,
-  });
+  const statement = createStatement({ reduced: () => state.reduced, clock: fake.clock });
+  statement.subscribe(() => looks.push(statement.look()));
   /** Move the clock on by exactly this much, in one step, so a look can be taken at a known moment. */
   const to = (ms: number) => fake.advance(ms, ms);
   const latest = () => looks.at(-1);
@@ -320,27 +317,59 @@ describe("the statement", () => {
     expect(toMotion.latest()).toEqual({ ink: "black", crossed: [1, 1, 0.75] });
   });
 
-  it("stops everything pending when it is destroyed: the wait, a crossing or a rest", () => {
-    const waiting = setup();
-    waiting.statement.enter();
-    waiting.statement.destroy();
-    expect([waiting.timers.size, waiting.frames.size]).toEqual([0, 0]);
+  it("shows one look until it changes: black at first, and a new one at each change", () => {
+    const { statement, to } = setup();
+    const first = statement.look();
+    expect(first).toBe(AT_FIRST);
+    statement.enter();
+    to(LEAD_MS);
+    // Begun, with nothing crossed yet: still the look it had.
+    expect(statement.look()).toBe(first);
+    to(150);
+    const crossing = statement.look();
+    expect(crossing).not.toBe(first);
+    expect(crossing).toEqual({ ink: "black", crossed: [0.75, 0, 0] });
+    expect(statement.look()).toBe(crossing);
+    // What was handed out earlier is not changed under whoever holds it.
+    to(SAID_MS);
+    expect(first).toEqual({ ink: "black", crossed: [0, 0, 0] });
+    expect(crossing).toEqual({ ink: "black", crossed: [0.75, 0, 0] });
+  });
 
-    const crossing = started();
-    crossing.to(200);
-    const said = crossing.looks.length;
-    crossing.statement.destroy();
-    expect([crossing.timers.size, crossing.frames.size]).toEqual([0, 0]);
-    crossing.advance(20_000);
-    expect(crossing.looks).toHaveLength(said);
+  it("tells whoever is watching of each new look, and stops telling one that has stopped watching", () => {
+    const { statement, to } = setup();
+    const told = { one: 0, other: 0 };
+    const stop = statement.subscribe(() => void told.one++);
+    statement.subscribe(() => void told.other++);
+    statement.enter();
+    to(LEAD_MS);
+    to(150);
+    expect(told).toEqual({ one: 1, other: 1 });
+    stop();
+    to(150);
+    to(SAID_MS);
+    expect(told.one).toBe(1);
+    expect(told.other).toBeGreaterThan(2);
+  });
 
-    const resting = started();
-    resting.to(SAID_MS);
-    resting.statement.destroy();
-    expect([resting.timers.size, resting.frames.size]).toEqual([0, 0]);
-
-    const stepping = started(true);
-    stepping.statement.destroy();
-    expect([stepping.timers.size, stepping.frames.size]).toEqual([0, 0]);
+  it("finishes what it is saying and keeps the colour it reached with nothing watching it at all", () => {
+    const fake = fakeClock();
+    const statement = createStatement({ reduced: () => false, clock: fake.clock });
+    const stop = statement.subscribe(() => {});
+    statement.enter();
+    fake.advance(LEAD_MS + 400);
+    // The cell is taken off the dial in the middle of a crossing.
+    stop();
+    statement.leave();
+    fake.advance(SAID_MS);
+    expect(statement.look()).toEqual({ ink: "white", crossed: [0, 0, 0] });
+    expect([fake.timers.size, fake.frames.size]).toEqual([0, 0]);
+    // It is still white when the cell is put back, however much later, and black comes next.
+    fake.advance(60_000);
+    expect(statement.look()).toEqual({ ink: "white", crossed: [0, 0, 0] });
+    statement.enter();
+    fake.advance(LEAD_MS, LEAD_MS);
+    fake.advance(150, 150);
+    expect(statement.look()).toEqual({ ink: "white", crossed: [0.75, 0, 0] });
   });
 });

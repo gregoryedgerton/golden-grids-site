@@ -1,8 +1,11 @@
-import { act, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { axe } from "vitest-axe";
 import { fills } from "../../test/fills";
 import { setReducedMotion } from "../../test/media";
+import { clock } from "../dial/clock";
 import { CellAtRest, CellCurrent } from "../dial/current";
+import { Dial } from "../dial/Dial";
+import { prefersReducedMotion } from "../dial/motion";
 import { site } from "../site";
 import { embedUrl } from "../ui/BackgroundVideo";
 import { contrast, parseStudy, studies } from "../studies";
@@ -12,7 +15,8 @@ import { Gallery, INKS } from "./Gallery";
 import { buildCells } from "./index";
 import { PARAMETERS, Parameters } from "./Parameters";
 import { Signup } from "./Signup";
-import { LEAD_MS, SAID_MS } from "./statement";
+import { LEAD_MS, SAID_MS, createStatement } from "./statement";
+import type { Statement } from "./statement";
 import { StudyCell } from "./StudyCell";
 import { Title } from "./Title";
 import { LENS, PLATFORMS, Vision } from "./Vision";
@@ -31,6 +35,9 @@ const espn = parseStudy(
   },
   "espn",
 );
+
+/** A statement of its own for a test, made as the page makes its one: on the browser's clock, which a test may fake. */
+const newStatement = () => createStatement({ reduced: prefersReducedMotion, clock });
 
 describe("Title", () => {
   it("says who presents it, names the library, and gives its version and where to get it", async () => {
@@ -278,7 +285,7 @@ describe("Parameters", () => {
 
 describe("Gallery", () => {
   it("says THESE ARE FAKE, as large as the cell allows, FAKE on a line of its own", async () => {
-    const { container } = render(<Gallery />);
+    const { container } = render(<Gallery statement={newStatement()} />);
     expect(screen.getByRole("heading", { level: 2, name: "THESE ARE FAKE" })).toBeInTheDocument();
     expect([...container.querySelectorAll(".gallery__heading .fit__line")].map((g) => g.textContent)).toEqual([
       "THESE ARE",
@@ -300,7 +307,7 @@ describe("Gallery", () => {
   });
 
   it("then says what a study is, and that none is the site it looks like", () => {
-    const { container } = render(<Gallery />);
+    const { container } = render(<Gallery statement={newStatement()} />);
     const body = container.querySelector(".gallery__body") as HTMLElement;
     // The owner's words, whole. It says what studies are, not what the cells after it are: the last of those is the sign-up.
     expect(body.textContent?.replace(/\s+/g, " ").trim()).toBe(
@@ -313,12 +320,12 @@ describe("Gallery", () => {
   });
 
   it("gives no count, since studies keep being added", () => {
-    const { container } = render(<Gallery />);
+    const { container } = render(<Gallery statement={newStatement()} />);
     expect(container.querySelector(".gallery")).not.toHaveTextContent(/\d/);
   });
 
   it("has no call to act: the disclaimer is the last thing in the cell", () => {
-    const { container } = render(<Gallery />);
+    const { container } = render(<Gallery statement={newStatement()} />);
     expect(screen.queryByRole("link")).toBeNull();
     expect(screen.queryByRole("button")).toBeNull();
     expect(container.querySelector(".gallery")?.lastElementChild).toHaveClass("gallery__body");
@@ -328,13 +335,14 @@ describe("Gallery", () => {
 
 describe("Gallery, and the statement being said", () => {
   /** The cell as the dial holds it: the focused one or not, with the dial at rest on it or not. */
-  const held = (current: boolean, atRest: boolean) => (
+  const holding = (statement: Statement) => (current: boolean, atRest: boolean) => (
     <CellCurrent value={current}>
       <CellAtRest value={atRest}>
-        <Gallery />
+        <Gallery statement={statement} />
       </CellAtRest>
     </CellCurrent>
   );
+  let held: ReturnType<typeof holding>;
   const pass = (ms: number) => act(() => void vi.advanceTimersByTime(ms));
   const BLACK = INKS.black;
   const WHITE = INKS.white;
@@ -343,6 +351,7 @@ describe("Gallery, and the statement being said", () => {
 
   beforeEach(() => {
     vi.useFakeTimers();
+    held = holding(newStatement());
   });
 
   afterEach(() => {
@@ -350,7 +359,7 @@ describe("Gallery, and the statement being said", () => {
   });
 
   it("is black, as the rest of the cell is, until the dial has come to rest on it", () => {
-    const outside = render(<Gallery />);
+    const outside = render(<Gallery statement={newStatement()} />);
     pass(20_000);
     expect(fills(outside.container)).toEqual([BLACK, BLACK]);
     outside.unmount();
@@ -513,14 +522,82 @@ describe("Gallery, and the statement being said", () => {
     expect((fills(container)[0] as [number, string][])[1]).toEqual([MEET, WHITE]);
   });
 
-  it("stops when the cell is taken off the dial", () => {
-    for (const leaveAfter of [100, LEAD_MS + 300, LEAD_MS + SAID_MS + 300]) {
-      const { unmount } = render(held(true, true));
-      pass(leaveAfter);
-      expect(vi.getTimerCount()).toBeGreaterThan(0);
+  it("finishes what it was saying when the cell is taken off the dial, and is that colour when the cell is put back", () => {
+    const statement = newStatement();
+    const cell = holding(statement);
+    const first = render(cell(true, true));
+    pass(LEAD_MS + 420);
+    expect(fills(first.container)[1]).toBe(BLACK);
+    // Off the dial in the middle of the white crossing, as when the reader goes far from it.
+    first.unmount();
+    expect(statement.look().ink).toBe("black");
+    pass(SAID_MS);
+    expect(statement.look()).toEqual({ ink: "white", crossed: [0, 0, 0] });
+    // Finished, and nothing is left running.
+    expect(vi.getTimerCount()).toBe(0);
+    pass(60_000);
+
+    // Put back, near the focus but not on it: white, as it was left. Then black, once the dial rests on it.
+    const again = render(cell(false, false));
+    expect(fills(again.container)).toEqual([WHITE, WHITE]);
+    again.rerender(cell(true, true));
+    pass(LEAD_MS + 150);
+    const [these] = fills(again.container) as [[number, string][]];
+    expect(these.map(([, colour]) => colour)).toEqual([BLACK, BLACK, WHITE, WHITE]);
+  });
+
+  it("says no more once it is off the dial, even if it was the focused cell when it was taken off", () => {
+    // Waiting to begin, and resting between two crossings: in both the next crossing is called off.
+    for (const [after, ink] of [
+      [LEAD_MS - 50, "black"],
+      [LEAD_MS + SAID_MS + 300, "white"],
+    ] as const) {
+      const statement = newStatement();
+      const { unmount } = render(holding(statement)(true, true));
+      pass(after);
+      expect(vi.getTimerCount()).toBe(1);
       unmount();
       expect(vi.getTimerCount()).toBe(0);
+      pass(20_000);
+      expect(statement.look()).toEqual({ ink, crossed: [0, 0, 0] });
     }
+  });
+
+  it("heeds the reader's motion preference in the statement the page's own cells are built with", () => {
+    setReducedMotion(true);
+    const gallery = buildCells([], "").find((cell) => cell.id === "gallery");
+    const { container } = render(
+      <CellCurrent value>
+        <CellAtRest value>{gallery?.content}</CellAtRest>
+      </CellCurrent>,
+    );
+    const edges = new Set<number>();
+    for (let t = 0; t < LEAD_MS + SAID_MS; t += 10) {
+      pass(10);
+      for (const fill of fills(container)) if (Array.isArray(fill)) edges.add((fill[1] as [number, string])[0]);
+    }
+    // White crossed the whole statement, and the only edge there ever was sat between THESE and ARE.
+    expect(fills(container)).toEqual([WHITE, WHITE]);
+    expect([...edges]).toEqual([MEET]);
+  });
+
+  it("shows two cells one statement the same, and each set of cells has a statement of its own", () => {
+    const cells = buildCells([], "");
+    const gallery = cells.find((cell) => cell.id === "gallery");
+    const shown = render(
+      <CellCurrent value>
+        <CellAtRest value>{gallery?.content}</CellAtRest>
+      </CellCurrent>,
+    );
+    pass(LEAD_MS + SAID_MS + 20);
+    expect(fills(shown.container)).toEqual([WHITE, WHITE]);
+    shown.unmount();
+    // The same cells, shown again: the statement is the one they were built with.
+    const again = render(<>{gallery?.content}</>);
+    expect(fills(again.container)).toEqual([WHITE, WHITE]);
+    // Other cells have never said theirs.
+    const others = render(<>{buildCells([], "").find((cell) => cell.id === "gallery")?.content}</>);
+    expect(fills(others.container)).toEqual([BLACK, BLACK]);
   });
 
   it("keeps large type's contrast against the cell's red in white as it does in black", () => {
@@ -538,6 +615,81 @@ describe("Gallery, and the statement being said", () => {
     expect(screen.getByRole("heading", { level: 2, name: "THESE ARE FAKE" })).toBeInTheDocument();
     expect(container.querySelector(".gallery__heading")).toHaveAttribute("aria-hidden", "true");
     expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe("the statement, on a dial that mounts only the cells near the focus", () => {
+  const pass = (ms: number) => act(() => void vi.advanceTimersByTime(ms));
+  /** A frame at a time, so the page is drawn between frames as a browser draws it. */
+  const frames = (ms: number) => {
+    for (let t = 0; t < ms; t += 16) pass(16);
+  };
+  const key = (name: string) => fireEvent.keyDown(document.body, { key: name });
+  const gallery = () => document.querySelector(".gallery");
+  const said = () => fills(gallery() as Element);
+  const announced = () => screen.getByTestId("dial-announce").textContent;
+  /** Frames go by until the statement looks like this, or far too long has passed. */
+  const until = (looks: (now: ReturnType<typeof said>) => boolean) => {
+    for (let t = 0; t < 6000 && !looks(said()); t += 16) pass(16);
+    return said();
+  };
+  const [WHITE, BLACK] = [INKS.white, INKS.black];
+  const whole = (now: ReturnType<typeof said>) => now.every((fill) => typeof fill === "string");
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    // jsdom lays nothing out; the dial draws only on a stage with a size.
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(1440);
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(900);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it.each([
+    ["travelling there", false],
+    ["jumping there, with motion reduced", true],
+  ])("finishes and keeps its colour while the reader is at the far end of the dial, %s", (_, reduced) => {
+    setReducedMotion(reduced);
+    render(<Dial cells={buildCells(studies, "")} />);
+    key("ArrowDown");
+    frames(1000);
+    key("ArrowDown");
+    frames(1000);
+    // Ahead and in reach, never yet the focused cell: black.
+    expect(said()).toEqual([BLACK, BLACK]);
+    key("ArrowDown");
+    // On the cell, and white is part of the way across it.
+    expect(until((now) => !whole(now))).not.toEqual([BLACK, BLACK]);
+    expect(announced()).toMatch(/^Case Studies, 4 of/);
+    frames(100);
+    expect(whole(said())).toBe(false);
+
+    // To the last cell. The gallery's is far behind and is taken off the dial with the crossing unfinished.
+    key("End");
+    frames(4000);
+    expect(announced()).toMatch(/^The mailing list/);
+    expect(gallery()).toBeNull();
+    pass(20_000);
+
+    // Back to the first cell. The gallery's is ahead and mounted again: white, as the crossing left it.
+    key("Home");
+    frames(4000);
+    expect(announced()).toMatch(/^Golden Grids, 1 of/);
+    expect(said()).toEqual([WHITE, WHITE]);
+    pass(20_000);
+    expect(said()).toEqual([WHITE, WHITE]);
+
+    // And when the dial rests on it again, black crosses it.
+    key("ArrowDown");
+    frames(1000);
+    key("ArrowDown");
+    frames(1000);
+    expect(said()).toEqual([WHITE, WHITE]);
+    key("ArrowDown");
+    expect(until((now) => !whole(now)).flat().at(0)).toEqual([0, BLACK]);
+    expect(until((now) => now.every((fill) => fill === BLACK))).toEqual([BLACK, BLACK]);
   });
 });
 
