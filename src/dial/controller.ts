@@ -1,13 +1,14 @@
 /**
  * The dial's depth over time, with no knowledge of the page.
  *
- * Depth is a number from 0 to the last cell. Continuous input (a finger, a
- * wheel) moves it directly; when the input ends the dial settles on a whole
- * cell. Discrete input (a key, a button) names the cell and the dial travels
- * there.
+ * Depth is a number from 0 to the last cell. A finger moves it directly, and
+ * when it lifts the dial settles on a whole cell. A key or a button names the
+ * cell and the dial travels there. A wheel turns it one cell at a time: a
+ * scroll is a tick, as a swipe is, and never carries the dial across several
+ * cells or leaves it between two.
  *
- * Under reduced motion there is no travel at all: continuous input is only
- * counted, and when it ends the dial jumps one whole step in one frame.
+ * Under reduced motion there is no travel at all: a drag is only counted,
+ * and when it ends the dial jumps one whole step in one frame.
  */
 
 /** How far past a cell, in steps, input must carry the dial for it to go on to the next. */
@@ -16,6 +17,12 @@ export const COMMIT = 0.15;
 export const SETTLE_MS = 110;
 /** A wheel has ended when it has been quiet this long. */
 export const WHEEL_IDLE_MS = 140;
+/** Wheel travel, in steps, that turns the dial one tick: about one notch of a mouse wheel. */
+export const WHEEL_TICK = 0.1;
+/** After a tick the wheel turns nothing for this long, while the dial travels. */
+export const WHEEL_HOLD_MS = 400;
+/** A wheel event smaller than this, in steps, is the tail of a flick and never a new push. */
+export const WHEEL_PUSH = 0.01;
 /** Close enough to the target to stop. */
 const ARRIVED = 0.001;
 
@@ -44,7 +51,7 @@ export type DialController = {
   nudge: (steps: number) => void;
   /** Continuous input has ended: settle on a cell. */
   release: () => void;
-  /** A wheel event's worth of input. The wheel has no end of its own, so quiet ends it. */
+  /** A wheel event's worth of travel. Enough of it turns the dial one tick. */
   wheel: (steps: number) => void;
   /** Go a whole number of cells deeper, or back if negative. */
   step: (by: number) => void;
@@ -70,6 +77,13 @@ export function createDial({ count, reduced, onDepth, onFocus, clock }: DialOpti
   let frame = 0;
   let stamp = 0;
   let timer = 0;
+  /** Wheel travel gathered toward the next tick. */
+  let gathered = 0;
+  /** Whether the wheel has just ticked and is being ignored. */
+  let held = false;
+  let heldAt = 0;
+  /** The size of the wheel event before this one. */
+  let lastSize = 0;
 
   const emit = () => {
     onDepth(depth);
@@ -146,46 +160,56 @@ export function createDial({ count, reduced, onDepth, onFocus, clock }: DialOpti
     travel(Math.abs(depth - passed) < COMMIT ? passed : ahead);
   };
 
+  /** The wheel has gone quiet: the gesture is over and the next one starts clean. */
   const quiet = () => {
     timer = 0;
-    release();
+    gathered = 0;
+    held = false;
+    lastSize = 0;
   };
 
   /**
-   * A wheel gesture is over the moment anything else moves the dial. Left
-   * pending, its quiet timer would settle a journey it knows nothing about.
+   * One tick per push of the wheel. Travel is gathered until there is a
+   * tick's worth, the dial turns one cell, and then the wheel is ignored: for
+   * a short hold while the dial travels, and after that for as long as each
+   * event is smaller than the last, which is a trackpad's flick dying away
+   * and not the reader scrolling. An event as large as the one before it, or
+   * larger, is a new push, so a wheel that is kept turning ticks again.
    */
-  const forgetWheel = () => {
+  const wheel = (steps: number) => {
+    if (steps === 0) return;
     if (timer) clock.clearTimer(timer);
-    timer = 0;
+    timer = clock.setTimer(quiet, WHEEL_IDLE_MS);
+    const size = Math.abs(steps);
+    const push = size >= WHEEL_PUSH && size >= lastSize;
+    lastSize = size;
+    if (held) {
+      if (clock.now() - heldAt < WHEEL_HOLD_MS || !push) return;
+      held = false;
+    }
+    // Travel the other way starts again from nothing.
+    if (Math.sign(steps) !== Math.sign(gathered)) gathered = 0;
+    gathered += steps;
+    if (Math.abs(gathered) < WHEEL_TICK) return;
+    gathered = 0;
+    held = true;
+    heldAt = clock.now();
+    travel(Math.round(target) + Math.sign(steps));
   };
 
   return {
-    nudge(steps) {
-      forgetWheel();
-      nudge(steps);
-    },
-    release() {
-      forgetWheel();
-      release();
-    },
-    wheel(steps) {
-      forgetWheel();
-      nudge(steps);
-      timer = clock.setTimer(quiet, WHEEL_IDLE_MS);
-    },
+    nudge,
+    release,
+    wheel,
     step(by) {
-      forgetWheel();
       travel(Math.round(target) + by);
     },
-    goTo(index) {
-      forgetWheel();
-      travel(index);
-    },
+    goTo: travel,
     depth: () => depth,
     destroy() {
       stop();
-      forgetWheel();
+      if (timer) clock.clearTimer(timer);
+      timer = 0;
     },
   };
 }
