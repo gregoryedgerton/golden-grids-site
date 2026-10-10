@@ -25,7 +25,7 @@ Add one file to `src/studies/`, named for its number and subject:
 }
 ```
 
-Nothing else changes: the gallery and its count come from the folder, and it runs from the latest study to the oldest.
+Nothing else changes: the gallery comes from the folder and runs from the latest study to the oldest.
 
 - `brand` is the parody name, written exactly. It is never case-transformed.
 - `colors.ink` sets the name and `colors.accent` the icon and the rule; each needs 3:1 contrast with `ground`. Small text takes whichever of them reads at 4.5:1, or white or black.
