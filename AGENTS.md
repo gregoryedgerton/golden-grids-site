@@ -37,6 +37,11 @@ whose brand is case-transformed in CSS: the parody names are written exactly
 study's colours and a face from an open licence. No logos, wordmarks or
 photography from the reference.
 
+**Platform marks are the one exception to "no logos".** The cell on platforms
+shows the React, Apple and Android marks in one colour to name where the
+library runs, by the owner's decision. Flag any other third-party logo, and
+any change that recolours, alters or restyles these three.
+
 **Email addresses are not handled here.** The form posts straight to the
 mailing-list provider. Flag any code that stores, logs or sends an address
 anywhere else.
