@@ -6,8 +6,10 @@
 export const PARAMETERS = [
   {
     term: "from · to",
-    values: ["1", "5"],
-    says: "The range of the Fibonacci sequence to lay out. From 1 to 5 is five squares, with sides 1, 1, 2, 3 and 5.",
+    // The library's ceiling: 91 squares natively, 78 on the web, where the
+    // 79th term is past the integers JavaScript holds exactly.
+    values: ["1", "91"],
+    says: "The range to lay out: any two positions on the Fibonacci sequence, from 1 to 91 (78 on the web). 1 to 5, say, is five squares.",
   },
   {
     term: "skip",

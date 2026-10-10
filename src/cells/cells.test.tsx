@@ -73,10 +73,19 @@ describe("Parameters", () => {
   it("covers the range, skipping, where the spiral starts and which way it turns", () => {
     render(<Parameters />);
     const says = (term: string) => PARAMETERS.find((p) => p.term === term)?.says;
-    expect(says("from · to")).toMatch(/range of the Fibonacci sequence/);
+    expect(says("from · to")).toMatch(/positions on the Fibonacci sequence/);
     expect(says("skip")).toMatch(/squares before it are skipped.*not a plain run/);
     expect(within(screen.getByRole("list", { name: "Values for placement" })).getAllByRole("listitem")).toHaveLength(4);
     expect(says("clockwise")).toMatch(/clockwise, or counter-clockwise/);
+  });
+
+  it("gives the whole range, 1 to 91, with the web's lower ceiling, and 1 to 5 only as an example", () => {
+    render(<Parameters />);
+    const range = within(screen.getByRole("list", { name: "Values for from · to" })).getAllByRole("listitem");
+    expect(range.map((li) => li.textContent)).toEqual(["1", "91"]);
+    const says = PARAMETERS[0].says;
+    expect(says).toMatch(/from 1 to 91 \(78 on the web\)/);
+    expect(says).toMatch(/1 to 5, say, is five squares/);
   });
 
   it("is not a grid", () => {
