@@ -337,10 +337,6 @@ a {
   font-size: 2.6cqw;
 }
 
-.parameters__byline b {
-  font-weight: 600;
-}
-
 .parameters__note {
   display: block;
   margin-top: 1cqw;
@@ -374,12 +370,11 @@ a {
   color: var(--ground);
 }
 
-/* Four parts: the kicker, the heading, the disclaimer and the call to act.
-   The first sits on the cell's top padding and the last on its bottom padding,
-   the same distance in as the sides, and the room left is split evenly
-   between them. */
+/* Three parts: the kicker, the heading and the disclaimer, held close
+   together and centred in the cell's height. */
 .gallery {
-  justify-content: space-between;
+  justify-content: center;
+  gap: 4.5cqw;
 }
 
 .gallery__kicker {
@@ -397,23 +392,10 @@ a {
   letter-spacing: -0.02em;
 }
 
-/* The heading ends hard on its baseline; the lines either side of the other
-   gaps carry a little air of their own. This evens the three by eye. */
 .gallery__body {
-  margin-top: 1cqw;
   font-size: 3cqw;
   font-weight: 400;
   line-height: 1.25;
-}
-
-.gallery .gallery__make a {
-  display: inline-block;
-  padding: 2cqw 3.4cqw 1.5cqw;
-  background: var(--ground);
-  color: var(--paper);
-  font-size: 4cqw;
-  font-weight: 600;
-  text-decoration: none;
 }
 
 /* A study's lockup, in the study's own colours and face. */
