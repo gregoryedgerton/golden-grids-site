@@ -118,23 +118,18 @@ export function FitText({
 
   useLayoutEffect(measure, [measure]);
 
-  // A face that arrives late changes every width. A layout effect, so that
-  // it stops listening in the same step that takes the lines off the page:
-  // an ordinary effect is cleaned up later, and a face arriving in between
-  // would measure lines that are no longer there.
+  // A face that arrives late changes every width, and so does anything else
+  // that restyles the letters. The lines themselves are watched: a resize
+  // observer reports an SVG text's own box, after layout, whenever it changes.
+  // The browser's font events are not used. WebKit does not send the one that
+  // says a face has finished loading, so a name measured in its fallback kept
+  // that width and ran out of its cell when the real face was drawn.
   useLayoutEffect(() => {
-    const fonts = document.fonts as FontFaceSet | undefined;
-    if (!fonts) return;
-    let live = true;
-    const again = () => {
-      if (live) measure();
-    };
-    fonts.addEventListener("loadingdone", again);
-    void fonts.ready.then(again);
-    return () => {
-      live = false;
-      fonts.removeEventListener("loadingdone", again);
-    };
+    const observer = new ResizeObserver(measure);
+    for (const element of refs.current.slice(0, lines.length)) observer.observe(element as SVGTextElement);
+    return () => observer.disconnect();
+    // `measure` changes with the words, and with them the lines to watch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [measure]);
 
   const stacked = stack(lines, fitted?.boxes, leading, indent, uniform);

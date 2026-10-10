@@ -14,25 +14,11 @@ function measureAs(per: number, height = 100, x = 0, y = -80) {
   });
 }
 
-/** A stand-in for `document.fonts`. */
-function fakeFonts() {
-  const listeners = new Set<() => void>();
-  let ready!: () => void;
-  const fonts = {
-    ready: new Promise<void>((resolve) => {
-      ready = resolve;
-    }),
-    addEventListener: (_: string, listener: () => void) => listeners.add(listener),
-    removeEventListener: (_: string, listener: () => void) => listeners.delete(listener),
-  };
-  Object.defineProperty(document, "fonts", { value: fonts, configurable: true });
-  return {
-    listeners,
-    ready,
-    loaded: () => listeners.forEach((listener) => listener()),
-    remove: () => delete (document as { fonts?: unknown }).fonts,
-  };
-}
+type Observer = { callback: () => void; observed: Element[]; disconnected: boolean };
+/** The resize observers made so far, which a test fires by hand. */
+const observers = () => (ResizeObserver as unknown as { instances: Observer[] }).instances;
+/** Tell every live observer that what it watches has changed size, as a browser does after layout. */
+const resized = () => act(() => observers().filter((o) => !o.disconnected).forEach((o) => o.callback()));
 
 describe("FitText", () => {
   it("is a drawing, hidden from assistive technology, with the caller's class beside its own", () => {
@@ -264,40 +250,39 @@ describe("FitText", () => {
     expect(groups(container)).toEqual(["translate(0 800) scale(10)"]);
   });
 
-  it("measures again when a face arrives, and stops listening when removed", async () => {
-    const fonts = fakeFonts();
-    try {
-      const { container, unmount } = render(<FitText lines={["ab"]} />);
-      expect(fonts.listeners.size).toBe(1);
-      const measure = measureAs(25);
-      act(() => fonts.loaded());
-      expect(groups(container)).toEqual(["translate(0 1600) scale(20)"]);
-      // The faces already loaded when the page opened.
-      measureAs(100);
-      await act(async () => fonts.ready());
-      expect(groups(container)).toEqual(["translate(0 400) scale(5)"]);
-      // A face that changes nothing draws nothing new.
-      const before = container.querySelector("g");
-      act(() => fonts.loaded());
-      expect(container.querySelector("g")).toBe(before);
-      unmount();
-      expect(fonts.listeners.size).toBe(0);
-      expect(measure).toHaveBeenCalled();
-    } finally {
-      fonts.remove();
-    }
+  it("watches each line itself, and measures again when a face arrives and changes its width", () => {
+    const { container } = render(<FitText lines={["ab", "cd"]} />);
+    const watched = observers().flatMap((o) => o.observed);
+    expect(watched).toEqual([...container.querySelectorAll("text.fit__face")]);
+    // The face arrives: every glyph is now half as wide.
+    const measure = measureAs(25);
+    resized();
+    expect(groups(container)[0]).toBe("translate(0 1600) scale(20)");
+    expect(measure).toHaveBeenCalled();
+    // A report that changes nothing draws nothing new.
+    const before = container.querySelector("g.fit__line");
+    resized();
+    expect(container.querySelector("g.fit__line")).toBe(before);
   });
 
-  it("does not measure for a face that arrives after it has been removed", async () => {
-    const fonts = fakeFonts();
-    try {
-      const { unmount } = render(<FitText lines={["ab"]} />);
-      unmount();
-      const measure = measureAs(25);
-      await act(async () => fonts.ready());
-      expect(measure).not.toHaveBeenCalled();
-    } finally {
-      fonts.remove();
-    }
+  it("measures a wider face too, so a name never keeps the width of its fallback", () => {
+    const { container } = render(<FitText lines={["abcd"]} />);
+    expect(groups(container)).toEqual(["translate(0 400) scale(5)"]);
+    measureAs(100);
+    resized();
+    // Twice as wide, so half the scale: still exactly the full width.
+    expect(groups(container)).toEqual(["translate(0 200) scale(2.5)"]);
+  });
+
+  it("stops watching when it is removed, and watches the new lines when the words change", () => {
+    const { rerender, unmount, container } = render(<FitText lines={["ab"]} />);
+    const [first] = observers();
+    rerender(<FitText lines={["ab", "cd"]} />);
+    expect(first?.disconnected).toBe(true);
+    const live = observers().filter((o) => !o.disconnected);
+    expect(live).toHaveLength(1);
+    expect(live[0]?.observed).toEqual([...container.querySelectorAll("text.fit__face")]);
+    unmount();
+    expect(observers().every((o) => o.disconnected)).toBe(true);
   });
 });
