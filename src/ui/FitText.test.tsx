@@ -170,37 +170,58 @@ describe("FitText", () => {
     expect(plain.querySelector(".fit__line > text")).not.toHaveAttribute("fill");
   });
 
-  it("marks the start of the first line, and of every copy of it, when asked", () => {
-    const { container } = render(<FitText lines={["4abc", "def"]} strong={1} extrude={1} />);
+  it("sets the first letters of the first line in colours of their own, on the letters and not the copies behind", () => {
+    const tints = ["#d62021", "#222222", "#237bbd"];
+    const { container } = render(<FitText lines={["GIFx", "def"]} tints={tints} extrude={1} />);
     const [first, second] = [...container.querySelectorAll(".fit__line")] as [Element, Element];
-    for (const text of first.querySelectorAll("text")) {
-      expect(text.querySelector("tspan.fit__strong")).toHaveTextContent("4");
-      expect(text).toHaveTextContent("4abc");
-    }
-    expect(first.querySelectorAll("text")).toHaveLength(2);
+    const face = first.querySelector("text.fit__face") as SVGTextElement;
+    // One letter to a colour, in order, and the rest of the line as it was.
+    expect([...face.querySelectorAll("tspan")].map((t) => [t.textContent, t.getAttribute("fill")])).toEqual([
+      ["G", "#d62021"],
+      ["I", "#222222"],
+      ["F", "#237bbd"],
+    ]);
+    expect(face).toHaveTextContent("GIFx");
+    expect(face.lastChild?.textContent).toBe("x");
+    // The copy behind is one colour, and so is every other line.
+    expect(first.querySelector("text.fit__shadow")).toHaveTextContent("GIFx");
+    expect(first.querySelector("text.fit__shadow tspan")).toBeNull();
     expect(second.querySelector("tspan")).toBeNull();
     // The whole line is still what is measured: four glyphs, 200 wide.
     expect(groups(container)[0]).toBe("translate(0 400) scale(5)");
-    // In a receding depth too.
-    const deep = render(<FitText lines={["4abc"]} strong={2} extrude={1} vanish={{ x: 0, y: 2 }} />);
-    expect(deep.container.querySelector(".fit__layer tspan.fit__strong")).toHaveTextContent("4a");
+    // In a receding depth too, the copies are one colour.
+    const deep = render(<FitText lines={["GIFx"]} tints={tints} extrude={2} vanish={{ x: 0, y: 2 }} />);
+    expect(deep.container.querySelector(".fit__layer tspan")).toBeNull();
+    expect(deep.container.querySelectorAll(".fit__face tspan")).toHaveLength(3);
   });
 
-  it("measures again when the marked part changes, since it may be set heavier and wider", () => {
-    // A marked glyph measures twice as wide as a plain one.
+  it("colours no more letters than the line has", () => {
+    const { container } = render(<FitText lines={["GI"]} tints={["#d62021", "#222222", "#237bbd"]} />);
+    const face = container.querySelector("text.fit__face") as SVGTextElement;
+    expect([...face.querySelectorAll("tspan")].map((t) => t.textContent)).toEqual(["G", "I"]);
+    expect(face.textContent).toBe("GI");
+  });
+
+  it("measures again when the number of letters set apart changes, since they may sit differently", () => {
+    // A letter set apart measures twice as wide as one that is not.
     vi.spyOn(SVGElement.prototype as unknown as { getBBox: () => DOMRect }, "getBBox").mockImplementation(function (
       this: SVGElement,
     ) {
-      const marked = (this.querySelector("tspan")?.textContent as string | undefined)?.length ?? 0;
-      return { x: 0, y: -80, width: ((this.textContent as string).length + marked) * 50, height: 100 } as DOMRect;
+      const apart = this.querySelectorAll("tspan").length;
+      return { x: 0, y: -80, width: ((this.textContent as string).length + apart) * 50, height: 100 } as DOMRect;
     });
-    const { container, rerender } = render(<FitText lines={["4abc"]} />);
+    const { container, rerender } = render(<FitText lines={["GIFx"]} />);
     expect(groups(container)).toEqual(["translate(0 400) scale(5)"]);
-    rerender(<FitText lines={["4abc"]} strong={1} />);
+    rerender(<FitText lines={["GIFx"]} tints={["#d62021"]} />);
     expect(groups(container)).toEqual(["translate(0 320) scale(4)"]);
-    rerender(<FitText lines={["4abc"]} strong={2} />);
+    rerender(<FitText lines={["GIFx"]} tints={["#d62021", "#222222"]} />);
     expect(groups(container)[0]).toBe(`translate(0 ${80 * (1000 / 300)}) scale(${1000 / 300})`);
-    rerender(<FitText lines={["4abc"]} />);
+    // Other colours for the same letters move nothing.
+    const before = container.querySelector("g.fit__line");
+    rerender(<FitText lines={["GIFx"]} tints={["#000000", "#ffffff"]} />);
+    expect(container.querySelector("g.fit__line")).toBe(before);
+    expect(groups(container)[0]).toBe(`translate(0 ${80 * (1000 / 300)}) scale(${1000 / 300})`);
+    rerender(<FitText lines={["GIFx"]} />);
     expect(groups(container)).toEqual(["translate(0 400) scale(5)"]);
   });
 
@@ -212,7 +233,7 @@ describe("FitText", () => {
     expect(faces[0]?.previousElementSibling).toHaveClass("fit__shadow");
   });
 
-  it("marks nothing unless asked", () => {
+  it("sets no letter apart unless asked", () => {
     const { container } = render(<FitText lines={["4abc"]} />);
     expect(container.querySelector("tspan")).toBeNull();
   });

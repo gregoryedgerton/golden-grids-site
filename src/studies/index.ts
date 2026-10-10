@@ -31,6 +31,12 @@ export type Study = {
     accent: string;
     /** Small text: whichever colour reads at body size on the ground. Derived. */
     text: string;
+    /**
+     * Colours of their own for the name's first letters, one each and in
+     * order, when the name opens in the colours of a mark. The rest of the
+     * name is in the ink. Left out by most studies.
+     */
+    letters?: string[];
   };
   font: Face;
   /**
@@ -103,7 +109,7 @@ export function parseStudy(raw: unknown, file: string): Study {
   if (typeof url !== "string" || !url.startsWith("https://")) fail(file, "url must be an https address");
 
   if (typeof colors !== "object" || colors === null) fail(file, "colors is missing");
-  const { ground, ink, accent } = colors as Record<string, unknown>;
+  const { ground, ink, accent, letters } = colors as Record<string, unknown>;
   for (const [name, value] of [["ground", ground], ["ink", ink], ["accent", accent]] as const) {
     if (typeof value !== "string" || !HEX.test(value)) fail(file, `colors.${name} must be a six-digit hex colour`);
   }
@@ -112,6 +118,20 @@ export function parseStudy(raw: unknown, file: string): Study {
     if (contrast(palette[name], palette.ground) < LARGE) {
       fail(file, `colors.${name} has less than ${LARGE}:1 contrast with the ground`);
     }
+  }
+
+  if (letters !== undefined) {
+    // They are set on the name's first line, which is its first word.
+    const most = [...(brand.split(" ")[0] as string)].length;
+    if (!Array.isArray(letters) || letters.length === 0 || letters.length > most) {
+      fail(file, `colors.letters must be a list of one to ${most} colours, one for each of the name's first letters`);
+    }
+    letters.forEach((value: unknown, i: number) => {
+      if (typeof value !== "string" || !HEX.test(value)) fail(file, `colors.letters[${i}] must be a six-digit hex colour`);
+      if (contrast(value, palette.ground) < LARGE) {
+        fail(file, `colors.letters[${i}] has less than ${LARGE}:1 contrast with the ground`);
+      }
+    });
   }
 
   if (typeof font !== "object" || font === null) fail(file, "font is missing");
@@ -141,7 +161,11 @@ export function parseStudy(raw: unknown, file: string): Study {
     reference: reference as string,
     subject: subject as string,
     url,
-    colors: { ...palette, text: readable(palette.ground, [palette.ink, palette.accent]) },
+    colors: {
+      ...palette,
+      text: readable(palette.ground, [palette.ink, palette.accent]),
+      ...(letters === undefined ? {} : { letters: letters as string[] }),
+    },
     font: { family, weight: weight as number, italic },
     icon: drawn,
   };

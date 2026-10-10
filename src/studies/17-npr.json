@@ -8,7 +8,8 @@
   "colors": {
     "ground": "#ffffff",
     "ink": "#222222",
-    "accent": "#237bbd"
+    "accent": "#237bbd",
+    "letters": ["#d62021", "#222222", "#237bbd"]
   },
   "font": {
     "family": "Inter",

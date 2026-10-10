@@ -358,6 +358,23 @@ describe("StudyCell", () => {
     expect(document.head.querySelector("link[data-face]")).toHaveAttribute("href", fontHref(espn.font, "GIFspn"));
   });
 
+  it("sets a name's first letters in colours of their own when the study gives them, and all in its ink when it does not", () => {
+    const org = { ...espn, brand: "GIF.org", colors: { ...espn.colors, letters: ["#d62021", "#222222", "#237bbd"] } };
+    const { container, unmount } = render(<StudyCell study={org} />);
+    const face = container.querySelector(".study__name .fit__face") as SVGTextElement;
+    expect([...face.querySelectorAll("tspan")].map((t) => [t.textContent, t.getAttribute("fill")])).toEqual([
+      ["G", "#d62021"],
+      ["I", "#222222"],
+      ["F", "#237bbd"],
+    ]);
+    expect(face).toHaveTextContent("GIF.org");
+    // The name itself is unchanged for a reader who cannot see it.
+    expect(screen.getByRole("heading", { level: 2, name: "GIF.org" })).toBeInTheDocument();
+    unmount();
+    const plain = render(<StudyCell study={espn} />);
+    expect(plain.container.querySelector(".study__name tspan")).toBeNull();
+  });
+
   it("sets an upright face upright, a long name a word to a line, and any day as it is written", () => {
     const records = { ...espn, published: "2027-01-31", brand: "GIFmilk Records", font: { ...espn.font, italic: false } };
     const { container } = render(<StudyCell study={records} />);

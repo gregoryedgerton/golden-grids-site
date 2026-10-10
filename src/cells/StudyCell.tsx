@@ -28,7 +28,7 @@ export function StudyCell({ study }: { study: Study }) {
       <Icon name={study.icon} className="study__icon" />
       {/* The name is written exactly; nothing here changes its case. */}
       <h2 className="visually-hidden">{brand}</h2>
-      <FitText className="study__name" lines={brand.split(" ")} leading={0.9} />
+      <FitText className="study__name" lines={brand.split(" ")} leading={0.9} tints={colors.letters} />
       <div className="study__foot">
         <p className="study__subject">
           {subject}
