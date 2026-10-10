@@ -20,7 +20,7 @@ export function buildCells(studies: Study[], subscribe: string): Cell[] {
     ...studies.map(
       (study): Cell => ({
         id: `study-${study.number}`,
-        label: `Study ${study.number}: ${study.brand}`,
+        label: study.brand,
         ground: study.colors.ground,
         content: <StudyCell study={study} />,
       }),

@@ -19,6 +19,7 @@ import { LENS, PLATFORMS, Vision } from "./Vision";
 const espn = parseStudy(
   {
     number: 6,
+    published: "2026-10-06",
     brand: "GIFspn",
     reference: "ESPN",
     subject: "A sports front page",
@@ -316,10 +317,16 @@ describe("Gallery", () => {
 });
 
 describe("StudyCell", () => {
-  it("sets the parody name exactly, with its number, its subject and a way to it", async () => {
+  it("sets the parody name exactly, with the day it was published, its subject and a way to it", async () => {
     const { container } = render(<StudyCell study={espn} />);
     expect(screen.getByRole("heading", { level: 2, name: "GIFspn" })).toBeInTheDocument();
-    expect(screen.getByText("Study 06")).toBeInTheDocument();
+    // The date is the first thing in the cell, top left, where the number used to be.
+    const date = container.querySelector(".study")?.firstElementChild as HTMLElement;
+    expect(date).toHaveClass("study__date");
+    expect(date).toHaveTextContent("Published Oct 6, 2026");
+    expect(date.querySelector("time")).toHaveAttribute("datetime", "2026-10-06");
+    // The study's number is not shown anywhere.
+    expect(container).not.toHaveTextContent(/Study\s*0?6/);
     expect(container.querySelector(".study__subject")).toHaveTextContent(
       "A sports front page After ESPN; not affiliated with it.",
     );
@@ -343,12 +350,12 @@ describe("StudyCell", () => {
     expect(document.head.querySelector("link[data-face]")).toHaveAttribute("href", fontHref(espn.font, "GIFspn"));
   });
 
-  it("sets an upright face upright, a long name a word to a line, and a later number unpadded", () => {
-    const records = { ...espn, number: 105, brand: "GIFmilk Records", font: { ...espn.font, italic: false } };
+  it("sets an upright face upright, a long name a word to a line, and any day as it is written", () => {
+    const records = { ...espn, published: "2027-01-31", brand: "GIFmilk Records", font: { ...espn.font, italic: false } };
     const { container } = render(<StudyCell study={records} />);
     expect((container.querySelector(".study") as HTMLElement).style.getPropertyValue("--face-style")).toBe("normal");
     expect([...container.querySelectorAll(".study__name text")].map((t) => t.textContent)).toEqual(["GIFmilk", "Records"]);
-    expect(screen.getByText("Study 105")).toBeInTheDocument();
+    expect(screen.getByText("Jan 31, 2027")).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: "GIFmilk Records" })).toBeInTheDocument();
   });
 });
@@ -407,9 +414,10 @@ describe("buildCells", () => {
     expect(new Set(cells.map((cell) => cell.id)).size).toBe(cells.length);
   });
 
-  it("labels each study by number and name, and draws it on its own ground", () => {
+  it("labels each study by its name, and draws it on its own ground", () => {
     const study = studies[1] as (typeof studies)[number];
-    expect(cells[5]).toMatchObject({ label: `Study ${study.number}: ${study.brand}`, ground: study.colors.ground });
+    expect(cells[5]).toMatchObject({ label: study.brand, ground: study.colors.ground });
+    expect(cells[5]?.label).not.toMatch(/\d/);
     render(<>{cells[5]?.content}</>);
     expect(screen.getByRole("heading", { level: 2, name: study.brand })).toBeInTheDocument();
   });

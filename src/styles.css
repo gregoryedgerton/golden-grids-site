@@ -406,7 +406,7 @@ a {
   color: var(--text);
 }
 
-.study__number {
+.study__date {
   font-size: 3.4cqw;
   font-weight: 600;
   letter-spacing: 0.08em;

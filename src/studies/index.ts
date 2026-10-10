@@ -10,8 +10,10 @@ import type { Face } from "../ui/fonts";
  * colours that cannot be read fails the tests, not the page.
  */
 export type Study = {
-  /** The study's number in the series. Orders the gallery, latest first. */
+  /** The study's number in the series. Orders the gallery, latest first. It is not shown. */
   number: number;
+  /** The day the study was first published, as YYYY-MM-DD. Shown on its cell. */
+  published: string;
   /** The parody name, exactly as written: GIF, then the tail of the reference's name. */
   brand: string;
   /** The site the study rebuilds. */
@@ -69,6 +71,20 @@ export function readable(ground: string, candidates: string[]): string {
   return [...candidates, ...FALLBACKS].find((color) => contrast(color, ground) >= BODY) as string;
 }
 
+/** Whether a string is a real calendar day written YYYY-MM-DD. The 31st of February is not. */
+export function isDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const day = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(day.getTime()) && day.toISOString().slice(0, 10) === value;
+}
+
+const written = new Intl.DateTimeFormat("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
+
+/** A YYYY-MM-DD day as it is written on a cell: Oct 9, 2026. */
+export function writeDate(value: string): string {
+  return written.format(new Date(`${value}T00:00:00Z`));
+}
+
 function fail(file: string, problem: string): never {
   throw new Error(`Study ${file}: ${problem}`);
 }
@@ -76,9 +92,10 @@ function fail(file: string, problem: string): never {
 /** Reads one study file, or says exactly what is wrong with it. */
 export function parseStudy(raw: unknown, file: string): Study {
   if (typeof raw !== "object" || raw === null) fail(file, "is not an object");
-  const { number, brand, reference, subject, url, colors, font, icon } = raw as Record<string, unknown>;
+  const { number, published, brand, reference, subject, url, colors, font, icon } = raw as Record<string, unknown>;
 
   if (!Number.isInteger(number) || (number as number) < 1) fail(file, "number must be a whole number from 1");
+  if (typeof published !== "string" || !isDate(published)) fail(file, "published must be a real date, as YYYY-MM-DD");
   if (typeof brand !== "string" || !/^GIF\S/.test(brand)) fail(file, 'brand must be a parody name starting "GIF"');
   for (const [name, value] of [["reference", reference], ["subject", subject]] as const) {
     if (typeof value !== "string" || !value.trim()) fail(file, `${name} is missing`);
@@ -119,6 +136,7 @@ export function parseStudy(raw: unknown, file: string): Study {
 
   return {
     number: number as number,
+    published,
     brand,
     reference: reference as string,
     subject: subject as string,
