@@ -4,20 +4,19 @@
   cell draws its name: Pacifico set tight, lemon to gold from top to bottom,
   with depth that shrinks toward a point below and to the left. `make.mjs`
   opens this page and photographs it. `?art=icon` draws GG on a square;
-  `?art=share` draws the first cell's composition at 1200 by 630.
+  `?art=share` draws the name alone, centred, at 1200 by 630.
 -->
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@300&family=Pacifico&display=block" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pacifico&display=block" />
     <style>
       html, body { margin: 0; background: #14100c; }
       #stage { position: relative; overflow: hidden; background: #14100c; }
       svg { position: absolute; overflow: visible; }
       text { font-family: "Pacifico"; letter-spacing: -0.035em; }
-      .presents { position: absolute; margin: 0; color: #f7f2e8; font: 300 58px/1 "Oswald"; letter-spacing: 0.01em; }
       /* A soft light behind the name, where the video's picture would be. */
-      .glow { position: absolute; inset: 0; background: radial-gradient(60% 70% at 62% 45%, #3a2a16 0%, #14100c 70%); }
+      .glow { position: absolute; inset: 0; background: radial-gradient(60% 75% at 50% 48%, #3a2a16 0%, #14100c 72%); }
     </style>
   </head>
   <body>
@@ -62,7 +61,7 @@
 
       const art = new URLSearchParams(location.search).get("art");
       const stage = document.getElementById("stage");
-      document.fonts.load('100px "Pacifico"').then(() => document.fonts.load('300 58px "Oswald"')).then(() => {
+      document.fonts.load('100px "Pacifico"').then(() => {
         /** Size a lockup to fit a box of the stage and centre it there, nudged to leave room for its depth. */
         const fit = (svg, ratio, box, nudge) => {
           const width = Math.min(box.width, box.height / ratio);
@@ -76,10 +75,12 @@
           fit(svg, ratio, { left: 56, top: 40, width: 400, height: 400 }, { x: 14, y: -34 });
         } else {
           stage.style.cssText += "width:1200px;height:630px";
-          stage.insertAdjacentHTML("beforeend", '<div class="glow"></div><p class="presents" style="left:64px;top:52px">GIFcommit presents</p>');
+          stage.insertAdjacentHTML("beforeend", '<div class="glow"></div>');
           const svg = el("svg", {}, stage);
           const ratio = lockup(svg, ["Golden", "Grids"], { indent: [0, 0.85], leading: 0.66, copies: 26, step: 0.004, vanish: { x: -0.15, y: 1.8 } });
-          fit(svg, ratio, { left: 190, top: 70, width: 860, height: 500 }, { x: 40, y: -22 });
+          // The name alone, centred. Its depth falls down and to the left, so the
+          // letters sit a little right of and above the middle to balance it.
+          fit(svg, ratio, { left: 120, top: 40, width: 960, height: 520 }, { x: 34, y: -26 });
         }
         document.body.dataset.ready = "yes";
       });
