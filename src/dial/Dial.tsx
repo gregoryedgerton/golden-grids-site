@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import type { ReactNode } from "react";
 import { createDial } from "./controller";
 import type { DialClock, DialController } from "./controller";
-import { TEXTURE_PX, mountedAround, paintTile } from "./geometry";
+import { TEXTURE_PX, mountedAround, navFits, paintTile } from "./geometry";
 import { dragSteps, keyMove, ownsDrag, ownsKey, pastSlop, swipeAxis, wheelSteps } from "./input";
 import type { Axis } from "./input";
 import { useReducedMotion } from "./motion";
@@ -49,7 +49,10 @@ function DialOf({ cells }: { cells: Cell[] }) {
   const reduced = useReducedMotion();
   const reducedRef = useRef(reduced);
   const [focus, setFocus] = useState(0);
+  const rootRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  /** Whether the buttons are in a bar of their own, below the stage, instead of over its corner. */
+  const [barred, setBarred] = useState(false);
   const tilesRef = useRef(new Map<number, HTMLElement>());
   const dialRef = useRef<DialController | null>(null);
   const dial = useCallback(() => dialRef.current as DialController, []);
@@ -99,8 +102,16 @@ function DialOf({ cells }: { cells: Cell[] }) {
   useLayoutEffect(paint, [paint, focus, count]);
 
   useEffect(() => {
+    const root = rootRef.current as HTMLDivElement;
     const stage = stageRef.current as HTMLDivElement;
-    const observer = new ResizeObserver(paint);
+    // Decided from the whole dial, not the stage, whose height the decision changes.
+    const fit = () => {
+      setBarred(!navFits(root.clientWidth, root.clientHeight));
+      paint();
+    };
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(root);
     observer.observe(stage);
     return () => observer.disconnect();
   }, [paint]);
@@ -188,7 +199,7 @@ function DialOf({ cells }: { cells: Cell[] }) {
   const focused = cells[focus] as Cell;
 
   return (
-    <div className="dial">
+    <div className="dial" ref={rootRef} data-nav={barred ? "bar" : "corner"}>
       <div className="dial__stage" ref={stageRef}>
         {mountedAround(focus, count).map((index) => {
           const cell = cells[index] as Cell;

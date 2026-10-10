@@ -54,6 +54,18 @@ export function layoutFor(trail: SpiralTrail): GridLayout {
   return layout;
 }
 
+/** The room, in CSS pixels, the Previous and Next buttons take: their width and their height. */
+export const NAV_PX = { width: 172, height: 68 };
+
+/**
+ * Whether the buttons can sit in the corner of the room the focused cell
+ * leaves over. On a square or nearly square page there is no such room, and
+ * they would lie over the focused cell's own corner, so they get a bar.
+ */
+export function navFits(width: number, height: number): boolean {
+  return width >= height ? width - height >= NAV_PX.width : height - width >= NAV_PX.height;
+}
+
 /** The side of the focused square the rest of the spiral grows into: the stage's longer one. */
 export function trailFor(width: number, height: number): SpiralTrail {
   return width >= height ? "right" : "bottom";
