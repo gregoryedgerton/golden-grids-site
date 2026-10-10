@@ -39,8 +39,11 @@ const HEX = /^#[0-9a-f]{6}$/i;
 const LARGE = 3;
 /** WCAG AA for body text. */
 const BODY = 4.5;
-/** The site's own ink and paper, either of which reads on any ground the other does not. */
-const FALLBACKS = ["#ffffff", "#14100c"];
+/**
+ * Whatever the ground, one of these reads on it: black and white between them
+ * leave no colour below 4.58:1. A softer black would, on a mid grey.
+ */
+const FALLBACKS = ["#ffffff", "#000000"];
 
 function luminance(hex: string): number {
   const channel = (at: number) => {
@@ -56,7 +59,7 @@ export function contrast(a: string, b: string): number {
   return (light + 0.05) / (dark + 0.05);
 }
 
-/** The first candidate that reads as body text on the ground. */
+/** The first candidate that reads as body text on the ground, or else white or black. */
 export function readable(ground: string, candidates: string[]): string {
   return [...candidates, ...FALLBACKS].find((color) => contrast(color, ground) >= BODY) as string;
 }
