@@ -10,7 +10,6 @@ export const site = {
   video: {
     id: "ohWEdv4bhdE",
     title: "David Bowie, “Golden Years”",
-    url: "https://www.youtube.com/watch?v=ohWEdv4bhdE",
   },
   /**
    * Where the sign-up form sends an address: the Beehiiv publication's

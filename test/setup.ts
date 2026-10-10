@@ -2,7 +2,6 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach, expect } from "vitest";
 import * as axeMatchers from "vitest-axe/matchers";
-import { chooseVideo } from "../src/cells/videoChoice";
 import { resetMedia } from "./media";
 
 expect.extend(axeMatchers);
@@ -40,6 +39,5 @@ afterEach(() => {
   document.head.querySelectorAll("link[data-face]").forEach((link) => link.remove());
   cleanup();
   resetMedia();
-  chooseVideo(null);
   ResizeObserverStub.instances.length = 0;
 });

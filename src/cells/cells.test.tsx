@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import { axe } from "vitest-axe";
 import { setReducedMotion } from "../../test/media";
 import { CellCurrent } from "../dial/current";
@@ -36,12 +36,54 @@ describe("Title", () => {
     expect(screen.getByText(/^Version/).parentElement).toHaveTextContent(`Version v${site.version}`);
     expect(screen.getByRole("link", { name: "npm" })).toHaveAttribute("href", site.npm);
     expect(screen.getByRole("link", { name: "GitHub" })).toHaveAttribute("href", site.github);
-    // The name is drawn large, a word to a line.
-    expect([...container.querySelectorAll(".title__name g > text:last-child")].map((t) => t.textContent)).toEqual([
-      "Golden",
-      "Grids",
-    ]);
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("sets the name a word to a line at one size, the second word starting a little along from the first", () => {
+    const { container } = render(<Title />);
+    const lines = [...container.querySelectorAll(".title__name g.fit__line")];
+    expect(lines.map((g) => g.querySelector("text:last-child")?.textContent)).toEqual(["Golden", "Grids"]);
+    const placed = lines.map((g) => {
+      const [x, , scale] = (g.getAttribute("transform")?.match(/-?[\d.]+/g) as string[]).map(Number) as [number, number, number];
+      return { x, scale };
+    });
+    // One size for both words.
+    expect(placed[0]?.scale).toBe(placed[1]?.scale);
+    // "Grids" starts after the G of "Golden" (a glyph is 50 units wide here, at 100 to the em) and before its end.
+    const glyph = 50 * (placed[0]?.scale as number);
+    expect(placed[0]?.x).toBe(0);
+    expect(placed[1]?.x).toBeGreaterThan(glyph);
+    expect(placed[1]?.x).toBeLessThan(3 * glyph);
+  });
+
+  it("gives the name a gold gradient and depth that recedes to a point below it and to its left", () => {
+    const { container } = render(<Title />);
+    const name = container.querySelector(".title__name") as SVGSVGElement;
+    expect(name.querySelectorAll("linearGradient stop").length).toBeGreaterThanOrEqual(3);
+    for (const face of name.querySelectorAll(".fit__line > text:last-child")) {
+      expect(face.getAttribute("fill")).toMatch(/^url\(#fit/);
+    }
+    const layers = [...name.querySelectorAll("g.fit__layer")];
+    expect(layers.length).toBeGreaterThanOrEqual(12);
+    // translate(x y) scale(s) translate(-x -y): the point is left of the drawing and below it.
+    const [x, y, shrink] = (layers[0]?.getAttribute("transform")?.match(/-?[\d.]+/g) as string[]).map(Number) as [number, number, number];
+    const height = Number(name.getAttribute("viewBox")?.split(" ")[3]);
+    expect(x).toBeLessThan(0);
+    expect(y).toBeGreaterThan(height);
+    expect(shrink).toBeLessThan(1);
+    expect(shrink).toBeGreaterThan(0.8);
+  });
+
+  it("puts the version at the foot, first, and carries no instructions, video link or video button", () => {
+    const { container } = render(<Title />);
+    const cell = container.querySelector(".title") as HTMLElement;
+    const foot = cell.lastElementChild as HTMLElement;
+    expect(foot).toHaveClass("title__foot");
+    expect(foot.firstElementChild).toHaveClass("title__version");
+    expect(screen.queryByText(/swipe|scroll|arrow keys/i)).toBeNull();
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.getAllByRole("link").map((a) => a.textContent)).toEqual(["npm", "GitHub"]);
+    expect(container.innerHTML).not.toMatch(/youtube\.com\/watch/);
   });
 });
 
@@ -60,8 +102,6 @@ describe("Title, and the video behind it", () => {
     // Behind: the video is the cell's first child, and everything else follows it.
     expect(container.querySelector(".title")?.firstElementChild).toHaveClass("bgvideo");
     expect(container.querySelector(".bgvideo__scrim")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: `${site.video.title}, on YouTube` })).toHaveAttribute("href", site.video.url);
-    expect(site.video.url).toContain(site.video.id);
     expect(await axe(container)).toHaveNoViolations();
   });
 
@@ -76,53 +116,20 @@ describe("Title, and the video behind it", () => {
     expect(frame()).toBeNull();
   });
 
-  it("stops and starts with the button", () => {
-    render(focused(true));
-    fireEvent.click(screen.getByRole("button", { name: "Pause video" }));
-    expect(frame()).toBeNull();
-    expect(screen.queryByRole("button", { name: "Pause video" })).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Play video" }));
-    expect(frame()).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Pause video" })).toBeInTheDocument();
-  });
-
-  it("remembers the reader's choice after the cell has been removed and drawn again", () => {
-    const first = render(focused(true));
-    fireEvent.click(screen.getByRole("button", { name: "Pause video" }));
-    first.unmount();
-    // Back from the gallery: still stopped.
-    const second = render(focused(true));
-    expect(frame()).toBeNull();
-    expect(screen.getByRole("button", { name: "Play video" })).toBeInTheDocument();
-    second.unmount();
-    // And a video asked for under reduced motion is still playing.
-    setReducedMotion(true);
-    fireEvent.click(render(focused(true)).getByRole("button", { name: "Play video" }));
-    cleanup();
-    render(focused(true));
-    expect(frame()).toBeInTheDocument();
-  });
-
-  it("does not start by itself for a reader who has asked for reduced motion, and plays if they ask", () => {
+  it("does not play for a reader who has asked for reduced motion", () => {
     setReducedMotion(true);
     render(focused(true));
     expect(frame()).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Play video" }));
-    expect(frame()).toBeInTheDocument();
+    // The scrim stays, so the cell looks the same without the picture.
+    expect(document.querySelector(".bgvideo__scrim")).toBeInTheDocument();
   });
 
-  it("stops if reduced motion is turned on while it plays, unless the reader chose to play it", () => {
-    const { unmount } = render(focused(true));
+  it("stops if reduced motion is turned on while it plays, and starts if it is turned off", () => {
+    render(focused(true));
     expect(frame()).toBeInTheDocument();
     act(() => setReducedMotion(true));
     expect(frame()).toBeNull();
-    expect(screen.getByRole("button", { name: "Play video" })).toBeInTheDocument();
-    unmount();
-    setReducedMotion(false);
-    render(focused(true));
-    fireEvent.click(screen.getByRole("button", { name: "Pause video" }));
-    fireEvent.click(screen.getByRole("button", { name: "Play video" }));
-    act(() => setReducedMotion(true));
+    act(() => setReducedMotion(false));
     expect(frame()).toBeInTheDocument();
   });
 });

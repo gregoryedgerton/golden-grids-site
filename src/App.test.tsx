@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { axe } from "vitest-axe";
 import { setReducedMotion } from "../test/media";
 import { App } from "./App";
@@ -19,34 +19,20 @@ describe("App", () => {
   });
 
   it("plays the title's video only while the title is the focused cell", () => {
-    render(<App />);
-    expect(document.querySelector(".bgvideo iframe")).toBeInTheDocument();
-    cleanup();
-    // Reduced motion, so the dial steps at once; the reader then asks for the video.
-    setReducedMotion(true);
-    render(<App />);
-    fireEvent.click(screen.getByRole("button", { name: "Play video" }));
-    expect(document.querySelector(".bgvideo iframe")).toBeInTheDocument();
-    fireEvent.keyDown(document.body, { key: "ArrowDown" });
-    expect(document.querySelector(".bgvideo iframe")).toBeNull();
-    // And it is still their choice when they come back.
-    fireEvent.keyDown(document.body, { key: "ArrowUp" });
-    expect(document.querySelector(".bgvideo iframe")).toBeInTheDocument();
-  });
-
-  it("keeps the video stopped after a trip deep enough to remove the title cell", () => {
-    setReducedMotion(true);
-    render(<App />);
-    fireEvent.click(screen.getByRole("button", { name: "Play video" }));
-    fireEvent.click(screen.getByRole("button", { name: "Pause video" }));
-    for (let i = 0; i < 5; i++) fireEvent.keyDown(document.body, { key: "ArrowDown" });
-    expect(document.querySelector(".title")).toBeNull();
-    fireEvent.keyDown(document.body, { key: "Home" });
-    expect(document.querySelector(".bgvideo iframe")).toBeNull();
-    // Reduced motion would have left it stopped anyway; the reader's choice does so with motion allowed too.
-    act(() => setReducedMotion(false));
-    expect(document.querySelector(".bgvideo iframe")).toBeNull();
-    expect(screen.getByRole("button", { name: "Play video" })).toBeInTheDocument();
+    setReducedMotion(false);
+    vi.useFakeTimers();
+    try {
+      render(<App />);
+      expect(document.querySelector(".bgvideo iframe")).toBeInTheDocument();
+      fireEvent.keyDown(document.body, { key: "ArrowDown" });
+      act(() => void vi.advanceTimersByTime(3000));
+      expect(document.querySelector(".bgvideo iframe")).toBeNull();
+      fireEvent.keyDown(document.body, { key: "ArrowUp" });
+      act(() => void vi.advanceTimersByTime(3000));
+      expect(document.querySelector(".bgvideo iframe")).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("offers the sign-up only in the last cell", () => {

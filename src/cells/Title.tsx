@@ -3,29 +3,42 @@ import { useReducedMotion } from "../dial/motion";
 import { BackgroundVideo } from "../ui/BackgroundVideo";
 import { FitText } from "../ui/FitText";
 import { site } from "../site";
-import { chooseVideo, useVideoChoice } from "./videoChoice";
+
+/** "Grids" starts this many ems in: a little after the G of "Golden" above it. */
+const STAGGER = [0, 0.85];
+/** Where the name's depth recedes to: below the lettering and off to its left, as on the sleeve. */
+const VANISH = { x: -0.15, y: 1.8 };
+/** The face of the letters, top to bottom: lemon, a pale band of light, then gold. */
+const GOLD = ["#ffe23d", "#fff3a6", "#fbd128", "#eaa51b"];
 
 /**
- * The title screen: who presents it, its name, its version and where to get
- * it, set over the video the branding comes from.
+ * The title screen, after the sleeve it takes its branding from: who presents
+ * it in a tall light sans, the name in chunky gold script whose depth recedes
+ * to a point, its second word set under the first and a little along, a second line in red, and the
+ * version in a box at the foot.
  *
- * The video plays only while this is the focused cell, and does not start by
- * itself for a reader who has asked for reduced motion. Either way the button
- * stops and starts it.
+ * The video behind it plays only while this is the focused cell, and not at
+ * all for a reader who has asked for reduced motion.
  */
 export function Title() {
   const current = useCellCurrent();
   const reduced = useReducedMotion();
-  /** The reader's own choice, once they have made one. It outlives this cell. */
-  const chosen = useVideoChoice();
-  const playing = chosen ?? !reduced;
 
   return (
     <div className="cell title">
-      <BackgroundVideo id={site.video.id} title={site.video.title} playing={current && playing} />
+      <BackgroundVideo id={site.video.id} title={site.video.title} playing={current && !reduced} />
       <p className="title__presents">{site.presenter} presents</p>
       <h1 className="visually-hidden">{site.name}</h1>
-      <FitText className="title__name" lines={site.name.split(" ")} leading={0.78} extrude={7} />
+      <FitText
+        className="title__name"
+        lines={site.name.split(" ")}
+        leading={0.66}
+        extrude={26}
+        vanish={VANISH}
+        gradient={GOLD}
+        indent={STAGGER}
+        uniform
+      />
       <div className="title__foot">
         <p className="title__version">
           <span className="visually-hidden">Version </span>
@@ -40,15 +53,6 @@ export function Title() {
             <a href={site.github}>GitHub</a>
           </li>
         </ul>
-      </div>
-      <div className="title__base">
-        <p className="title__hint">Swipe, scroll or use the arrow keys</p>
-        <p className="title__video">
-          <button type="button" onClick={() => chooseVideo(!playing)}>
-            {playing ? "Pause video" : "Play video"}
-          </button>
-          <a href={site.video.url}>{site.video.title}, on YouTube</a>
-        </p>
       </div>
     </div>
   );

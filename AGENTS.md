@@ -20,8 +20,9 @@ steps with no travel between them. Flag any animation, transition or
 
 **The title's video is YouTube's.** It is played through YouTube's embedded
 player and never copied into the repository or the build. It plays only while
-the title is the focused cell, never starts by itself under reduced motion,
-and always has a button that stops it.
+the title is the focused cell and never under reduced motion. It has no
+control of its own by the owner's decision; do not flag the missing pause
+button, and do flag anything that would let it play in another cell.
 
 **Directions are fixed.** Swiping up or left, scrolling down or right, and the
 Down, Right, Page Down and Space keys go deeper; the opposites go back. Keys
