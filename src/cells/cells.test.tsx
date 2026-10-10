@@ -252,19 +252,48 @@ describe("Parameters", () => {
 });
 
 describe("Gallery", () => {
-  it("counts the studies and says what they are to their references", async () => {
+  it("says THESE ARE FAKE, as large as the cell allows, FAKE on a line of its own", async () => {
     const { container } = render(<Gallery count={13} />);
-    expect(screen.getByRole("heading", { level: 2, name: "The studies" })).toBeInTheDocument();
-    expect(container.querySelector(".gallery__count")).toHaveTextContent("13");
-    expect(container.querySelector(".gallery__body")).toHaveTextContent(
-      "13 sites rebuilt on the grid, each under a parody name. None is affiliated with the site it studies.",
+    expect(screen.getByRole("heading", { level: 2, name: "THESE ARE FAKE" })).toBeInTheDocument();
+    expect([...container.querySelectorAll(".gallery__heading .fit__line")].map((g) => g.textContent)).toEqual([
+      "THESE ARE",
+      "FAKE",
+    ]);
+    // The shorter line is scaled up to the same width, so FAKE is the largest thing in the cell.
+    const scales = [...container.querySelectorAll(".gallery__heading .fit__line")].map((g) =>
+      Number(/scale\(([\d.]+)\)/.exec(g.getAttribute("transform") as string)?.[1]),
     );
+    expect(scales[1]).toBeGreaterThan(2 * (scales[0] as number));
+    // The count is no longer the cell's big type.
+    expect(container.querySelector(".gallery__count")).toBeNull();
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("then says what a study is, and that none is the site it looks like", () => {
+    const { container } = render(<Gallery count={13} />);
+    const body = container.querySelector(".gallery__body") as HTMLElement;
+    expect(body).toHaveTextContent(/^The next 13 cells are layout studies\./);
+    expect(body).toHaveTextContent(/rebuilds it on Golden Grids under a parody name/);
+    expect(body).toHaveTextContent(/None is affiliated with the site it studies/);
+    expect(body).toHaveTextContent(/nothing in them can be bought, booked or signed up for\.$/);
+    // In that order: the heading, the disclaimer, the call to act.
+    const order = [...(container.querySelector(".gallery") as HTMLElement).children].map((c) => c.getAttribute("class"));
+    expect(order).toEqual(["gallery__kicker", "visually-hidden", "fit gallery__heading", "gallery__body", "gallery__make"]);
   });
 
   it("does not call one study several", () => {
     const { container } = render(<Gallery count={1} />);
-    expect(container.querySelector(".gallery__body")).toHaveTextContent(/^1 site rebuilt/);
+    expect(container.querySelector(".gallery__body")).toHaveTextContent(/^The next cell is a layout study\./);
+  });
+
+  it("ends by asking the reader to make their own, from the study template, in a new window", () => {
+    render(<Gallery count={13} />);
+    const link = screen.getByRole("link", { name: "Make your own study from the template (opens in a new window)" });
+    expect(link).toHaveAttribute("href", site.template);
+    expect(site.template).toBe("https://github.com/gregoryedgerton/golden-grids-study-template");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener");
+    expect(link.closest(".gallery")?.lastElementChild).toContainElement(link);
   });
 });
 
@@ -369,7 +398,7 @@ describe("buildCells", () => {
 
   it("counts the studies it was given on the gallery cell", () => {
     const { container } = render(<>{buildCells(studies.slice(0, 3), "")[3]?.content}</>);
-    expect(container.querySelector(".gallery__count")).toHaveTextContent("3");
+    expect(container.querySelector(".gallery__body")).toHaveTextContent(/^The next 3 cells are layout studies\./);
   });
 
   it("puts the email field in the last cell and nowhere else", () => {

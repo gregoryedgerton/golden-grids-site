@@ -74,7 +74,7 @@ a {
  * Light through the middle, so the picture shows, and dark in two bands: at
  * the top and at the foot, where small type sits and has to keep its contrast
  * over a white frame as well as a dark one. Large type set over the middle
- * needs an edge of its own; the title's name has one.
+ * needs help of its own; the title's name carries a dark glow.
  */
 .bgvideo__scrim {
   position: absolute;
@@ -176,14 +176,12 @@ a {
   transform: rotate(-7deg);
 }
 
-/* A dark edge round each letter of the name, drawn under its fill. Over a
-   bright frame of the video the gold would have nothing to stand against;
-   the edge and the brown depth behind it are what it is read by. */
-.title__name .fit__face {
-  stroke: #2e1804;
-  stroke-width: 7px;
-  stroke-linejoin: round;
-  paint-order: stroke fill;
+/* No outline on the name. A soft dark glow behind it does the outline's
+   work: it darkens the picture just round the letters, so the gold keeps
+   something to stand against over a bright frame without the middle of the
+   scrim having to be dark. */
+.title__name {
+  filter: drop-shadow(0 0 2.4cqw rgb(20 16 12 / 0.7)) drop-shadow(0 0 0.8cqw rgb(20 16 12 / 0.5));
 }
 
 .title__foot {
@@ -366,21 +364,33 @@ a {
   color: var(--ground);
 }
 
-.gallery__heading {
-  font-size: 7cqw;
-  font-weight: 300;
-  line-height: 1;
+.gallery__kicker {
+  font-size: 3.4cqw;
+  font-weight: 600;
+  letter-spacing: 0.08em;
 }
 
-.gallery__count {
+.gallery__heading {
   flex: 1 1 0;
   min-height: 0;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .gallery__body {
-  font-size: 3.5cqw;
+  font-size: 3cqw;
   font-weight: 400;
+  line-height: 1.25;
+}
+
+.gallery .gallery__make a {
+  display: inline-block;
+  padding: 2cqw 3.4cqw 1.5cqw;
+  background: var(--ground);
+  color: var(--paper);
+  font-size: 4cqw;
+  font-weight: 600;
+  text-decoration: none;
 }
 
 /* A study's lockup, in the study's own colours and face. */
