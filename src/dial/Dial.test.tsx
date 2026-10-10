@@ -265,7 +265,7 @@ describe("Dial", () => {
       act(() => void vi.advanceTimersByTime(3000));
       expect(announced()).toBe("Cell 3, 3 of 12");
       // A notch too small to be a tick turns nothing.
-      fireEvent.wheel(stage(), { deltaY: 20 });
+      fireEvent.wheel(stage(), { deltaY: 10 });
       act(() => void vi.advanceTimersByTime(3000));
       expect(announced()).toBe("Cell 3, 3 of 12");
     } finally {

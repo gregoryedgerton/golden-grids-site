@@ -32,8 +32,11 @@ another cell.
 **Directions are fixed.** Swiping up or left, scrolling down or right, and the
 Down, Right, Page Down and Space keys go deeper; the opposites go back. Keys
 typed into a form field never move the dial. A scroll turns the dial
-one cell and no more, tail of a flick included; flag anything that lets the
-wheel carry it across several cells or leave it between two.
+one cell and no more, the tail of a flick and a wheel held spinning included.
+The wheel turns again only after it has gone quiet, or on a second push
+clearly larger than the event before it. Flag anything that lets an unbroken
+stream of wheel events carry the dial across several cells or leave it
+between two.
 
 **A study is data.** Adding a study is one file in `src/studies/`. Flag a
 change that needs a second edit elsewhere to add one, and any study entry

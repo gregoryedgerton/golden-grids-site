@@ -17,12 +17,18 @@ export const COMMIT = 0.15;
 export const SETTLE_MS = 110;
 /** A wheel has ended when it has been quiet this long. */
 export const WHEEL_IDLE_MS = 140;
-/** Wheel travel, in steps, that turns the dial one tick: about one notch of a mouse wheel. */
-export const WHEEL_TICK = 0.1;
+/**
+ * Wheel travel, in steps, that turns the dial one tick: 24 pixels. Small
+ * enough that one notch of any wheel is a tick, a notch reported as three
+ * lines of 16 pixels included.
+ */
+export const WHEEL_TICK = 0.03;
 /** After a tick the wheel turns nothing for this long, while the dial travels. */
 export const WHEEL_HOLD_MS = 400;
 /** A wheel event smaller than this, in steps, is the tail of a flick and never a new push. */
 export const WHEEL_PUSH = 0.01;
+/** How much larger than the event before it a wheel event must be to be a new push. */
+export const WHEEL_RISE = 1.5;
 /** Close enough to the target to stop. */
 const ARRIVED = 0.001;
 
@@ -169,19 +175,24 @@ export function createDial({ count, reduced, onDepth, onFocus, clock }: DialOpti
   };
 
   /**
-   * One tick per push of the wheel. Travel is gathered until there is a
-   * tick's worth, the dial turns one cell, and then the wheel is ignored: for
-   * a short hold while the dial travels, and after that for as long as each
-   * event is smaller than the last, which is a trackpad's flick dying away
-   * and not the reader scrolling. An event as large as the one before it, or
-   * larger, is a new push, so a wheel that is kept turning ticks again.
+   * One tick per scroll. Travel is gathered until there is a tick's worth,
+   * the dial turns one cell, and then the wheel is latched: nothing more
+   * turns until it has gone quiet. A stream of events that never pauses is
+   * one scroll, however long it runs, so a wheel held spinning and the tail
+   * of a trackpad's flick both turn one cell and stop.
+   *
+   * The one thing that ends a scroll without a pause is a second push: once
+   * the hold is over, an event clearly larger than the one before it. A
+   * flick's tail only ever shrinks, and a mouse's notches are all one size,
+   * so neither is taken for it; a reader who flicks again before the first
+   * flick has died away is.
    */
   const wheel = (steps: number) => {
     if (steps === 0) return;
     if (timer) clock.clearTimer(timer);
     timer = clock.setTimer(quiet, WHEEL_IDLE_MS);
     const size = Math.abs(steps);
-    const push = size >= WHEEL_PUSH && size >= lastSize;
+    const push = size >= WHEEL_PUSH && size > lastSize * WHEEL_RISE;
     lastSize = size;
     if (held) {
       if (clock.now() - heldAt < WHEEL_HOLD_MS || !push) return;
