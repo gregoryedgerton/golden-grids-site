@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { axe } from "vitest-axe";
 import { setReducedMotion } from "../test/media";
 import { App } from "./App";
@@ -16,6 +16,22 @@ describe("App", () => {
     expect(screen.getByRole("link", { name: "npm" })).toHaveAttribute("href", site.npm);
     expect(site.version).toMatch(/^\d+\.\d+\.\d+/);
     expect(announced()).toBe(`Golden Grids, 1 of ${total}`);
+  });
+
+  it("plays the title's video only while the title is the focused cell", () => {
+    render(<App />);
+    expect(document.querySelector(".bgvideo iframe")).toBeInTheDocument();
+    cleanup();
+    // Reduced motion, so the dial steps at once; the reader then asks for the video.
+    setReducedMotion(true);
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Play video" }));
+    expect(document.querySelector(".bgvideo iframe")).toBeInTheDocument();
+    fireEvent.keyDown(document.body, { key: "ArrowDown" });
+    expect(document.querySelector(".bgvideo iframe")).toBeNull();
+    // And it is still their choice when they come back.
+    fireEvent.keyDown(document.body, { key: "ArrowUp" });
+    expect(document.querySelector(".bgvideo iframe")).toBeInTheDocument();
   });
 
   it("offers the sign-up only in the last cell", () => {

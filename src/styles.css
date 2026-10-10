@@ -50,6 +50,43 @@ a {
   border: 0;
 }
 
+/* A video behind a cell, and the scrim that keeps the type over it legible. */
+.bgvideo {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* A 16:9 picture covering a square: full height, centred, the sides cropped. */
+.bgvideo iframe {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 177.78%;
+  height: 100%;
+  border: 0;
+  translate: -50% -50%;
+}
+
+/*
+ * Dark enough that white, gold and red each keep their contrast over a white
+ * frame: lighter through the middle, where the type is largest, and nearly
+ * solid at the foot, where it is smallest.
+ */
+.bgvideo__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgb(20 16 12 / 0.82) 0%,
+    rgb(20 16 12 / 0.66) 30%,
+    rgb(20 16 12 / 0.66) 58%,
+    rgb(20 16 12 / 0.92) 80%,
+    rgb(20 16 12 / 0.95) 100%
+  );
+}
+
 /* Display type drawn to fit its box. */
 .fit {
   display: block;
@@ -97,7 +134,13 @@ a {
 
 /* Title: the sleeve. Light sans above, gold script with depth, a boxed number. */
 .title {
+  position: relative;
   color: var(--paper);
+}
+
+/* Everything in the cell sits above its video. */
+.title > :not(.bgvideo) {
+  position: relative;
 }
 
 .title__presents {
@@ -140,9 +183,32 @@ a {
   color: var(--red);
 }
 
-.title__hint {
-  font-size: 2.6cqw;
-  letter-spacing: 0.04em;
+.title__base {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 3cqw;
+  font-size: 2.3cqw;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.title__video {
+  display: flex;
+  align-items: baseline;
+  gap: 2cqw;
+}
+
+.title__video button {
+  padding: 0.7cqw 1.4cqw 0.3cqw;
+  border: 0.3cqw solid currentColor;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  white-space: nowrap;
+  cursor: pointer;
 }
 
 /* Vision. */

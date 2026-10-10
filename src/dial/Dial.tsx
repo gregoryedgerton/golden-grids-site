@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import type { ReactNode } from "react";
 import { createDial } from "./controller";
 import type { DialClock, DialController } from "./controller";
+import { CellCurrent } from "./current";
 import { TEXTURE_PX, mountedAround, navFits, paintTile } from "./geometry";
 import { dragSteps, keyMove, ownsDrag, ownsKey, pastSlop, swipeAxis, wheelSteps } from "./input";
 import type { Axis } from "./input";
@@ -223,7 +224,7 @@ function DialOf({ cells }: { cells: Cell[] }) {
               onClick={current ? undefined : () => dial().goTo(index)}
             >
               <div className="dial__content" inert={!current}>
-                {cell.content}
+                <CellCurrent value={current}>{cell.content}</CellCurrent>
               </div>
             </section>
           );

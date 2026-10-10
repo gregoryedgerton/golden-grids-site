@@ -1,6 +1,9 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { axe } from "vitest-axe";
+import { setReducedMotion } from "../../test/media";
+import { CellCurrent } from "../dial/current";
 import { site } from "../site";
+import { embedUrl } from "../ui/BackgroundVideo";
 import { parseStudy, studies } from "../studies";
 import { fontHref } from "../ui/fonts";
 import { Gallery } from "./Gallery";
@@ -39,6 +42,71 @@ describe("Title", () => {
       "Grids",
     ]);
     expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe("Title, and the video behind it", () => {
+  const frame = () => document.querySelector(".bgvideo iframe");
+  const focused = (current: boolean) => (
+    <CellCurrent value={current}>
+      <Title />
+    </CellCurrent>
+  );
+
+  it("plays the video behind the title while the title is the focused cell", async () => {
+    const { container } = render(focused(true));
+    expect(frame()).toHaveAttribute("src", embedUrl(site.video.id));
+    expect(frame()).toHaveAttribute("title", site.video.title);
+    // Behind: the video is the cell's first child, and everything else follows it.
+    expect(container.querySelector(".title")?.firstElementChild).toHaveClass("bgvideo");
+    expect(container.querySelector(".bgvideo__scrim")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: `${site.video.title}, on YouTube` })).toHaveAttribute("href", site.video.url);
+    expect(site.video.url).toContain(site.video.id);
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("has no player while another cell is focused, or outside a dial", () => {
+    const { rerender } = render(focused(false));
+    expect(frame()).toBeNull();
+    rerender(focused(true));
+    expect(frame()).toBeInTheDocument();
+    rerender(focused(false));
+    expect(frame()).toBeNull();
+    rerender(<Title />);
+    expect(frame()).toBeNull();
+  });
+
+  it("stops and starts with the button", () => {
+    render(focused(true));
+    fireEvent.click(screen.getByRole("button", { name: "Pause video" }));
+    expect(frame()).toBeNull();
+    expect(screen.queryByRole("button", { name: "Pause video" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Play video" }));
+    expect(frame()).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pause video" })).toBeInTheDocument();
+  });
+
+  it("does not start by itself for a reader who has asked for reduced motion, and plays if they ask", () => {
+    setReducedMotion(true);
+    render(focused(true));
+    expect(frame()).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Play video" }));
+    expect(frame()).toBeInTheDocument();
+  });
+
+  it("stops if reduced motion is turned on while it plays, unless the reader chose to play it", () => {
+    const { unmount } = render(focused(true));
+    expect(frame()).toBeInTheDocument();
+    act(() => setReducedMotion(true));
+    expect(frame()).toBeNull();
+    expect(screen.getByRole("button", { name: "Play video" })).toBeInTheDocument();
+    unmount();
+    setReducedMotion(false);
+    render(focused(true));
+    fireEvent.click(screen.getByRole("button", { name: "Pause video" }));
+    fireEvent.click(screen.getByRole("button", { name: "Play video" }));
+    act(() => setReducedMotion(true));
+    expect(frame()).toBeInTheDocument();
   });
 });
 
