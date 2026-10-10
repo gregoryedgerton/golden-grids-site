@@ -71,20 +71,20 @@ a {
 }
 
 /*
- * Dark enough that white, gold and red each keep their contrast over a white
- * frame: lighter through the middle, where the type is largest, and nearly
- * solid at the foot, where it is smallest.
+ * Light enough to see the picture through: lightest through the middle, where
+ * the type is largest, and darkest at the foot, where it is smallest. The
+ * video is a dark one; over a bright frame the small type would lose contrast.
  */
 .bgvideo__scrim {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgb(20 16 12 / 0.82) 0%,
-    rgb(20 16 12 / 0.66) 30%,
-    rgb(20 16 12 / 0.66) 58%,
-    rgb(20 16 12 / 0.92) 80%,
-    rgb(20 16 12 / 0.95) 100%
+    rgb(20 16 12 / 0.6) 0%,
+    rgb(20 16 12 / 0.38) 30%,
+    rgb(20 16 12 / 0.38) 58%,
+    rgb(20 16 12 / 0.7) 82%,
+    rgb(20 16 12 / 0.78) 100%
   );
 }
 
@@ -319,6 +319,13 @@ a {
   font-size: 2.9cqw;
   font-weight: 400;
   line-height: 1.2;
+}
+
+.parameters__note {
+  display: block;
+  margin-top: 1cqw;
+  font-size: 2.1cqw;
+  font-weight: 300;
 }
 
 .parameters__takes {
