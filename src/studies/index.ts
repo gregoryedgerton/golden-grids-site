@@ -10,7 +10,7 @@ import type { Face } from "../ui/fonts";
  * colours that cannot be read fails the tests, not the page.
  */
 export type Study = {
-  /** The study's number in the series. Orders the gallery. */
+  /** The study's number in the series. Orders the gallery, latest first. */
   number: number;
   /** The parody name, exactly as written: GIF, then the tail of the reference's name. */
   brand: string;
@@ -129,9 +129,9 @@ export function parseStudy(raw: unknown, file: string): Study {
   };
 }
 
-/** In series order. Two studies cannot share a number. */
-export function inOrder(list: Study[]): Study[] {
-  const sorted = [...list].sort((a, b) => a.number - b.number);
+/** From the latest study to the oldest. Two studies cannot share a number. */
+export function latestFirst(list: Study[]): Study[] {
+  const sorted = [...list].sort((a, b) => b.number - a.number);
   sorted.forEach((study, i) => {
     if (i > 0 && (sorted[i - 1] as Study).number === study.number) {
       throw new Error(`Two studies are numbered ${study.number}: ${(sorted[i - 1] as Study).brand} and ${study.brand}`);
@@ -142,4 +142,4 @@ export function inOrder(list: Study[]): Study[] {
 
 const files = import.meta.glob<unknown>("./*.json", { eager: true, import: "default" });
 
-export const studies: Study[] = inOrder(Object.entries(files).map(([file, raw]) => parseStudy(raw, file)));
+export const studies: Study[] = latestFirst(Object.entries(files).map(([file, raw]) => parseStudy(raw, file)));

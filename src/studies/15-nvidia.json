@@ -1,0 +1,20 @@
+{
+  "number": 15,
+  "brand": "GIFvidia",
+  "reference": "Nvidia",
+  "subject": "Home, industries, a laptop shop and drivers",
+  "url": "https://gregoryedgerton.github.io/golden-grids-study-15-nvidia/",
+  "colors": {
+    "ground": "#000000",
+    "ink": "#76b900",
+    "accent": "#ffffff"
+  },
+  "font": {
+    "family": "Barlow",
+    "weight": 700,
+    "italic": false
+  },
+  "icon": {
+    "path": "M7 7h10v10H7zM10 10h4v4h-4zM9.5 3v4M14.5 3v4M9.5 17v4M14.5 17v4M3 9.5h4M3 14.5h4M17 9.5h4M17 14.5h4"
+  }
+}

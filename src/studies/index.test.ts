@@ -1,4 +1,4 @@
-import { contrast, inOrder, parseStudy, readable, studies } from "./index";
+import { contrast, latestFirst, parseStudy, readable, studies } from "./index";
 import type { Study } from "./index";
 
 const valid = {
@@ -120,28 +120,43 @@ describe("parseStudy", () => {
   });
 });
 
-describe("inOrder", () => {
+describe("latestFirst", () => {
   const study = (number: number, brand: string) => ({ ...parseStudy(valid, "x"), number, brand }) as Study;
 
-  it("sorts by number without changing the list it was given", () => {
+  it("puts the highest number first, without changing the list it was given", () => {
     const given = [study(3, "GIFc"), study(1, "GIFa"), study(2, "GIFb")];
-    expect(inOrder(given).map((s) => s.brand)).toEqual(["GIFa", "GIFb", "GIFc"]);
+    expect(latestFirst(given).map((s) => s.brand)).toEqual(["GIFc", "GIFb", "GIFa"]);
     expect(given.map((s) => s.number)).toEqual([3, 1, 2]);
-    expect(inOrder([])).toEqual([]);
+    expect(latestFirst([])).toEqual([]);
   });
 
   it("refuses two studies with one number, and names them", () => {
-    expect(() => inOrder([study(2, "GIFb"), study(1, "GIFa"), study(2, "GIFc")])).toThrow(
+    expect(() => latestFirst([study(2, "GIFb"), study(1, "GIFa"), study(2, "GIFc")])).toThrow(
       "Two studies are numbered 2: GIFb and GIFc",
     );
   });
 });
 
 describe("the studies in this folder", () => {
-  it("are all valid, in order, and enough to fill a gallery", () => {
+  it("are all valid, latest first, and enough to fill a gallery", () => {
     expect(studies.length).toBeGreaterThanOrEqual(13);
-    expect(studies.map((s) => s.number)).toEqual([...studies.map((s) => s.number)].sort((a, b) => a - b));
-    expect(studies[0]).toMatchObject({ number: 1, brand: "GIFbnb", reference: "Airbnb" });
+    expect(studies.map((s) => s.number)).toEqual([...studies.map((s) => s.number)].sort((a, b) => b - a));
+    expect(studies[0]?.number).toBe(Math.max(...studies.map((s) => s.number)));
+  });
+
+  it("include GIFdepot and GIFvidia, each with a drawing of its own", () => {
+    const depot = studies.find((s) => s.number === 14);
+    const vidia = studies.find((s) => s.number === 15);
+    expect(depot).toMatchObject({ brand: "GIFdepot", reference: "The Home Depot" });
+    expect(vidia).toMatchObject({ brand: "GIFvidia", reference: "Nvidia" });
+    expect(depot?.icon).toHaveProperty("path");
+    expect(vidia?.icon).toHaveProperty("path");
+    expect(studies.indexOf(vidia as Study)).toBeLessThan(studies.indexOf(depot as Study));
+  });
+
+  it("no longer include the first two studies", () => {
+    expect(studies.some((s) => s.number === 1 || s.number === 2)).toBe(false);
+    expect(studies.at(-1)?.number).toBe(3);
   });
 
   it("each have small text that reads on their ground", () => {

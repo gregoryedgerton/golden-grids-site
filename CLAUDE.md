@@ -34,7 +34,7 @@ Issue → pull request → review → merge. No exceptions, including for docs.
 - **Directions.** Up or left goes deeper, down or right goes back. No
   calibration.
 - **Studies are data.** One file per study in `src/studies/`; the gallery,
-  the count and the order derive from the folder.
+  the count and the order derive from the folder, latest study first.
 - **Brand.** Parody names are written exactly and never case-transformed in
   CSS. GIFcommit is the presenter and the npm scope.
 - **Copy.** Plain and exact. No jokes at a reference's expense, no verdicts on
