@@ -38,19 +38,24 @@ scroll (three pixels of travel make one), and a scroll is one cell and no
 more, the tail of a flick and a wheel held spinning included. Within an
 unbroken stream of wheel events the dial turns again for two things only:
 
-- a second push: the stream has fallen to a third of its peak, then an event
-  is more than three times its lowest since, and is as large as a push has to
-  be. That is 8 px, or the first push's own peak if it was gentler than that,
-  and never less than a scroll's worth. The size is there because the faint
-  end of a hard flick can hand over a few pixels at once;
+- a second push, which is looked for only after a hard one. A scroll that
+  peaked at 8 px or more falls to a third of that peak, and then an event is
+  more than three times its lowest since and at least 8 px itself;
 - the wheel turned the other way on the scroll's axis.
 
-Otherwise it turns again only once the wheel has gone quiet. A scroll has one
-axis: before it turns the dial, travel is gathered on each axis by itself and
-the first to have a scroll's worth is the scroll's; after, only that axis is
-read. Flag anything that lets a steady or dying stream of wheel events carry
-the dial across several cells, lose a scroll the reader made, or leave the
-dial between two cells.
+Otherwise it turns again only once the wheel has gone quiet. Travel that
+never reaches 8 px in an event is one scroll however it dips and recovers:
+`4, 1, 4` is one cell, by design. At a few pixels a stream of wheel events
+wobbles by a factor of three on its own, as a flick starts, at the faint end
+of its tail and all through a slow drag, and a rule that read a push into
+that turned one flick into two cells. Do not flag a gentle second push as
+lost.
+
+A scroll has one axis: before it turns the dial, travel is gathered on each
+axis by itself and the first to have a scroll's worth is the scroll's; after,
+only that axis is read. Flag anything that lets a steady or dying stream of
+wheel events carry the dial across several cells, drops a notch or a hard
+second flick the reader made, or leaves the dial between two cells.
 
 **A study is data.** Adding a study is one file in `src/studies/`. Flag a
 change that needs a second edit elsewhere to add one, and any study entry
