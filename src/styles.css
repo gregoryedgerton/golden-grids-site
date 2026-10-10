@@ -233,9 +233,6 @@ a {
   letter-spacing: -0.02em;
 }
 
-.vision__heading .fit__strong {
-  font-weight: 700;
-}
 
 /* The four platforms in a row, each under its mark. */
 .vision__platforms {
@@ -288,9 +285,11 @@ a {
   margin: 0;
 }
 
+/* Each row is as tall as what it says, and they share what is left over. */
 .parameters__item {
-  flex: 1 1 0;
+  flex: 1 0 auto;
   min-height: 0;
+  padding-block: 1.5cqw;
   display: grid;
   grid-template: 1fr auto auto 1fr / 44% 1fr;
   column-gap: 4cqw;
@@ -298,10 +297,9 @@ a {
   border-top: 0.6cqw solid var(--ground);
 }
 
-.parameters__item:nth-child(4n + 1) { --mark: var(--gold); }
-.parameters__item:nth-child(4n + 2) { --mark: var(--red); }
-.parameters__item:nth-child(4n + 3) { --mark: var(--blue); }
-.parameters__item:nth-child(4n + 4) { --mark: var(--gold-deep); }
+.parameters__item:nth-child(3n + 1) { --mark: var(--gold); }
+.parameters__item:nth-child(3n + 2) { --mark: var(--red); }
+.parameters__item:nth-child(3n + 3) { --mark: var(--blue); }
 
 .parameters__item dt {
   grid-area: 2 / 1;
@@ -329,6 +327,18 @@ a {
   font-size: 2.9cqw;
   font-weight: 400;
   line-height: 1.2;
+}
+
+.parameters__byline {
+  display: block;
+  margin-top: 1.4cqw;
+  padding-top: 1.4cqw;
+  border-top: 0.3cqw solid var(--mark);
+  font-size: 2.6cqw;
+}
+
+.parameters__byline b {
+  font-weight: 600;
 }
 
 .parameters__note {
