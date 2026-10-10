@@ -10,6 +10,7 @@
   --blue: #7fa6d9;
   --sans: "Josefin Sans", "Avenir Next", "Century Gothic", sans-serif;
   --script: "Pacifico", "Brush Script MT", cursive;
+  --tall: "Oswald", "Avenir Next Condensed", "Arial Narrow", sans-serif;
   color-scheme: dark;
 }
 
@@ -100,6 +101,11 @@ a {
   fill: var(--fit-shadow, currentColor);
 }
 
+/* A copy in a receding depth darkens with its distance. */
+.fit__layer .fit__shadow {
+  fill: color-mix(in oklab, var(--fit-shadow-far, var(--fit-shadow, currentColor)) var(--fit-far), var(--fit-shadow, currentColor));
+}
+
 /*
  * A cell. Its square is 100cqw on a side whatever size the dial draws it at,
  * so every measure below is a share of the square and the type scales with it.
@@ -144,75 +150,57 @@ a {
   position: relative;
 }
 
+/* Tall, light and white, as the artist's name is set on the sleeve. */
 .title__presents {
-  font-size: 5cqw;
+  font-family: var(--tall);
+  font-size: 8cqw;
   font-weight: 300;
-  letter-spacing: 0.04em;
+  line-height: 1;
+  letter-spacing: 0.01em;
 }
 
+/* The name, as large as the cell allows: tilted up to the right, its depth
+   falling down and to the left. It may run a little past the cell's padding. */
 .title__name {
   flex: 1 1 0;
   min-height: 0;
+  margin: -3cqw -3cqw -1cqw;
   font-family: var(--script);
+  letter-spacing: -0.035em;
   color: var(--gold);
-  --fit-shadow: var(--gold-deep);
-  transform: rotate(-6deg) scale(0.9);
+  /* The sides of the letters: ochre where they meet the face, brown where they recede. */
+  --fit-shadow: #d98a14;
+  --fit-shadow-far: #6b3a0c;
+  transform: rotate(-7deg);
 }
 
 .title__foot {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 4cqw;
 }
 
+/* The boxed catalogue number at the foot of the sleeve. */
 .title__version {
   padding: 0.6cqw 1.6cqw 0.2cqw;
   border: 0.4cqw solid currentColor;
-  font-size: 4cqw;
+  font-size: 3.4cqw;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
 }
 
+/* The sleeve's second line, in its red. */
 .title__links {
   display: flex;
   gap: 4cqw;
   padding: 0;
   list-style: none;
-  font-size: 5cqw;
+  font-family: var(--tall);
+  font-size: 6cqw;
   font-weight: 400;
+  line-height: 1;
   color: var(--red);
-}
-
-.title__base {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  /* With a wider face than the one asked for, the two halves stack rather than run off the cell. */
-  flex-wrap: wrap;
-  gap: 1.2cqw 3cqw;
-  font-size: 2.3cqw;
-  letter-spacing: 0.03em;
-}
-
-.title__video {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 1.2cqw 2cqw;
-  min-width: 0;
-}
-
-.title__video button {
-  padding: 0.7cqw 1.4cqw 0.3cqw;
-  border: 0.3cqw solid currentColor;
-  border-radius: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  letter-spacing: inherit;
-  white-space: nowrap;
-  cursor: pointer;
 }
 
 /* Vision. */
