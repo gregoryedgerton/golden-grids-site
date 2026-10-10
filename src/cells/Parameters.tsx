@@ -6,13 +6,15 @@
 export const PARAMETERS = [
   {
     term: "from · to",
-    // The library's ceiling: 91 squares in Swift and Kotlin, 78 wherever the
-    // numbers are JavaScript's, React Native included: the 79th term is past
-    // the integers JavaScript holds exactly.
-    values: ["1", "91"],
-    says: "The range to lay out: any two positions on the Fibonacci sequence, from 1 to 91.*",
+    // One value, a range: positions on the Fibonacci sequence. It starts at
+    // 0, which the library accepts: from 0 to 1 is a grid of one cell. Its
+    // ceiling is 91 in Swift and Kotlin and 78 wherever the numbers are
+    // JavaScript's, React Native included: the 79th term is past the integers
+    // JavaScript holds exactly.
+    values: ["0 – 91"],
+    says: "Two positions on the Fibonacci sequence: where the grid starts and where it ends. Every position from one to the other is a cell, sized by its number in the sequence.*",
     byline: "Grid cells are always squared except when the sequence is skipped. If a grid starts at 3 then cells 1 and 2 are combined into a single rectangular cell.",
-    note: "* 1 to 78 in React and React Native.",
+    note: "* 0 – 78 in React and React Native.",
   },
   {
     term: "placement",

@@ -230,15 +230,17 @@ describe("Parameters", () => {
     expect(document.querySelectorAll(".parameters__byline")).toHaveLength(1);
   });
 
-  it("gives the whole range, 1 to 91, and the lower React count as an asterisked note at the foot of its row", () => {
+  it("gives the range as one value with a dash, 0 – 91, and the lower React ceiling as an asterisked note", () => {
     render(<Parameters />);
     const range = within(screen.getByRole("list", { name: "Values for from · to" })).getAllByRole("listitem");
-    expect(range.map((li) => li.textContent)).toEqual(["1", "91"]);
+    // One chip, read as a range, not two numbers. It starts at 0: from 0 to 1 is a grid of one cell.
+    expect(range.map((li) => li.textContent)).toEqual(["0 – 91"]);
     const item = screen.getByText("from · to").closest(".parameters__item") as HTMLElement;
     const says = item.querySelector(".parameters__says") as HTMLElement;
-    expect(says).toHaveTextContent(/from 1 to 91\.\*/);
+    expect(says).toHaveTextContent(/^Two positions on the Fibonacci sequence: where the grid starts and where it ends\./);
+    expect(says).toHaveTextContent(/Every position from one to the other is a cell, sized by its number in the sequence\.\*/);
     const note = says.querySelector("small.parameters__note") as HTMLElement;
-    expect(note).toHaveTextContent("* 1 to 78 in React and React Native.");
+    expect(note).toHaveTextContent("* 0 – 78 in React and React Native.");
     // The note closes the row, after the byline; the next row is placement.
     expect(says.lastElementChild).toBe(note);
     expect(note.previousElementSibling).toHaveClass("parameters__byline");
