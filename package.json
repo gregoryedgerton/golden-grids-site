@@ -11,10 +11,10 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "typecheck": "tsc -b",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "prepare": "husky"
