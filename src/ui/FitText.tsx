@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useId, useLayoutEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 
 /** The width every line is scaled to, in the drawing's own units. */
 const WIDTH = 1000;
@@ -6,8 +7,13 @@ const WIDTH = 1000;
 const MEASURED_AT = 100;
 /** How far each copy behind a line steps, in the drawing's units. */
 const DEPTH_STEP = 4;
+/** How much smaller each copy is than the one in front of it, when the depth recedes to a point. */
+const VANISH_STEP = 0.004;
 /** Until a line can be measured, a glyph is assumed to be this share of its size wide. */
 const GUESS = 0.58;
+
+/** No line indented. One array, so a caller that passes none does not look changed on every render. */
+const NO_INDENT: number[] = [];
 
 type Box = { x: number; y: number; width: number; height: number };
 
@@ -15,20 +21,32 @@ function guess(line: string): Box {
   return { x: 0, y: -MEASURED_AT * 0.8, width: Math.max(1, line.length) * MEASURED_AT * GUESS, height: MEASURED_AT };
 }
 
-/** Scales every line to the full width and stacks them from the top. */
-function stack(lines: string[], boxes: Box[] | undefined, leading: number) {
+/**
+ * Stacks the lines from the top. Each is scaled so that it and its indent
+ * span the full width; with `uniform`, all take the scale of the longest, so
+ * the letters are one size and the shorter lines stop short.
+ */
+function stack(lines: string[], boxes: Box[] | undefined, leading: number, indent: number[], uniform: boolean) {
+  const measured = lines.map((line, i) => {
+    const box = boxes?.[i] ?? guess(line);
+    const inset = (indent[i] ?? 0) * MEASURED_AT;
+    return { line, box, inset, span: box.width + inset };
+  });
+  const longest = Math.max(...measured.map((m) => m.span));
   let cursor = 0;
   let height = 0;
-  const placed = lines.map((line, i) => {
-    const box = boxes?.[i] ?? guess(line);
-    const scale = WIDTH / box.width;
+  const placed = measured.map(({ line, box, inset, span }) => {
+    const scale = WIDTH / (uniform ? longest : span);
     const top = cursor;
     cursor += box.height * scale * leading;
     height = top + box.height * scale;
-    return { line, scale, x: -box.x * scale, y: top - box.y * scale };
+    return { line, scale, x: (inset - box.x) * scale, y: top - box.y * scale };
   });
   return { placed, height };
 }
+
+/** A point in the drawing, as shares of its width and height. It may lie outside it. */
+export type Vanish = { x: number; y: number };
 
 /**
  * Display type fitted to its box: every line is scaled to the same width, the
@@ -36,24 +54,42 @@ function stack(lines: string[], boxes: Box[] | undefined, leading: number) {
  * ways. It is a drawing of the words, hidden from assistive technology; the
  * caller writes the words themselves beside it.
  *
- * `leading` closes the lines up (1 is the face's own line height). `extrude`
- * draws that many offset copies behind each line, in `--fit-shadow`, for
- * solid letters with depth.
+ * `leading` closes the lines up (1 is the face's own line height). `indent`
+ * starts a line that many ems in, and `uniform` sets every line at one size
+ * instead of one width; the two together stagger the lines of a lockup.
+ *
+ * `extrude` draws that many copies behind each line, in `--fit-shadow`, for
+ * solid letters with depth. On its own the copies step down and to the right,
+ * or down and to the left if the number is negative. With `vanish` they
+ * instead shrink toward that point, so the depth recedes in perspective, and
+ * darken toward `--fit-shadow-far` as they go.
+ *
+ * `gradient` fills each line from its top to its bottom with those colours.
  */
 export function FitText({
   lines,
   className,
   leading = 1,
   extrude = 0,
+  indent = NO_INDENT,
+  uniform = false,
+  vanish,
+  gradient,
 }: {
   lines: string[];
   className?: string;
   leading?: number;
   extrude?: number;
+  indent?: number[];
+  uniform?: boolean;
+  vanish?: Vanish;
+  gradient?: string[];
 }) {
   const refs = useRef<(SVGTextElement | null)[]>([]);
   const [fitted, setFitted] = useState<{ key: string; boxes: Box[] } | null>(null);
   const text = lines.join("\n");
+  // An id that is safe inside url(#…).
+  const gradientId = `fit${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
 
   const measure = useCallback(() => {
     const measured = refs.current.slice(0, lines.length).map((element) => (element as SVGTextElement).getBBox());
@@ -68,8 +104,11 @@ export function FitText({
 
   useLayoutEffect(measure, [measure]);
 
-  // A face that arrives late changes every width.
-  useEffect(() => {
+  // A face that arrives late changes every width. A layout effect, so that
+  // it stops listening in the same step that takes the lines off the page:
+  // an ordinary effect is cleaned up later, and a face arriving in between
+  // would measure lines that are no longer there.
+  useLayoutEffect(() => {
     const fonts = document.fonts as FontFaceSet | undefined;
     if (!fonts) return;
     let live = true;
@@ -84,35 +123,73 @@ export function FitText({
     };
   }, [measure]);
 
-  const { placed, height } = stack(lines, fitted?.boxes, leading);
-  // Room for the copies behind, which step down and to the right.
-  const depth = extrude * DEPTH_STEP;
+  const { placed, height } = stack(lines, fitted?.boxes, leading, indent, uniform);
+  const copies = Math.abs(extrude);
+  const place = ({ x, y, scale }: { x: number; y: number; scale: number }) => `translate(${x} ${y}) scale(${scale})`;
+
+  const lean = extrude < 0 ? -1 : 1;
+  // Stepped copies get room in the drawing's box. Copies that recede to a
+  // point do not: the lines keep their full size, and the depth falls outside
+  // the box, which does not clip it.
+  const depth = vanish ? 0 : copies * DEPTH_STEP;
+  const point = { x: (vanish?.x ?? 0) * WIDTH, y: (vanish?.y ?? 0) * height };
 
   return (
     <svg
       className={className ? `fit ${className}` : "fit"}
-      viewBox={`0 0 ${WIDTH + depth} ${height + depth}`}
+      viewBox={`${lean < 0 ? -depth : 0} 0 ${WIDTH + depth} ${height + depth}`}
       preserveAspectRatio="xMidYMid meet"
       aria-hidden="true"
       focusable="false"
     >
-      {placed.map(({ line, scale, x, y }, i) => (
-        <g key={i} transform={`translate(${x} ${y}) scale(${scale})`}>
-          {Array.from({ length: extrude }, (_, k) => {
-            const offset = ((extrude - k) * DEPTH_STEP) / scale;
-            return (
-              <text key={k} className="fit__shadow" fontSize={MEASURED_AT} x={offset} y={offset}>
-                {line}
-              </text>
-            );
-          })}
+      {gradient && (
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            {gradient.map((color, i) => (
+              <stop key={i} offset={gradient.length > 1 ? i / (gradient.length - 1) : 0} stopColor={color} />
+            ))}
+          </linearGradient>
+        </defs>
+      )}
+      {vanish &&
+        // Farthest first, so nearer copies cover it.
+        Array.from({ length: copies }, (_, k) => {
+          const far = copies - k;
+          const shrink = 1 - far * VANISH_STEP;
+          return (
+            <g
+              key={k}
+              className="fit__layer"
+              transform={`translate(${point.x} ${point.y}) scale(${shrink}) translate(${-point.x} ${-point.y})`}
+              style={{ "--fit-far": `${Math.round((far / copies) * 100)}%` } as CSSProperties}
+            >
+              {placed.map((line, i) => (
+                <text key={i} className="fit__shadow" fontSize={MEASURED_AT} transform={place(line)}>
+                  {line.line}
+                </text>
+              ))}
+            </g>
+          );
+        })}
+      {placed.map((line, i) => (
+        <g key={i} className="fit__line" transform={place(line)}>
+          {!vanish &&
+            Array.from({ length: copies }, (_, k) => {
+              const offset = ((copies - k) * DEPTH_STEP) / line.scale;
+              return (
+                <text key={k} className="fit__shadow" fontSize={MEASURED_AT} x={lean * offset} y={offset}>
+                  {line.line}
+                </text>
+              );
+            })}
           <text
             ref={(element) => {
               refs.current[i] = element;
             }}
             fontSize={MEASURED_AT}
+            fill={gradient ? `url(#${gradientId})` : undefined}
           >
-            {line}
+            {line.line}
           </text>
         </g>
       ))}

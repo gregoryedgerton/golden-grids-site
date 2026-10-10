@@ -2,7 +2,8 @@ import { act, render } from "@testing-library/react";
 import { FitText } from "./FitText";
 
 const svg = (container: HTMLElement) => container.querySelector("svg") as SVGSVGElement;
-const groups = (container: HTMLElement) => [...container.querySelectorAll("g")].map((g) => g.getAttribute("transform"));
+const groups = (container: HTMLElement) =>
+  [...container.querySelectorAll("g.fit__line")].map((g) => g.getAttribute("transform"));
 
 /** Measure every glyph as `per` units wide in a line `height` tall, with the box starting at (x, y). */
 function measureAs(per: number, height = 100, x = 0, y = -80) {
@@ -78,6 +79,109 @@ describe("FitText", () => {
     // The line itself is drawn last, on top, and is the one that is measured.
     const texts = [...container.querySelectorAll("text")];
     expect(texts.at(-1)).not.toHaveClass("fit__shadow");
+  });
+
+  it("draws the copies down and to the left for a negative depth, and makes room on that side", () => {
+    const { container } = render(<FitText lines={["ab"]} extrude={-2} />);
+    const shadows = [...container.querySelectorAll(".fit__shadow")];
+    expect(shadows.map((s) => [s.getAttribute("x"), s.getAttribute("y")])).toEqual([
+      ["-0.8", "0.8"],
+      ["-0.4", "0.4"],
+    ]);
+    expect(svg(container)).toHaveAttribute("viewBox", "-8 0 1008 1008");
+  });
+
+  it("starts an indented line that many ems in, and still ends it at the full width", () => {
+    // "ab" is 100 wide; half an em of indent is 50 more, so it is scaled to fit 150.
+    const { container } = render(<FitText lines={["ab", "ab"]} indent={[0.5]} />);
+    const scale = 1000 / 150;
+    expect(groups(container)[0]).toBe(`translate(${50 * scale} ${80 * scale}) scale(${scale})`);
+    // A line with no indent given has none.
+    expect(groups(container)[1]).toBe(`translate(0 ${100 * scale + 800}) scale(10)`);
+  });
+
+  it("sets every line at the size of the longest when uniform, so shorter lines stop short", () => {
+    const { container } = render(<FitText lines={["abcd", "ab"]} uniform />);
+    expect(groups(container)).toEqual(["translate(0 400) scale(5)", "translate(0 900) scale(5)"]);
+    expect(svg(container)).toHaveAttribute("viewBox", "0 0 1000 1000");
+  });
+
+  it("staggers a lockup: one size, the second line starting along from the first", () => {
+    // "abcd" spans 200; "abc" with one em of indent spans 250 and is the longest.
+    const { container } = render(<FitText lines={["abcd", "abc"]} uniform indent={[0, 1]} />);
+    expect(groups(container)).toEqual(["translate(0 320) scale(4)", "translate(400 720) scale(4)"]);
+  });
+
+  it("recedes to a point: each copy the whole drawing shrunk toward it, the farthest drawn first", () => {
+    // "ab" is fitted to 1000 by 1000; the point is at the left edge, twice the height down.
+    const { container } = render(<FitText lines={["ab"]} extrude={3} vanish={{ x: 0, y: 2 }} />);
+    const layers = [...container.querySelectorAll("g.fit__layer")];
+    expect(layers.map((g) => g.getAttribute("transform"))).toEqual([
+      "translate(0 2000) scale(0.988) translate(0 -2000)",
+      "translate(0 2000) scale(0.992) translate(0 -2000)",
+      "translate(0 2000) scale(0.996) translate(0 -2000)",
+    ]);
+    // Each holds every line, placed as the line itself is.
+    for (const layer of layers) {
+      const copy = layer.querySelector("text") as SVGTextElement;
+      expect(copy).toHaveClass("fit__shadow");
+      expect(copy).toHaveTextContent("ab");
+      expect(copy).toHaveAttribute("transform", groups(container)[0]);
+    }
+    // They come before the lines, so the lines are drawn over them.
+    expect(layers.at(-1)?.nextElementSibling).toHaveClass("fit__line");
+    // The lines carry no stepped copies of their own in this mode.
+    expect(container.querySelectorAll(".fit__line .fit__shadow")).toHaveLength(0);
+  });
+
+  it("darkens a receding copy by how far back it is", () => {
+    const { container } = render(<FitText lines={["ab", "cd"]} extrude={4} vanish={{ x: -0.2, y: 1.5 }} />);
+    const far = [...container.querySelectorAll<SVGGElement>("g.fit__layer")].map((g) => g.style.getPropertyValue("--fit-far"));
+    expect(far).toEqual(["100%", "75%", "50%", "25%"]);
+    expect(container.querySelectorAll("g.fit__layer text")).toHaveLength(8);
+  });
+
+  it("keeps the lines at full size when the depth recedes, and lets the depth fall outside", () => {
+    const flat = render(<FitText lines={["ab"]} />);
+    const deep = render(<FitText lines={["ab"]} extrude={-12} vanish={{ x: -0.5, y: 3 }} />);
+    expect(svg(deep.container).getAttribute("viewBox")).toBe(svg(flat.container).getAttribute("viewBox"));
+    expect(svg(deep.container)).toHaveAttribute("viewBox", "0 0 1000 1000");
+    // The sign of the depth means nothing here: the point gives the direction.
+    expect(deep.container.querySelectorAll("g.fit__layer")).toHaveLength(12);
+  });
+
+  it("fills each line from top to bottom with the colours it is given", () => {
+    const { container } = render(<FitText lines={["ab", "cd"]} gradient={["#ffffff", "#ffcc00", "#aa6600"]} />);
+    const gradient = container.querySelector("linearGradient") as SVGLinearGradientElement;
+    expect([gradient.getAttribute("x1"), gradient.getAttribute("y1"), gradient.getAttribute("x2"), gradient.getAttribute("y2")]).toEqual(["0", "0", "0", "1"]);
+    const stops = [...gradient.querySelectorAll("stop")];
+    expect(stops.map((s) => [s.getAttribute("offset"), s.getAttribute("stop-color")])).toEqual([
+      ["0", "#ffffff"],
+      ["0.5", "#ffcc00"],
+      ["1", "#aa6600"],
+    ]);
+    const id = gradient.id;
+    expect(id).toMatch(/^fit[a-zA-Z0-9]+$/);
+    for (const face of container.querySelectorAll(".fit__line > text:last-child")) {
+      expect(face).toHaveAttribute("fill", `url(#${id})`);
+    }
+  });
+
+  it("gives a single colour one stop, two drawings gradients of their own, and a plain drawing none", () => {
+    const { container } = render(
+      <>
+        <FitText lines={["ab"]} gradient={["#ffcc00"]} />
+        <FitText lines={["ab"]} gradient={["#000000", "#ffffff"]} />
+        <FitText lines={["ab"]} />
+      </>,
+    );
+    const gradients = [...container.querySelectorAll("linearGradient")];
+    expect(gradients).toHaveLength(2);
+    expect(gradients[0]?.id).not.toBe(gradients[1]?.id);
+    expect(gradients[0]?.querySelector("stop")).toHaveAttribute("offset", "0");
+    const plain = container.querySelectorAll("svg")[2] as SVGSVGElement;
+    expect(plain.querySelector("defs")).toBeNull();
+    expect(plain.querySelector(".fit__line > text")).not.toHaveAttribute("fill");
   });
 
   it("keeps a guess while a line cannot be measured", () => {
