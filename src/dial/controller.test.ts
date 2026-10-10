@@ -697,6 +697,58 @@ describe("createDial, and where it is heading", () => {
     expect(headings).toEqual([null, 0]);
   });
 
+  it("is headed nowhere from the moment a finger comes down, before it has moved, while the dial goes on to where it was going", () => {
+    const { dial, advance, headings, focuses, frames } = setup();
+    dial.step(1);
+    advance(16);
+    dial.hold();
+    expect(headings).toEqual([1, null]);
+    // The touch stops nothing. The dial arrives on its cell beneath the finger, and is not headed for it.
+    advance(2000);
+    expect(dial.depth()).toBe(1);
+    expect(focuses).toEqual([1]);
+    expect(headings).toEqual([1, null]);
+    // The finger lifts where it came down: the dial is where it was going, and nothing is set moving.
+    dial.release();
+    expect(headings).toEqual([1, null, 1]);
+    expect(frames.size).toBe(0);
+    expect(dial.depth()).toBe(1);
+  });
+
+  it("is given no heading by a key or a scroll while a finger is down, and has one when the finger lifts", () => {
+    for (const startReduced of [false, true]) {
+      const { dial, advance, headings, state } = setup(10, startReduced);
+      dial.hold();
+      dial.step(1);
+      dial.goTo(3);
+      expect(headings).toEqual([null]);
+      advance(3000);
+      expect(dial.depth()).toBe(3);
+      expect(headings).toEqual([null]);
+      dial.release();
+      expect(headings).toEqual([null, 3]);
+      // And the dial is nobody's again: the next key heads it at once.
+      dial.step(1);
+      expect(headings).toEqual([null, 3, 4]);
+      expect(state.reduced).toBe(startReduced);
+    }
+  });
+
+  it("tells a touch from a swipe each time: a finger that only touches, after one that swiped, settles nothing", () => {
+    const { dial, advance, headings, frames } = setup();
+    dial.nudge(0.4);
+    dial.release();
+    advance(2000);
+    expect(dial.depth()).toBe(1);
+    expect(headings).toEqual([null, 1]);
+    dial.hold();
+    dial.release();
+    expect(headings).toEqual([null, 1, null, 1]);
+    // No settle is begun for a finger that moved nothing.
+    expect(frames.size).toBe(0);
+    expect(dial.depth()).toBe(1);
+  });
+
   it("is headed nowhere under a finger when motion is reduced too, though the finger moves nothing until it lifts", () => {
     const { dial, advance, headings, focuses } = setup(10, true);
     dial.step(1);
