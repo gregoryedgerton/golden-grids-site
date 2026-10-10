@@ -25,7 +25,18 @@ class ResizeObserverStub {
 }
 Object.defineProperty(globalThis, "ResizeObserver", { value: ResizeObserverStub, writable: true });
 
+// jsdom draws nothing, so it measures nothing. Every glyph is fifty units
+// wide and a line a hundred tall, unless a test says otherwise.
+Object.defineProperty(SVGElement.prototype, "getBBox", {
+  writable: true,
+  configurable: true,
+  value(this: SVGElement) {
+    return { x: 0, y: -80, width: (this.textContent as string).length * 50, height: 100 };
+  },
+});
+
 afterEach(() => {
+  document.head.querySelectorAll("link[data-face]").forEach((link) => link.remove());
   cleanup();
   resetMedia();
   ResizeObserverStub.instances.length = 0;

@@ -1,0 +1,18 @@
+{
+  "number": 7,
+  "brand": "GIFbase",
+  "reference": "Coinbase",
+  "subject": "A signed-in exchange app",
+  "url": "https://gregoryedgerton.github.io/golden-grids-study-07-coinbase/",
+  "colors": {
+    "ground": "#0052ff",
+    "ink": "#ffffff",
+    "accent": "#0a0b0d"
+  },
+  "font": {
+    "family": "Inter",
+    "weight": 700,
+    "italic": false
+  },
+  "icon": "coin"
+}

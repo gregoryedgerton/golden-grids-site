@@ -1,0 +1,18 @@
+{
+  "number": 11,
+  "brand": "GIFmutual",
+  "reference": "Northwestern Mutual",
+  "subject": "An insurer's site and a calculator",
+  "url": "https://gregoryedgerton.github.io/golden-grids-study-11-northwestern/",
+  "colors": {
+    "ground": "#0e497b",
+    "ink": "#ffffff",
+    "accent": "#ffb81c"
+  },
+  "font": {
+    "family": "Source Sans 3",
+    "weight": 600,
+    "italic": false
+  },
+  "icon": "shield"
+}

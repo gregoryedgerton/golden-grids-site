@@ -1,0 +1,18 @@
+{
+  "number": 4,
+  "brand": "GIFipedia",
+  "reference": "Wikipedia",
+  "subject": "One long article",
+  "url": "https://gregoryedgerton.github.io/golden-grids-study-04-wikipedia/",
+  "colors": {
+    "ground": "#f3ecdd",
+    "ink": "#1a1a1a",
+    "accent": "#b4261f"
+  },
+  "font": {
+    "family": "Fraunces",
+    "weight": 700,
+    "italic": false
+  },
+  "icon": "book"
+}

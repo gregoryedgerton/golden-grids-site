@@ -2,6 +2,40 @@
 
 The marketing site for [Golden Grids](https://github.com/gregoryedgerton/golden-grids), the Fibonacci layout library published as [`@gifcommit/golden-grids`](https://www.npmjs.com/package/@gifcommit/golden-grids).
 
+It is one page: a spiral dial. Swipe up or left, scroll, or use the arrow keys to go deeper; the opposites go back. The dial runs through a title, a statement of what the library is, its parameters, a gallery of the layout studies, and ends at a mailing-list sign-up.
+
+Live at <https://gregoryedgerton.github.io/golden-grids-site/>.
+
+## Adding a study
+
+Add one file to `src/studies/`, named for its number and subject:
+
+```json
+{
+  "number": 14,
+  "brand": "GIFdepot",
+  "reference": "The Home Depot",
+  "subject": "A product page",
+  "url": "https://gregoryedgerton.github.io/golden-grids-study-14-homedepot/",
+  "colors": { "ground": "#f96302", "ink": "#ffffff", "accent": "#000000" },
+  "font": { "family": "Archivo", "weight": 800, "italic": false },
+  "icon": "house"
+}
+```
+
+Nothing else changes: the gallery, its count and its order come from the folder.
+
+- `brand` is the parody name, written exactly. It is never case-transformed.
+- `colors.ink` sets the name and `colors.accent` the icon and the rule; each needs 3:1 contrast with `ground`. Small text takes whichever of them reads at 4.5:1, or white or black.
+- `font.family` is a Google Fonts family under an open licence. Only the letters of the name are requested.
+- `icon` is one of the names in `src/ui/icons.tsx`. Draw a new one there if none fits.
+
+A file that breaks a rule fails the tests with the file's name and the reason.
+
+## The mailing list
+
+`subscribe` in `src/site.ts` is the address the sign-up form sends to: the Beehiiv publication's subscribe page. While it is empty the form is shown closed.
+
 ## Running it
 
 ```bash
