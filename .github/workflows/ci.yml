@@ -46,7 +46,7 @@ jobs:
       - run: npm run test:coverage
       - run: npm run build
       - name: Keep the built site for the deploy job
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.PUBLISH_SITE == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
@@ -84,7 +84,11 @@ jobs:
     needs: test
     # Only main is published. The workflow can be run by hand on any branch,
     # and that must never replace the live site.
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    #
+    # And only when publishing is switched on. The site is private unless the
+    # repository variable PUBLISH_SITE is "true"; unset, main tests and
+    # releases and nothing is deployed.
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.PUBLISH_SITE == 'true'
     runs-on: ubuntu-latest
     permissions:
       pages: write

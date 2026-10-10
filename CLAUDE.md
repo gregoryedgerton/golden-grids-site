@@ -22,7 +22,9 @@ Issue → pull request → review → merge. No exceptions, including for docs.
 4. Merge only when both hold: Codex's review of HEAD reports no issues, and CI
    is green. Then `gh pr merge --rebase --delete-branch`.
 
-`main` releases itself with semantic-release and deploys to GitHub Pages.
+`main` releases itself with semantic-release. It deploys to GitHub Pages only
+when the repository variable `PUBLISH_SITE` is `true`; the site is private
+until then.
 
 ## Rules
 
