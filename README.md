@@ -28,7 +28,7 @@ Nothing else changes: the gallery, its count and its order come from the folder.
 - `brand` is the parody name, written exactly. It is never case-transformed.
 - `colors.ink` sets the name and `colors.accent` the icon and the rule; each needs 3:1 contrast with `ground`. Small text takes whichever of them reads at 4.5:1, or white or black.
 - `font.family` is a Google Fonts family under an open licence. Only the letters of the name are requested.
-- `icon` is one of the names in `src/ui/icons.tsx`. Draw a new one there if none fits.
+- `icon` is one of the names in `src/ui/icons.tsx`. If none fits, the file can draw its own: `"icon": { "path": "M3 20 12 4l9 16z" }` is SVG path data on a 24-unit grid, drawn as a line. Left out, the study gets a golden rectangle.
 
 A file that breaks a rule fails the tests with the file's name and the reason.
 
