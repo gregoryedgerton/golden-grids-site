@@ -27,8 +27,10 @@ export const WHEEL_IDLE_MS = 140;
  */
 export const WHEEL_TICK_PX = 3;
 /**
- * A wheel event smaller than this, in CSS pixels, is never the start of a
- * second push: the faint end of a flick flutters by a pixel or two.
+ * The size, in CSS pixels, that a second push has to reach. The faint end of
+ * a hard flick can hand over a few pixels at once, and that must not turn the
+ * dial. After a scroll gentler than this, a second push has only to reach
+ * that scroll's own peak, and never less than a scroll's worth.
  */
 export const WHEEL_PUSH_PX = 8;
 /**
@@ -92,8 +94,8 @@ export function createDial({ count, reduced, onDepth, onFocus, clock }: DialOpti
   let frame = 0;
   let stamp = 0;
   let timer = 0;
-  /** Wheel travel gathered toward a scroll: before one has turned the dial, or against the way it turned. */
-  let gathered = 0;
+  /** Wheel travel gathered toward a scroll on each axis: before one has turned the dial, or against the way it turned. */
+  const gathered = { x: 0, y: 0 };
   /** The way the scroll in progress turned the dial, 1 or -1, or 0 when there is none. */
   let latched = 0;
   /** The axis that scroll is on. */
@@ -181,13 +183,22 @@ export function createDial({ count, reduced, onDepth, onFocus, clock }: DialOpti
   /** The wheel has gone quiet: the scroll is over and the next one starts clean. */
   const quiet = () => {
     timer = 0;
-    gathered = 0;
+    gathered.x = 0;
+    gathered.y = 0;
     latched = 0;
+  };
+
+  /** Adds travel on one axis to what is gathered there, starting again from nothing if it has turned round. */
+  const gather = (along: Axis, pixels: number) => {
+    if (pixels * gathered[along] < 0) gathered[along] = 0;
+    gathered[along] += pixels;
+    return Math.abs(gathered[along]);
   };
 
   /** A scroll, or a new push of one, turns the dial one cell and latches the wheel to it. */
   const turn = (way: number, size: number, along: Axis) => {
-    gathered = 0;
+    gathered.x = 0;
+    gathered.y = 0;
     latched = way;
     axis = along;
     peak = size;
@@ -207,44 +218,57 @@ export function createDial({ count, reduced, onDepth, onFocus, clock }: DialOpti
    * running on, and each turns the dial again:
    *
    * - A second push. The scroll falls to a third of its peak and then climbs
-   *   to more than three times its lowest ebb. A flick's tail only shrinks
-   *   and a mouse's notches are all one size, so neither does that. A second
-   *   flick made before the first has died away does, however soon it comes.
+   *   to more than three times its lowest ebb, and to a push's size. A
+   *   flick's tail only shrinks and a mouse's notches are all one size, so
+   *   neither does that. A second flick made before the first has died away
+   *   does, however soon it comes.
    * - The wheel turned round. Travel against the scroll is gathered as travel
    *   toward a new one is.
    *
-   * A scroll keeps to the axis it began on, as a swipe does: a hand that
-   * drifts sideways as it lifts is not scrolling back.
+   * A scroll has one axis, as a swipe does. Before it turns the dial, travel
+   * is gathered on each axis by itself and the first to have a scroll's worth
+   * is the scroll's; after, only that axis is read. A hand that drifts
+   * sideways, as it starts or as it lifts, neither undoes the scroll nor
+   * scrolls back.
    */
   const wheel = (x: number, y: number) => {
     if (x === 0 && y === 0) return;
     if (timer) clock.clearTimer(timer);
     timer = clock.setTimer(quiet, WHEEL_IDLE_MS);
-    const along: Axis = latched ? axis : Math.abs(x) > Math.abs(y) ? "x" : "y";
-    const pixels = along === "x" ? x : y;
+
+    if (!latched) {
+      const across = gather("x", x);
+      const down = gather("y", y);
+      if (Math.max(across, down) < WHEEL_TICK_PX) return;
+      const along: Axis = across > down ? "x" : "y";
+      turn(Math.sign(gathered[along]), Math.abs(along === "x" ? x : y), along);
+      return;
+    }
+
+    const pixels = axis === "x" ? x : y;
     // Off the scroll's axis altogether: it keeps the scroll alive and turns nothing.
     if (pixels === 0) return;
     const way = Math.sign(pixels);
     const size = Math.abs(pixels);
 
-    if (way === latched) {
-      // More of the scroll that has already turned the dial. Whatever was
-      // gathered against it was a stray, not the wheel turning round.
-      gathered = 0;
-      if (ebb === 0) {
-        peak = Math.max(peak, size);
-        if (size * WHEEL_RISE <= peak) ebb = size;
-        return;
-      }
-      ebb = Math.min(ebb, size);
-      if (size >= WHEEL_PUSH_PX && size > ebb * WHEEL_RISE) turn(way, size, along);
+    if (way !== latched) {
+      // The wheel has turned round.
+      if (gather(axis, pixels) >= WHEEL_TICK_PX) turn(way, size, axis);
       return;
     }
 
-    // No scroll yet, or the wheel has turned round: gather toward one.
-    if (way !== Math.sign(gathered)) gathered = 0;
-    gathered += pixels;
-    if (Math.abs(gathered) >= WHEEL_TICK_PX) turn(way, size, along);
+    // More of the scroll that has already turned the dial. Whatever was
+    // gathered against it was a stray, not the wheel turning round.
+    gathered[axis] = 0;
+    if (ebb === 0) {
+      peak = Math.max(peak, size);
+      if (size * WHEEL_RISE <= peak) ebb = size;
+      return;
+    }
+    ebb = Math.min(ebb, size);
+    // As large as the push before it, within the least and the most a push has to be.
+    const push = Math.min(Math.max(peak, WHEEL_TICK_PX), WHEEL_PUSH_PX);
+    if (size > ebb * WHEEL_RISE && size >= push) turn(way, size, axis);
   };
 
   return {
