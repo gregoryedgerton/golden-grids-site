@@ -1,5 +1,5 @@
 import { useEffect, useSyncExternalStore } from "react";
-import { useCellAtRest, useCellCurrent } from "../dial/current";
+import { useCellCurrent, useCellLanding } from "../dial/current";
 import { FitText } from "../ui/FitText";
 import { opposite } from "./statement";
 import type { Ink, Statement } from "./statement";
@@ -15,21 +15,21 @@ export const INKS: Record<Ink, string> = { black: "currentColor", white: "#fffff
  * like. It says so first, then what they are. It gives no count: studies keep
  * being added.
  *
- * The statement is said, white then black and round again, from when the dial
- * comes to rest on the cell until the cell loses the focus. The cell only
- * shows it and tells it of those two things. The statement itself is handed
- * in, because this cell is taken off the dial when the reader is far from it
- * and put back when they return, and it has to come back the colour the
- * statement reached.
+ * The statement is said once, white and then black, as the dial lands on the
+ * cell. The cell only shows it, and tells it two things: that the dial is
+ * landing here, and that the cell has lost the focus. The statement itself is
+ * handed in, because this cell is taken off the dial when the reader is far
+ * from it and put back when they return, and it has to come back the colour
+ * the statement reached.
  */
 export function Gallery({ statement }: { statement: Statement }) {
   const current = useCellCurrent();
-  const atRest = useCellAtRest();
+  const landing = useCellLanding();
   const { ink, crossed } = useSyncExternalStore(statement.subscribe, statement.look);
 
   useEffect(() => {
-    if (atRest) statement.enter();
-  }, [statement, atRest]);
+    if (landing) statement.enter();
+  }, [statement, landing]);
 
   // The cell has the focus until it loses it or is taken off the dial, whichever comes first.
   useEffect(() => {

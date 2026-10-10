@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { clock } from "./clock";
 import { createDial } from "./controller";
 import type { DialController } from "./controller";
-import { CellAtRest, CellCurrent } from "./current";
+import { CellCurrent, CellLanding } from "./current";
 import { TEXTURE_PX, mountedAround, navFits, paintTile } from "./geometry";
 import { dragSteps, keyMove, ownsDrag, ownsKey, pastSlop, swipeAxis, wheelPixels } from "./input";
 import type { Axis } from "./input";
@@ -43,8 +43,8 @@ function DialOf({ cells }: { cells: Cell[] }) {
   const reduced = useReducedMotion();
   const reducedRef = useRef(reduced);
   const [focus, setFocus] = useState(0);
-  /** Whether the dial is on its focused cell and going nowhere. */
-  const [rested, setRested] = useState(true);
+  /** The cell the dial is at rest on or travelling to, or null while a finger holds it. */
+  const [heading, setHeading] = useState<number | null>(0);
   const rootRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   /** Whether the buttons are in a bar of their own, below the stage, instead of over its corner. */
@@ -84,7 +84,7 @@ function DialOf({ cells }: { cells: Cell[] }) {
         paint();
       },
       onFocus: setFocus,
-      onRest: setRested,
+      onHeading: setHeading,
       clock,
     });
     dialRef.current = created;
@@ -222,7 +222,7 @@ function DialOf({ cells }: { cells: Cell[] }) {
             >
               <div className="dial__content" inert={!current}>
                 <CellCurrent value={current}>
-                  <CellAtRest value={current && rested}>{cell.content}</CellAtRest>
+                  <CellLanding value={current && heading === index}>{cell.content}</CellLanding>
                 </CellCurrent>
               </div>
             </section>

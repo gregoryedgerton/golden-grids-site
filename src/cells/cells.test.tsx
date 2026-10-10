@@ -3,7 +3,7 @@ import { axe } from "vitest-axe";
 import { fills } from "../../test/fills";
 import { setReducedMotion } from "../../test/media";
 import { clock } from "../dial/clock";
-import { CellAtRest, CellCurrent } from "../dial/current";
+import { CellCurrent, CellLanding } from "../dial/current";
 import { Dial } from "../dial/Dial";
 import { prefersReducedMotion } from "../dial/motion";
 import { site } from "../site";
@@ -15,7 +15,7 @@ import { Gallery, INKS } from "./Gallery";
 import { buildCells } from "./index";
 import { PARAMETERS, Parameters } from "./Parameters";
 import { Signup } from "./Signup";
-import { LEAD_MS, SAID_MS, createStatement } from "./statement";
+import { SAID_MS, createStatement } from "./statement";
 import type { Statement } from "./statement";
 import { StudyCell } from "./StudyCell";
 import { Title } from "./Title";
@@ -334,12 +334,12 @@ describe("Gallery", () => {
 });
 
 describe("Gallery, and the statement being said", () => {
-  /** The cell as the dial holds it: the focused one or not, with the dial at rest on it or not. */
-  const holding = (statement: Statement) => (current: boolean, atRest: boolean) => (
+  /** The cell as the dial holds it: the focused one or not, and with the dial landing on it or not. */
+  const holding = (statement: Statement) => (current: boolean, landing: boolean) => (
     <CellCurrent value={current}>
-      <CellAtRest value={atRest}>
+      <CellLanding value={landing}>
         <Gallery statement={statement} />
-      </CellAtRest>
+      </CellLanding>
     </CellCurrent>
   );
   let held: ReturnType<typeof holding>;
@@ -348,6 +348,16 @@ describe("Gallery, and the statement being said", () => {
   const WHITE = INKS.white;
   // Here a glyph is 50 units: THESE runs from 0 to 250 of its line's 450 and ARE from 300, so they meet at 275.
   const MEET = Number((275 / 450).toFixed(4));
+  /** Every look the statement has from now, for this long, a frame at a time. */
+  const watch = (container: Element, ms: number) => {
+    const looks: string[] = [];
+    for (let t = 0; t < ms; t += 10) {
+      pass(10);
+      const now = JSON.stringify(fills(container));
+      if (now !== looks.at(-1)) looks.push(now);
+    }
+    return looks.map((look) => JSON.parse(look) as ReturnType<typeof fills>);
+  };
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -358,26 +368,26 @@ describe("Gallery, and the statement being said", () => {
     vi.useRealTimers();
   });
 
-  it("is black, as the rest of the cell is, until the dial has come to rest on it", () => {
+  it("is black, as the rest of the cell is, until the dial lands on it", () => {
+    // Looked at every frame: said once, it ends black as it began, so the end alone would not show it had been said.
     const outside = render(<Gallery statement={newStatement()} />);
-    pass(20_000);
-    expect(fills(outside.container)).toEqual([BLACK, BLACK]);
+    expect(watch(outside.container, 20_000)).toEqual([[BLACK, BLACK]]);
     outside.unmount();
-    // The focused cell, but still arriving: not yet.
-    const arriving = render(held(true, false));
-    pass(20_000);
-    expect(fills(arriving.container)).toEqual([BLACK, BLACK]);
+    // The focused cell, but under a finger or only being passed: not yet.
+    const passing = render(held(true, false));
+    expect(watch(passing.container, 20_000)).toEqual([[BLACK, BLACK]]);
     // The ink is the cell's own, whatever that is set to.
     expect(BLACK).toBe("currentColor");
   });
 
-  it("is crossed by white once the dial rests on it: THESE, then ARE, then FAKE, each from its left", () => {
+  it("is crossed by white the moment the dial lands on it: THESE, then ARE, then FAKE, each from its left", () => {
     const { container } = render(held(true, true));
-    pass(LEAD_MS - 20);
-    expect(fills(container)).toEqual([BLACK, BLACK]);
+    // No wait: a few frames in, white is already into THESE.
+    pass(50);
+    expect((fills(container)[0] as [number, string][]).map(([, colour]) => colour)).toEqual([WHITE, WHITE, BLACK, BLACK]);
 
-    // Into THESE: white from the left to an edge inside the word, black from there on. FAKE is untouched.
-    pass(20 + 150);
+    // Further into THESE: white from the left to an edge inside the word, black from there on. FAKE is untouched.
+    pass(100);
     const [these, fake] = fills(container) as [[number, string][], string];
     expect(these.map(([, colour]) => colour)).toEqual([WHITE, WHITE, BLACK, BLACK]);
     expect(these[1]?.[0]).toBeGreaterThan(0.3);
@@ -412,9 +422,9 @@ describe("Gallery, and the statement being said", () => {
     expect(fills(container)).toEqual([WHITE, WHITE]);
   });
 
-  it("rests white, is crossed by black the same way, rests black, and goes round for as long as it has the focus", () => {
+  it("rests white, is crossed by black the same way, and then stays black however long the reader stays", () => {
     const { container } = render(held(true, true));
-    pass(LEAD_MS + SAID_MS + 20);
+    pass(SAID_MS + 20);
     expect(fills(container)).toEqual([WHITE, WHITE]);
     // The rest is as long as the saying.
     pass(SAID_MS - 60);
@@ -426,20 +436,46 @@ describe("Gallery, and the statement being said", () => {
     pass(SAID_MS - 150);
     expect(fills(container)).toEqual([BLACK, BLACK]);
 
-    // Looked at in the middle of each rest from here on: a crossing and a rest later it is the other colour, every time.
-    pass(SAID_MS / 2);
-    const rests: string[] = [];
-    for (let i = 0; i < 12; i++) {
-      pass(SAID_MS + SAID_MS);
-      rests.push(fills(container).join());
-    }
-    const [white, black] = [`${WHITE},${WHITE}`, `${BLACK},${BLACK}`];
-    expect(rests).toEqual([white, black, white, black, white, black, white, black, white, black, white, black]);
+    // It is said once. A minute on, looked at every frame, it has never been anything but black.
+    expect(watch(container, 60_000)).toEqual([[BLACK, BLACK]]);
+    expect(vi.getTimerCount()).toBe(0);
   });
 
-  it("finishes what it is saying when the cell loses the focus, stays that colour, and takes up from it on return", () => {
+  it("is not said again when the dial stirs on the cell: under a finger and let go, the reader never having left", () => {
     const { container, rerender } = render(held(true, true));
-    pass(LEAD_MS + 420);
+    // In the middle of the white rest a finger takes the dial and lets it go. It goes on to black as it would have.
+    pass(SAID_MS + 300);
+    rerender(held(true, false));
+    pass(200);
+    rerender(held(true, true));
+    pass(SAID_MS + SAID_MS);
+    expect(fills(container)).toEqual([BLACK, BLACK]);
+
+    // Done, and stirred again: nothing.
+    rerender(held(true, false));
+    rerender(held(true, true));
+    expect(watch(container, 10_000)).toEqual([[BLACK, BLACK]]);
+  });
+
+  it("is said again to a reader who leaves the cell and comes back", () => {
+    const { container, rerender } = render(held(true, true));
+    pass(4 * SAID_MS);
+    expect(fills(container)).toEqual([BLACK, BLACK]);
+    rerender(held(false, false));
+    pass(5000);
+    rerender(held(true, true));
+    pass(150);
+    const [these] = fills(container) as [[number, string][]];
+    expect(these.map(([, colour]) => colour)).toEqual([WHITE, WHITE, BLACK, BLACK]);
+    pass(SAID_MS);
+    expect(fills(container)).toEqual([WHITE, WHITE]);
+    pass(SAID_MS + SAID_MS);
+    expect(fills(container)).toEqual([BLACK, BLACK]);
+  });
+
+  it("finishes what it is saying when the cell loses the focus, stays that colour, and on return is crossed by black alone", () => {
+    const { container, rerender } = render(held(true, true));
+    pass(420);
     expect(fills(container)[1]).toBe(BLACK);
     rerender(held(false, false));
 
@@ -449,49 +485,34 @@ describe("Gallery, and the statement being said", () => {
     expect(fills(container)[1]).not.toBe(BLACK);
     pass(400);
     expect(fills(container)).toEqual([WHITE, WHITE]);
-    // And no further: it is white however long it is left.
-    for (let i = 0; i < 40; i++) {
-      pass(500);
-      expect(fills(container)).toEqual([WHITE, WHITE]);
-    }
+    // And no further: it is white however long it is left. No black follows behind the reader's back.
+    expect(watch(container, 20_000)).toEqual([[WHITE, WHITE]]);
 
-    // Back on the cell: nothing until the dial is at rest, then black, since it was left white.
+    // The focused cell again, but under a finger: nothing yet. Let go, and black crosses it at once.
     rerender(held(true, false));
     pass(5000);
     expect(fills(container)).toEqual([WHITE, WHITE]);
     rerender(held(true, true));
-    pass(LEAD_MS + 150);
+    pass(150);
     const [these] = fills(container) as [[number, string][]];
     expect(these.map(([, colour]) => colour)).toEqual([BLACK, BLACK, WHITE, WHITE]);
     pass(SAID_MS);
     expect(fills(container)).toEqual([BLACK, BLACK]);
+    // It had only to come back to black. No white follows.
+    expect(watch(container, 10_000)).toEqual([[BLACK, BLACK]]);
   });
 
-  it("goes on while the cell is the focused one, even if the dial stirs under a finger", () => {
+  it("stays white if the reader leaves while it rests white", () => {
     const { container, rerender } = render(held(true, true));
-    pass(LEAD_MS + SAID_MS + 20);
-    expect(fills(container)).toEqual([WHITE, WHITE]);
-    // Off rest, but still the focused cell: the next crossing comes as it would have.
-    rerender(held(true, false));
-    pass(SAID_MS + SAID_MS);
-    expect(fills(container)).toEqual([BLACK, BLACK]);
-    rerender(held(true, true));
-    pass(SAID_MS + SAID_MS);
-    expect(fills(container)).toEqual([WHITE, WHITE]);
+    pass(SAID_MS + 400);
+    rerender(held(false, false));
+    expect(vi.getTimerCount()).toBe(0);
+    expect(watch(container, 10_000)).toEqual([[WHITE, WHITE]]);
   });
 
   it("changes a word at a time, whole, when motion is reduced: the colour changes and nothing travels", () => {
     setReducedMotion(true);
     const { container } = render(held(true, true));
-    const looks: string[] = [];
-    const watch = (ms: number) => {
-      for (let t = 0; t < ms; t += 10) {
-        pass(10);
-        const now = JSON.stringify(fills(container));
-        if (now !== looks.at(-1)) looks.push(now);
-      }
-    };
-    watch(LEAD_MS + SAID_MS + SAID_MS + SAID_MS + 40);
     const meet = [
       [0, WHITE],
       [MEET, WHITE],
@@ -499,9 +520,10 @@ describe("Gallery, and the statement being said", () => {
       [1, BLACK],
     ];
     const back = meet.map(([at, colour]) => [at, colour === WHITE ? BLACK : WHITE]);
-    // Black; THESE white; THESE ARE white; all white; then black a word at a time. An edge only ever sits between two words.
-    expect(looks.map((look) => JSON.parse(look))).toEqual([
-      [BLACK, BLACK],
+    // THESE is white from the moment the dial lands.
+    expect(fills(container)).toEqual([meet, BLACK]);
+    // Then THESE ARE; all of it; and black a word at a time. An edge only ever sits between two words. Then nothing.
+    expect(watch(container, 20_000)).toEqual([
       [meet, BLACK],
       [WHITE, BLACK],
       [WHITE, WHITE],
@@ -513,7 +535,7 @@ describe("Gallery, and the statement being said", () => {
 
   it("follows the motion preference while it is being said", () => {
     const { container } = render(held(true, true));
-    pass(LEAD_MS + 100);
+    pass(100);
     const [these] = fills(container) as [[number, string][]];
     expect(these[1]?.[0]).toBeLessThan(MEET - 0.05);
     act(() => setReducedMotion(true));
@@ -526,41 +548,49 @@ describe("Gallery, and the statement being said", () => {
     const statement = newStatement();
     const cell = holding(statement);
     const first = render(cell(true, true));
-    pass(LEAD_MS + 420);
+    pass(420);
     expect(fills(first.container)[1]).toBe(BLACK);
     // Off the dial in the middle of the white crossing, as when the reader goes far from it.
     first.unmount();
     expect(statement.look().ink).toBe("black");
     pass(SAID_MS);
     expect(statement.look()).toEqual({ ink: "white", crossed: [0, 0, 0] });
-    // Finished, and nothing is left running.
+    // Finished, and nothing is left running: no black crossing waits its turn.
     expect(vi.getTimerCount()).toBe(0);
     pass(60_000);
+    expect(statement.look()).toEqual({ ink: "white", crossed: [0, 0, 0] });
 
-    // Put back, near the focus but not on it: white, as it was left. Then black, once the dial rests on it.
+    // Put back, near the focus but not on it: white, as it was left. Then black, as the dial lands on it.
     const again = render(cell(false, false));
     expect(fills(again.container)).toEqual([WHITE, WHITE]);
     again.rerender(cell(true, true));
-    pass(LEAD_MS + 150);
+    pass(150);
     const [these] = fills(again.container) as [[number, string][]];
     expect(these.map(([, colour]) => colour)).toEqual([BLACK, BLACK, WHITE, WHITE]);
   });
 
   it("says no more once it is off the dial, even if it was the focused cell when it was taken off", () => {
-    // Waiting to begin, and resting between two crossings: in both the next crossing is called off.
-    for (const [after, ink] of [
-      [LEAD_MS - 50, "black"],
-      [LEAD_MS + SAID_MS + 300, "white"],
-    ] as const) {
-      const statement = newStatement();
-      const { unmount } = render(holding(statement)(true, true));
-      pass(after);
-      expect(vi.getTimerCount()).toBe(1);
-      unmount();
-      expect(vi.getTimerCount()).toBe(0);
-      pass(20_000);
-      expect(statement.look()).toEqual({ ink, crossed: [0, 0, 0] });
-    }
+    // Resting white, with the black crossing still to come: it is called off.
+    const resting = newStatement();
+    const rest = render(holding(resting)(true, true));
+    pass(SAID_MS + 300);
+    expect(vi.getTimerCount()).toBe(1);
+    rest.unmount();
+    expect(vi.getTimerCount()).toBe(0);
+    pass(20_000);
+    expect(resting.look()).toEqual({ ink: "white", crossed: [0, 0, 0] });
+
+    // In the middle of a crossing, with motion reduced, where a timer waits for the next word: it finishes, and stops.
+    setReducedMotion(true);
+    const crossing = newStatement();
+    const cross = render(holding(crossing)(true, true));
+    pass(100);
+    cross.unmount();
+    expect(vi.getTimerCount()).toBe(1);
+    pass(SAID_MS);
+    expect(vi.getTimerCount()).toBe(0);
+    pass(20_000);
+    expect(crossing.look()).toEqual({ ink: "white", crossed: [0, 0, 0] });
   });
 
   it("heeds the reader's motion preference in the statement the page's own cells are built with", () => {
@@ -568,13 +598,12 @@ describe("Gallery, and the statement being said", () => {
     const gallery = buildCells([], "").find((cell) => cell.id === "gallery");
     const { container } = render(
       <CellCurrent value>
-        <CellAtRest value>{gallery?.content}</CellAtRest>
+        <CellLanding value>{gallery?.content}</CellLanding>
       </CellCurrent>,
     );
     const edges = new Set<number>();
-    for (let t = 0; t < LEAD_MS + SAID_MS; t += 10) {
-      pass(10);
-      for (const fill of fills(container)) if (Array.isArray(fill)) edges.add((fill[1] as [number, string])[0]);
+    for (const look of [fills(container), ...watch(container, SAID_MS)]) {
+      for (const fill of look) if (Array.isArray(fill)) edges.add((fill[1] as [number, string])[0]);
     }
     // White crossed the whole statement, and the only edge there ever was sat between THESE and ARE.
     expect(fills(container)).toEqual([WHITE, WHITE]);
@@ -586,10 +615,10 @@ describe("Gallery, and the statement being said", () => {
     const gallery = cells.find((cell) => cell.id === "gallery");
     const shown = render(
       <CellCurrent value>
-        <CellAtRest value>{gallery?.content}</CellAtRest>
+        <CellLanding value>{gallery?.content}</CellLanding>
       </CellCurrent>,
     );
-    pass(LEAD_MS + SAID_MS + 20);
+    pass(SAID_MS + 20);
     expect(fills(shown.container)).toEqual([WHITE, WHITE]);
     shown.unmount();
     // The same cells, shown again: the statement is the one they were built with.
@@ -628,13 +657,23 @@ describe("the statement, on a dial that mounts only the cells near the focus", (
   const gallery = () => document.querySelector(".gallery");
   const said = () => fills(gallery() as Element);
   const announced = () => screen.getByTestId("dial-announce").textContent;
-  /** Frames go by until the statement looks like this, or far too long has passed. */
+  const whole = (now: ReturnType<typeof said>) => now.every((fill) => typeof fill === "string");
+  /** Frames go by until the statement looks like this, or far too long has passed. Returns how long it took. */
   const until = (looks: (now: ReturnType<typeof said>) => boolean) => {
-    for (let t = 0; t < 6000 && !looks(said()); t += 16) pass(16);
-    return said();
+    let waited = 0;
+    for (; waited < 6000 && !looks(said()); waited += 16) pass(16);
+    return waited;
+  };
+  /** Every look the statement has while this long goes by, a frame at a time. */
+  const through = (ms: number) => {
+    const looks = new Set<string>();
+    for (let t = 0; t < ms; t += 16) {
+      pass(16);
+      if (gallery()) looks.add(said().map((fill) => (typeof fill === "string" ? fill : "crossing")).join());
+    }
+    return [...looks];
   };
   const [WHITE, BLACK] = [INKS.white, INKS.black];
-  const whole = (now: ReturnType<typeof said>) => now.every((fill) => typeof fill === "string");
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -647,6 +686,47 @@ describe("the statement, on a dial that mounts only the cells near the focus", (
     vi.useRealTimers();
   });
 
+  it("begins as the dial lands on the cell, well before the dial has come to rest, and is said once", () => {
+    setReducedMotion(false);
+    render(<Dial cells={buildCells(studies, "")} />);
+    key("ArrowDown");
+    frames(1000);
+    key("ArrowDown");
+    frames(1000);
+    // Ahead and in reach, never yet the focused cell: black.
+    expect(said()).toEqual([BLACK, BLACK]);
+
+    key("ArrowDown");
+    // White is into THESE within a few frames of the key. The dial is still most of a second from rest.
+    expect(until((now) => !whole(now))).toBeLessThan(200);
+    expect(announced()).toMatch(/^Case Studies, 4 of/);
+    const tile = (gallery() as Element).closest(".dial__tile") as HTMLElement;
+    const landing = tile.style.transform;
+    frames(1000);
+    expect(tile.style.transform).not.toBe(landing);
+
+    // White, a rest, black, and then black for good.
+    until((now) => now.every((fill) => fill === WHITE));
+    expect(said()).toEqual([WHITE, WHITE]);
+    until((now) => now.every((fill) => fill === BLACK));
+    expect(said()).toEqual([BLACK, BLACK]);
+    expect(through(20_000)).toEqual([`${BLACK},${BLACK}`]);
+  });
+
+  it("does not begin for a cell the dial only passes on its way to the far end, or on its way back", () => {
+    setReducedMotion(false);
+    render(<Dial cells={buildCells(studies, "")} />);
+    key("End");
+    // The gallery's cell is the focused one for a moment on the way, and is never crossed.
+    expect(through(4000)).toEqual([`${BLACK},${BLACK}`]);
+    expect(announced()).toMatch(/^The mailing list/);
+    expect(gallery()).toBeNull();
+    key("Home");
+    expect(through(4000)).toEqual([`${BLACK},${BLACK}`]);
+    expect(announced()).toMatch(/^Golden Grids, 1 of/);
+    expect(said()).toEqual([BLACK, BLACK]);
+  });
+
   it.each([
     ["travelling there", false],
     ["jumping there, with motion reduced", true],
@@ -657,11 +737,9 @@ describe("the statement, on a dial that mounts only the cells near the focus", (
     frames(1000);
     key("ArrowDown");
     frames(1000);
-    // Ahead and in reach, never yet the focused cell: black.
-    expect(said()).toEqual([BLACK, BLACK]);
     key("ArrowDown");
     // On the cell, and white is part of the way across it.
-    expect(until((now) => !whole(now))).not.toEqual([BLACK, BLACK]);
+    until((now) => !whole(now));
     expect(announced()).toMatch(/^Case Studies, 4 of/);
     frames(100);
     expect(whole(said())).toBe(false);
@@ -681,15 +759,18 @@ describe("the statement, on a dial that mounts only the cells near the focus", (
     pass(20_000);
     expect(said()).toEqual([WHITE, WHITE]);
 
-    // And when the dial rests on it again, black crosses it.
+    // And when the dial lands on it again, black crosses it, and it stays black.
     key("ArrowDown");
     frames(1000);
     key("ArrowDown");
     frames(1000);
     expect(said()).toEqual([WHITE, WHITE]);
     key("ArrowDown");
-    expect(until((now) => !whole(now)).flat().at(0)).toEqual([0, BLACK]);
-    expect(until((now) => now.every((fill) => fill === BLACK))).toEqual([BLACK, BLACK]);
+    until((now) => !whole(now));
+    expect(said().flat().at(0)).toEqual([0, BLACK]);
+    until((now) => now.every((fill) => fill === BLACK));
+    expect(said()).toEqual([BLACK, BLACK]);
+    expect(through(10_000)).toEqual([`${BLACK},${BLACK}`]);
   });
 });
 

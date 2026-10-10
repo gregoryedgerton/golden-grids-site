@@ -2,10 +2,11 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { axe } from "vitest-axe";
 import { mediaListeners, setReducedMotion } from "../../test/media";
 import { WHEEL_IDLE_MS } from "./controller";
-import { useCellAtRest, useCellCurrent } from "./current";
+import { useCellCurrent, useCellLanding } from "./current";
 import { Dial } from "./Dial";
 import type { Cell } from "./Dial";
 import { AHEAD, BEHIND, TEXTURE_PX, paintTile } from "./geometry";
+import { DRAG_SHARE } from "./input";
 
 const followed = vi.fn();
 
@@ -61,10 +62,15 @@ function Says() {
   return <span data-says>{useCellCurrent() ? "focused" : "waiting"}</span>;
 }
 
-function Rests() {
-  const [current, atRest] = [useCellCurrent(), useCellAtRest()];
-  return <span data-rests>{atRest ? "at rest" : current ? "arriving" : "waiting"}</span>;
+function Lands({ name }: { name: number }) {
+  const [current, landing] = [useCellCurrent(), useCellLanding()];
+  return <span data-lands={name}>{landing ? "landing" : current ? "focused" : "waiting"}</span>;
 }
+
+/** A dial whose cells each say how the dial stands to them. */
+const landable = (count: number) => makeCells(count).map((cell, i) => ({ ...cell, content: <Lands name={i} /> }));
+/** What the mounted cells say, in order. */
+const lands = () => [...document.querySelectorAll("[data-lands]")].map((s) => s.textContent);
 
 describe("Dial", () => {
   it("tells each cell's content whether its cell is the focused one", () => {
@@ -81,40 +87,99 @@ describe("Dial", () => {
     expect(document.querySelector("[data-says]")).toHaveTextContent("waiting");
   });
 
-  it("tells a cell's content when the dial has come to rest on it, which is later than when it becomes the focused one", () => {
+  it("tells a cell's content that the dial is landing on it as soon as it is the focused one, long before the dial is still", () => {
     setReducedMotion(false);
     vi.useFakeTimers();
     try {
-      const cells = makeCells(3).map((cell) => ({ ...cell, content: <Rests /> }));
-      render(<Dial cells={cells} />);
-      const said = () => [...document.querySelectorAll("[data-rests]")].map((s) => s.textContent);
+      render(<Dial cells={landable(3)} />);
       // It opens at rest on its first cell.
-      expect(said()).toEqual(["at rest", "waiting", "waiting"]);
+      expect(lands()).toEqual(["landing", "waiting", "waiting"]);
 
       fireEvent.keyDown(document.body, { key: "ArrowDown" });
-      const seen: string[] = [];
-      for (let i = 0; i < 200; i++) {
+      // Headed elsewhere at once: the first cell is still the nearest, and no longer where the dial is landing.
+      expect(lands()).toEqual(["focused", "waiting", "waiting"]);
+      let frames = 0;
+      while (lands()[1] !== "landing") {
         act(() => void vi.advanceTimersByTime(16));
-        const now = said().join();
-        if (now !== seen.at(-1)) seen.push(now);
+        frames += 1;
       }
-      // Setting off, nothing is at rest. Half way there the next cell is the
-      // focused one, still arriving. Only at the end is it at rest.
-      expect(seen).toEqual(["arriving,waiting,waiting", "waiting,arriving,waiting", "waiting,at rest,waiting"]);
+      // About half way there, a few frames in. The dial goes on moving for most of a second after this.
+      expect(lands()).toEqual(["waiting", "landing", "waiting"]);
+      expect(frames).toBeLessThan(10);
+      expect(current().style.transform).not.toBe(paintTile(1, 1, 1440, 900).transform);
+      for (let i = 0; i < 200; i++) act(() => void vi.advanceTimersByTime(16));
+      expect(current().style.transform).toBe(paintTile(1, 1, 1440, 900).transform);
+      expect(lands()).toEqual(["waiting", "landing", "waiting"]);
     } finally {
       vi.useRealTimers();
     }
   });
 
-  it("is at rest on each cell at once when motion is reduced, and tells content outside any dial that it is not", () => {
-    const cells = makeCells(3).map((cell) => ({ ...cell, content: <Rests /> }));
-    const { unmount } = render(<Dial cells={cells} />);
-    const said = () => [...document.querySelectorAll("[data-rests]")].map((s) => s.textContent);
+  it("does not tell a cell the dial is landing on it when the dial is only passing on its way to another", () => {
+    setReducedMotion(false);
+    vi.useFakeTimers();
+    try {
+      render(<Dial cells={landable(8)} />);
+      const landed = new Set<string>();
+      const focused = new Set<string>();
+      const watch = () => {
+        for (let i = 0; i < 300; i++) {
+          act(() => void vi.advanceTimersByTime(16));
+          for (const cell of document.querySelectorAll("[data-lands]")) {
+            if (cell.textContent === "landing") landed.add(cell.getAttribute("data-lands") as string);
+            if (cell.textContent === "focused") focused.add(cell.getAttribute("data-lands") as string);
+          }
+        }
+      };
+      fireEvent.keyDown(document.body, { key: "End" });
+      watch();
+      expect(announced()).toBe("Cell 8, 8 of 8");
+      // Every cell on the way was the focused one for a moment. Only the last was landed on.
+      expect([...focused].sort()).toEqual(["1", "2", "3", "4", "5", "6"]);
+      expect([...landed]).toEqual(["7"]);
+
+      landed.clear();
+      fireEvent.keyDown(document.body, { key: "Home" });
+      watch();
+      expect([...landed]).toEqual(["0"]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("does not tell a cell the dial is landing on it while a finger holds the dial, and does when the finger lifts", () => {
+    setReducedMotion(false);
+    vi.useFakeTimers();
+    try {
+      render(<Dial cells={landable(3)} />);
+      const finger = { pointerId: 7, isPrimary: true, pointerType: "touch" };
+      // Seven tenths of a cell, as a finger's travel on this stage.
+      const reach = 0.7 * 900 * DRAG_SHARE;
+      fireEvent.pointerDown(stage(), { ...finger, clientX: 200, clientY: 800 });
+      // Past the slop, then most of the way to the next cell.
+      fireEvent.pointerMove(window, { ...finger, clientX: 200, clientY: 790 });
+      fireEvent.pointerMove(window, { ...finger, clientX: 200, clientY: 790 - reach });
+      // The next cell is the nearest now, under the finger. It may yet be let go either way.
+      expect(announced()).toBe("Cell 2, 2 of 3");
+      expect(lands()).toEqual(["waiting", "focused", "waiting"]);
+      for (let i = 0; i < 20; i++) act(() => void vi.advanceTimersByTime(16));
+      expect(lands()).toEqual(["waiting", "focused", "waiting"]);
+
+      fireEvent.pointerUp(window, { ...finger, clientX: 200, clientY: 790 - reach });
+      // Let go: it is landing, before a frame of the settle has run.
+      expect(lands()).toEqual(["waiting", "landing", "waiting"]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("is landing on each cell at once when motion is reduced, and tells content outside any dial that nothing is", () => {
+    const { unmount } = render(<Dial cells={landable(3)} />);
     fireEvent.keyDown(document.body, { key: "ArrowDown" });
-    expect(said()).toEqual(["waiting", "at rest", "waiting"]);
+    expect(lands()).toEqual(["waiting", "landing", "waiting"]);
     unmount();
-    render(<Rests />);
-    expect(said()).toEqual(["waiting"]);
+    render(<Lands name={0} />);
+    expect(lands()).toEqual(["waiting"]);
   });
 
   it("shows the first cell as the only one that can be read or reached", async () => {

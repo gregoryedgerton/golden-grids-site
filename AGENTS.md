@@ -20,18 +20,27 @@ steps with no travel between them. Flag any animation, transition or
 that changes in place is not travel; the gallery's statement, below, is the
 one case of it.
 
-**The gallery's opening statement is said.** By the owner's direction, while
-its cell is the focused one white crosses THESE, ARE and FAKE in turn, inside
-the letters and from the left of each word. A word starts when it would be
-said and takes about as long as it takes to say. The statement rests in that
-colour for as long again, black crosses it the same way, and the two repeat.
+**The gallery's opening statement is said, once a visit.** By the owner's
+direction, as the dial lands on its cell white crosses THESE, ARE and FAKE in
+turn, inside the letters and from the left of each word. A word starts when it
+would be said and takes about as long as it takes to say. The statement rests
+white for as long again, black crosses it the same way, and it stays black. It
+does not repeat: the owner asked that it not loop once it is back to black.
 
-- It starts only once the dial has come to rest on the cell. A cell is the
-  nearest one from half way through the travel to it, and that is too soon.
+- It begins at once, as the dial lands: when the cell is the focused one and
+  the dial is at rest on it or on its way to rest on it with nothing holding
+  it. The owner asked for no wait, so do not flag that it starts while the
+  cell is still arriving. Do flag it starting for a cell the dial is only
+  passing on its way to another, or for one under a finger that has not let
+  go, and any delay put back in front of the first word.
+- It is said again only to a reader who has left the cell and come back. The
+  dial stirring on a cell the reader never left, a finger taking it and
+  letting it go, says nothing again.
 - When the cell loses the focus, a crossing under way finishes and the
-  statement stays the colour it reached. Flag anything that can leave it part
-  white and part black, or that lets it go on, or start, while another cell
-  has the focus.
+  statement stays the colour it reached. Nothing more is said while another
+  cell has the focus: a statement left white stays white, and is crossed by
+  black, and by black alone, when the reader returns. Flag anything that can
+  leave it part white and part black.
 - That holds while the cell is off the dial. The dial mounts only the cells
   near the focus, so the gallery's cell is removed when the reader is three or
   more cells past it and made again when they return. The statement is
@@ -47,6 +56,8 @@ colour for as long again, black crosses it the same way, and the two repeat.
 - White and the cell's own ink each keep 3:1 against the cell's red. Under a
   forced palette the statement keeps the reader's text colour and nothing
   crosses it.
+- All of it is over in under five seconds, so it has no control of its own
+  and needs none. Flag a change that would make it run longer.
 
 **The title's video is YouTube's.** It is played through YouTube's embedded
 player and never copied into the repository or the build. The one exception is

@@ -7,16 +7,16 @@ function setup(count = 10, startReduced = false) {
   const state = { reduced: startReduced };
   const depths: number[] = [];
   const focuses: number[] = [];
-  const rests: boolean[] = [];
+  const headings: (number | null)[] = [];
   const dial = createDial({
     count,
     reduced: () => state.reduced,
     onDepth: (depth) => depths.push(depth),
     onFocus: (index) => focuses.push(index),
-    onRest: (resting) => rests.push(resting),
+    onHeading: (index) => headings.push(index),
     clock: fake.clock,
   });
-  return { ...fake, dial, state, depths, focuses, rests };
+  return { ...fake, dial, state, depths, focuses, headings };
 }
 
 /**
@@ -619,107 +619,114 @@ describe("createDial, with motion", () => {
   });
 });
 
-describe("createDial, at rest on a cell and away from it", () => {
-  it("starts at rest and says so to nobody", () => {
-    const { rests, advance } = setup();
+describe("createDial, and where it is heading", () => {
+  it("starts headed for its first cell, at rest on it, and says so to nobody", () => {
+    const { dial, headings, advance } = setup();
     advance(1000);
-    expect(rests).toEqual([]);
+    expect(headings).toEqual([]);
+    // Sent where it already is, it has nothing new to say either.
+    dial.goTo(0);
+    advance(1000);
+    expect(headings).toEqual([]);
   });
 
-  it("leaves rest when it sets off for another cell and is at rest again only when it has arrived", () => {
-    const { dial, advance, rests, focuses } = setup();
+  it("says where it is going as it sets off, long before it is there, and nothing more when it arrives", () => {
+    const { dial, advance, headings, focuses } = setup();
     dial.step(1);
-    expect(rests).toEqual([false]);
-    // Past half way the next cell is the nearest, and the dial is still travelling.
-    while (focuses.length === 0) advance(16);
-    expect(dial.depth()).toBeLessThan(1);
-    expect(rests).toEqual([false]);
+    // Told at once: no frame has run and the dial has not moved.
+    expect(headings).toEqual([1]);
+    expect(dial.depth()).toBe(0);
+    expect(focuses).toEqual([]);
     advance(2000);
     expect(dial.depth()).toBe(1);
-    expect(rests).toEqual([false, true]);
+    expect(headings).toEqual([1]);
   });
 
-  it("says each once: more travel on the way is not a second departure", () => {
-    const { dial, advance, rests } = setup();
+  it("says each new destination as travel is sent on, and none twice", () => {
+    const { dial, advance, headings } = setup();
     dial.step(1);
     advance(48);
     dial.step(1);
     dial.wheel(0, 40);
     advance(48);
     dial.goTo(5);
-    expect(rests).toEqual([false]);
+    dial.goTo(5);
+    expect(headings).toEqual([1, 2, 3, 5]);
     advance(3000);
     expect(dial.depth()).toBe(5);
-    expect(rests).toEqual([false, true]);
+    expect(headings).toEqual([1, 2, 3, 5]);
+    // Past the last cell there is nowhere new to head for.
+    dial.goTo(9);
+    dial.step(1);
+    expect(headings).toEqual([1, 2, 3, 5, 9]);
   });
 
-  it("is off rest under a finger, and at rest once it has settled after the finger lifts", () => {
-    const { dial, advance, rests } = setup();
+  it("is headed nowhere under a finger, and for a cell again as soon as the finger lifts", () => {
+    const { dial, advance, headings } = setup();
     dial.nudge(0.05);
     dial.nudge(0.05);
-    expect(rests).toEqual([false]);
+    expect(headings).toEqual([null]);
     dial.release();
-    // Settling back to the cell it never really left.
-    expect(rests).toEqual([false]);
+    // Back to the cell it never really left, and told so before it has settled there.
+    expect(headings).toEqual([null, 0]);
+    expect(dial.depth()).toBeGreaterThan(0);
     advance(2000);
     expect(dial.depth()).toBe(0);
-    expect(rests).toEqual([false, true]);
+    expect(headings).toEqual([null, 0]);
 
     dial.nudge(0.4);
     dial.release();
+    expect(headings).toEqual([null, 0, null, 1]);
     advance(2000);
     expect(dial.depth()).toBe(1);
-    expect(rests).toEqual([false, true, false, true]);
+    expect(headings).toEqual([null, 0, null, 1]);
   });
 
-  it("is at rest again when a finger lifts with motion newly reduced and the dial already on a cell", () => {
-    const { dial, advance, rests, frames, state } = setup();
-    // Dragged back from the first cell: there is nowhere to go, and the finger has still taken it off rest.
+  it("is headed for a cell again when a finger lifts with motion newly reduced and the dial already on one", () => {
+    const { dial, advance, headings, frames, state } = setup();
+    // Dragged back from the first cell: there is nowhere to go, and the finger still holds the dial.
     dial.nudge(-0.3);
     expect(dial.depth()).toBe(0);
-    expect(rests).toEqual([false]);
+    expect(headings).toEqual([null]);
     state.reduced = true;
     dial.release();
-    // No snap is needed and no frame is asked for, but the dial is on its cell and the finger is gone.
+    // No snap is needed and no frame is asked for, but the finger is gone and the dial is on its cell.
     expect(frames.size).toBe(0);
-    expect(rests).toEqual([false, true]);
+    expect(headings).toEqual([null, 0]);
     advance(1000);
-    expect(rests).toEqual([false, true]);
+    expect(headings).toEqual([null, 0]);
   });
 
-  it("never leaves rest when motion is reduced: it is on one cell and then on another", () => {
-    const { dial, advance, rests, focuses } = setup(10, true);
+  it("is never headed nowhere when motion is reduced: a finger moves nothing until it lifts", () => {
+    const { dial, advance, headings, focuses } = setup(10, true);
     dial.step(1);
     dial.goTo(4);
     dial.nudge(0.6);
+    expect(headings).toEqual([1, 4]);
     dial.release();
     dial.wheel(0, 40);
     advance(1000);
-    expect(focuses.at(-1)).toBe(dial.depth());
-    expect(dial.depth()).toBeGreaterThan(4);
-    expect(rests).toEqual([]);
+    expect(headings).toEqual([1, 4, 5, 6]);
+    expect(focuses.at(-1)).toBe(6);
+    expect(dial.depth()).toBe(6);
   });
 
-  it("tells of the cell before it tells of the rest, when both come in one moment", () => {
-    const fake = fakeClock();
-    const state = { reduced: false };
-    const told: string[] = [];
-    const dial = createDial({
-      count: 10,
-      reduced: () => state.reduced,
-      onDepth: () => {},
-      onFocus: (index) => told.push(`focus ${index}`),
-      onRest: (resting) => told.push(resting ? "at rest" : "off"),
-      clock: fake.clock,
-    });
-    dial.step(1);
-    fake.advance(16);
-    // Not yet half way, so cell 0 is still the nearest. Motion is reduced now, and the next frame jumps to the end.
-    expect(dial.depth()).toBeLessThan(0.5);
-    state.reduced = true;
-    fake.advance(16);
-    expect(dial.depth()).toBe(1);
-    expect(told).toEqual(["off", "focus 1", "at rest"]);
+  it("tells of the destination before it tells of the cell, so the cell it lands on already knows it is the one", () => {
+    for (const startReduced of [false, true]) {
+      const fake = fakeClock();
+      const told: string[] = [];
+      const dial = createDial({
+        count: 10,
+        reduced: () => startReduced,
+        onDepth: () => {},
+        onFocus: (index) => told.push(`focus ${index}`),
+        onHeading: (index) => told.push(`heading ${index}`),
+        clock: fake.clock,
+      });
+      dial.step(1);
+      fake.advance(2000);
+      expect(told).toEqual(["heading 1", "focus 1"]);
+    }
   });
 });
 
