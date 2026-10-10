@@ -184,6 +184,37 @@ describe("FitText", () => {
     expect(plain.querySelector(".fit__line > text")).not.toHaveAttribute("fill");
   });
 
+  it("marks the start of the first line, and of every copy of it, when asked", () => {
+    const { container } = render(<FitText lines={["4abc", "def"]} strong={1} extrude={1} />);
+    const [first, second] = [...container.querySelectorAll(".fit__line")] as [Element, Element];
+    for (const text of first.querySelectorAll("text")) {
+      expect(text.querySelector("tspan.fit__strong")).toHaveTextContent("4");
+      expect(text).toHaveTextContent("4abc");
+    }
+    expect(first.querySelectorAll("text")).toHaveLength(2);
+    expect(second.querySelector("tspan")).toBeNull();
+    // The whole line is still what is measured: four glyphs, 200 wide.
+    expect(groups(container)[0]).toBe("translate(0 400) scale(5)");
+    // In a receding depth too.
+    const deep = render(<FitText lines={["4abc"]} strong={2} extrude={1} vanish={{ x: 0, y: 2 }} />);
+    expect(deep.container.querySelector(".fit__layer tspan.fit__strong")).toHaveTextContent("4a");
+  });
+
+  it("marks nothing unless asked", () => {
+    const { container } = render(<FitText lines={["4abc"]} />);
+    expect(container.querySelector("tspan")).toBeNull();
+  });
+
+  it("ends its box at the last line's baseline when asked, leaving descenders to hang below", () => {
+    // Lines are 100 tall with the baseline 80 down; "ab" scales by 10, "abcd" by 5.
+    const whole = render(<FitText lines={["ab", "abcd"]} />);
+    expect(svg(whole.container)).toHaveAttribute("viewBox", "0 0 1000 1500");
+    const trimmed = render(<FitText lines={["ab", "abcd"]} toBaseline />);
+    expect(svg(trimmed.container)).toHaveAttribute("viewBox", "0 0 1000 1400");
+    // The lines themselves are where they were.
+    expect(groups(trimmed.container)).toEqual(groups(whole.container));
+  });
+
   it("keeps a guess while a line cannot be measured", () => {
     for (const [per, height] of [
       [0, 100],

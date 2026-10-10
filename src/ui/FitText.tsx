@@ -35,14 +35,17 @@ function stack(lines: string[], boxes: Box[] | undefined, leading: number, inden
   const longest = Math.max(...measured.map((m) => m.span));
   let cursor = 0;
   let height = 0;
+  let baseline = 0;
   const placed = measured.map(({ line, box, inset, span }) => {
     const scale = WIDTH / (uniform ? longest : span);
     const top = cursor;
     cursor += box.height * scale * leading;
     height = top + box.height * scale;
-    return { line, scale, x: (inset - box.x) * scale, y: top - box.y * scale };
+    // A line is drawn from its baseline, which the measured box starts above.
+    baseline = top - box.y * scale;
+    return { line, scale, x: (inset - box.x) * scale, y: baseline };
   });
-  return { placed, height };
+  return { placed, height, baseline };
 }
 
 /** A point in the drawing, as shares of its width and height. It may lie outside it. */
@@ -65,6 +68,12 @@ export type Vanish = { x: number; y: number };
  * darken toward `--fit-shadow-far` as they go.
  *
  * `gradient` fills each line from its top to its bottom with those colours.
+ *
+ * `strong` marks that many characters at the start of the first line as
+ * `fit__strong`, for a heavier figure or initial. `toBaseline` ends the
+ * drawing's box at the last line's baseline rather than under its descenders,
+ * which then hang below it: what follows can be spaced from where the letters
+ * sit, not from the tail of a p.
  */
 export function FitText({
   lines,
@@ -75,6 +84,8 @@ export function FitText({
   uniform = false,
   vanish,
   gradient,
+  strong = 0,
+  toBaseline = false,
 }: {
   lines: string[];
   className?: string;
@@ -84,6 +95,8 @@ export function FitText({
   uniform?: boolean;
   vanish?: Vanish;
   gradient?: string[];
+  strong?: number;
+  toBaseline?: boolean;
 }) {
   const refs = useRef<(SVGTextElement | null)[]>([]);
   const [fitted, setFitted] = useState<{ key: string; boxes: Box[] } | null>(null);
@@ -123,7 +136,19 @@ export function FitText({
     };
   }, [measure]);
 
-  const { placed, height } = stack(lines, fitted?.boxes, leading, indent, uniform);
+  const stacked = stack(lines, fitted?.boxes, leading, indent, uniform);
+  const { placed } = stacked;
+  const height = toBaseline ? stacked.baseline : stacked.height;
+  /** A line's words, with the start of the first line marked if asked. */
+  const words = (line: string, i: number) =>
+    strong > 0 && i === 0 ? (
+      <>
+        <tspan className="fit__strong">{line.slice(0, strong)}</tspan>
+        {line.slice(strong)}
+      </>
+    ) : (
+      line
+    );
   const copies = Math.abs(extrude);
   const place = ({ x, y, scale }: { x: number; y: number; scale: number }) => `translate(${x} ${y}) scale(${scale})`;
 
@@ -165,7 +190,7 @@ export function FitText({
             >
               {placed.map((line, i) => (
                 <text key={i} className="fit__shadow" fontSize={MEASURED_AT} transform={place(line)}>
-                  {line.line}
+                  {words(line.line, i)}
                 </text>
               ))}
             </g>
@@ -178,7 +203,7 @@ export function FitText({
               const offset = ((copies - k) * DEPTH_STEP) / line.scale;
               return (
                 <text key={k} className="fit__shadow" fontSize={MEASURED_AT} x={lean * offset} y={offset}>
-                  {line.line}
+                  {words(line.line, i)}
                 </text>
               );
             })}
@@ -189,7 +214,7 @@ export function FitText({
             fontSize={MEASURED_AT}
             fill={gradient ? `url(#${gradientId})` : undefined}
           >
-            {line.line}
+            {words(line.line, i)}
           </text>
         </g>
       ))}

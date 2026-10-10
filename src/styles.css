@@ -208,12 +208,23 @@ a {
   color: var(--ground);
 }
 
-/* One word across the whole cell. */
+/* The heading, the strip and the paragraph share the cell's height, with the
+   room left over split evenly above and below the strip. */
+.vision {
+  justify-content: space-between;
+}
+
+/* One word across the whole cell, as tall as that makes it. Its box ends at
+   the baseline, so the p hangs below and the strip is spaced from the letters. */
 .vision__heading {
-  flex: 1 1 0;
-  min-height: 0;
-  font-weight: 600;
+  flex: none;
+  height: auto;
+  font-weight: 400;
   letter-spacing: -0.02em;
+}
+
+.vision__heading .fit__strong {
+  font-weight: 700;
 }
 
 /* The four platforms in a row, each under its mark. */
