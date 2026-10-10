@@ -52,19 +52,36 @@ describe("Vision", () => {
 });
 
 describe("Parameters", () => {
-  it("names every parameter in a box of a grid the library lays out", async () => {
+  it("is a reference to read: each parameter, its values and what it does", async () => {
     const { container } = render(<Parameters />);
-    expect(screen.getByRole("heading", { level: 2, name: "Five parameters" })).toBeInTheDocument();
-    expect(PARAMETERS).toHaveLength(5);
-    const names = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
-    expect([...names].sort()).toEqual(PARAMETERS.map((p) => p.name).sort());
-    for (const { says } of PARAMETERS) expect(screen.getByText(says)).toBeInTheDocument();
-    const boxes = [...container.querySelectorAll(".golden-grid__box")];
-    expect(boxes).toHaveLength(5);
-    // The first parameter has the largest box.
-    const largest = boxes.reduce((a, b) => (parseFloat((b as HTMLElement).style.width) > parseFloat((a as HTMLElement).style.width) ? b : a));
-    expect(largest).toHaveTextContent(PARAMETERS[0].name);
+    expect(screen.getByRole("heading", { level: 2, name: "The parameters" })).toBeInTheDocument();
+    const terms = screen.getAllByRole("term").map((t) => t.textContent);
+    expect(terms).toEqual(["from · to", "skip", "placement", "clockwise"]);
+    for (const { term, values, says } of PARAMETERS) {
+      const list = screen.getByRole("list", { name: `Values for ${term}` });
+      expect(within(list).getAllByRole("listitem").map((li) => li.textContent)).toEqual([...values]);
+      expect(screen.getByText(says)).toBeInTheDocument();
+    }
+    // Each term has two descriptions: what it takes, then what it does.
+    const item = screen.getByText("skip").closest(".parameters__item") as HTMLElement;
+    expect([...item.children].map((c) => c.tagName)).toEqual(["DT", "DD", "DD"]);
+    expect(item.children[2]).toHaveTextContent(PARAMETERS[1].says);
+    expect(screen.getAllByRole("definition")).toHaveLength(PARAMETERS.length * 2);
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("covers the range, skipping, where the spiral starts and which way it turns", () => {
+    render(<Parameters />);
+    const says = (term: string) => PARAMETERS.find((p) => p.term === term)?.says;
+    expect(says("from · to")).toMatch(/range of the Fibonacci sequence/);
+    expect(says("skip")).toMatch(/squares before it are skipped.*not a plain run/);
+    expect(within(screen.getByRole("list", { name: "Values for placement" })).getAllByRole("listitem")).toHaveLength(4);
+    expect(says("clockwise")).toMatch(/clockwise, or counter-clockwise/);
+  });
+
+  it("is not a grid", () => {
+    const { container } = render(<Parameters />);
+    expect(container.querySelector(".golden-grid")).toBeNull();
   });
 });
 
