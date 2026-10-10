@@ -1,35 +1,56 @@
-import { GoldenBox, GoldenGrid } from "@gifcommit/golden-grids";
-
-/** The props, in the order of the boxes they sit in: largest first. */
+/**
+ * What there is to set, in the order a reader meets it: the range, what
+ * happens when the range does not start at the beginning, where the spiral
+ * starts and which way it turns.
+ */
 export const PARAMETERS = [
-  { name: "from · to", says: "The range of the Fibonacci sequence to lay out. One to five gives these five boxes." },
-  { name: "placement", says: "Where the spiral starts: right, bottom, left or top." },
-  { name: "clockwise", says: "Which way the spiral turns." },
-  { name: "color", says: "A base colour, stepped across the boxes." },
-  { name: "outline", says: "A border, drawn once on shared edges." },
+  {
+    term: "from · to",
+    values: ["1", "5"],
+    says: "The range of the Fibonacci sequence to lay out. From 1 to 5 is five squares, with sides 1, 1, 2, 3 and 5.",
+  },
+  {
+    term: "skip",
+    values: ["from 3"],
+    says: "Start above 1 and the squares before it are skipped. They fold into one open cell, for a layout that is not a plain run.",
+  },
+  {
+    term: "placement",
+    values: ["right", "bottom", "left", "top"],
+    says: "The side the spiral starts from.",
+  },
+  {
+    term: "clockwise",
+    values: ["true", "false"],
+    says: "Which way the spiral turns: clockwise, or counter-clockwise.",
+  },
 ] as const;
 
-/** The library's parameters, set in a grid the library lays out. */
+/** The library's parameters, as a reference to read. */
 export function Parameters() {
   return (
     <div className="cell parameters">
-      <h2 className="parameters__heading">Five parameters</h2>
-      <div className="parameters__grid">
-        {/* An odd count starting from the bottom lies on its side: eight wide, five tall. */}
-        <GoldenGrid from={1} to={PARAMETERS.length} placement="bottom">
-          {PARAMETERS.map(({ name, says }) => (
-            <GoldenBox key={name} className="parameters__box">
-              {/* The box is the container; what is in it is sized by the box. */}
-              <div className="parameters__in">
-                <h3>
-                  <code>{name}</code>
-                </h3>
-                <p>{says}</p>
-              </div>
-            </GoldenBox>
-          ))}
-        </GoldenGrid>
-      </div>
+      <h2 className="parameters__heading">The parameters</h2>
+      <dl className="parameters__list">
+        {PARAMETERS.map(({ term, values, says }) => (
+          <div key={term} className="parameters__item">
+            <dt>
+              <code>{term}</code>
+            </dt>
+            {/* Two descriptions of one term: what it takes, then what it does. */}
+            <dd className="parameters__takes">
+              <ul aria-label={`Values for ${term}`}>
+                {values.map((value) => (
+                  <li key={value}>
+                    <code>{value}</code>
+                  </li>
+                ))}
+              </ul>
+            </dd>
+            <dd className="parameters__says">{says}</dd>
+          </div>
+        ))}
+      </dl>
     </div>
   );
 }
