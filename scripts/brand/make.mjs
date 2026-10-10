@@ -25,7 +25,8 @@ const shots = [
   { art: "icon", file: "favicon-32.png", width: 512, height: 512, scale: 32 / 512 },
 ];
 
-const browser = await chromium.launch({ channel: "chrome" });
+// Playwright's own Chromium if it has been downloaded, or else the Chrome installed on this machine.
+const browser = await chromium.launch().catch(() => chromium.launch({ channel: "chrome" }));
 for (const { art, file, width, height, scale } of shots) {
   const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: scale });
   const tab = await context.newPage();
