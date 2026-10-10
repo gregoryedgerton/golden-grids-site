@@ -24,10 +24,24 @@ export function embedUrl(id: string): string {
  * stays legible whatever frame is showing. It is decoration: hidden from
  * assistive technology, out of the tab order, and it takes no clicks. The
  * player exists only while `playing`, so stopping it is removing it.
+ *
+ * `still` is a picture to show in the video's place while it is not playing:
+ * one frame of it, for a reader who has asked for no motion.
  */
-export function BackgroundVideo({ id, title, playing }: { id: string; title: string; playing: boolean }) {
+export function BackgroundVideo({
+  id,
+  title,
+  playing,
+  still,
+}: {
+  id: string;
+  title: string;
+  playing: boolean;
+  still?: string;
+}) {
   return (
     <div className="bgvideo" aria-hidden="true">
+      {!playing && still && <img className="bgvideo__still" src={still} alt="" />}
       {playing && (
         <iframe
           src={embedUrl(id)}

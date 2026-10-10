@@ -59,6 +59,15 @@ a {
   pointer-events: none;
 }
 
+/* The still that stands in for the video: the same crop of the same picture. */
+.bgvideo__still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 /* A 16:9 picture covering a square: full height, centred, the sides cropped. */
 .bgvideo iframe {
   position: absolute;

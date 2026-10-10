@@ -44,6 +44,26 @@ describe("BackgroundVideo", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
+  it("shows a still in the video's place while it is not playing, under the scrim", () => {
+    const { container, rerender } = render(<BackgroundVideo id="abc" title="A video" playing={false} still="/still.jpg" />);
+    const picture = container.querySelector("img.bgvideo__still") as HTMLImageElement;
+    expect(picture).toHaveAttribute("src", "/still.jpg");
+    // Decoration, like the video: no description, inside the hidden wrapper, under the scrim.
+    expect(picture).toHaveAttribute("alt", "");
+    expect(picture.closest("[aria-hidden='true']")).toHaveClass("bgvideo");
+    expect(picture.nextElementSibling).toHaveClass("bgvideo__scrim");
+    expect(container.querySelector("iframe")).toBeNull();
+    // Never both: when the video plays, the still is gone.
+    rerender(<BackgroundVideo id="abc" title="A video" playing still="/still.jpg" />);
+    expect(container.querySelector("img")).toBeNull();
+    expect(container.querySelector("iframe")).toBeInTheDocument();
+  });
+
+  it("has no picture when it is given none", () => {
+    const { container } = render(<BackgroundVideo id="abc" title="A video" playing={false} />);
+    expect(container.querySelector("img")).toBeNull();
+  });
+
   it("has no player at all when it is not playing, and keeps the scrim", () => {
     const { container, rerender } = render(<BackgroundVideo id="abc" title="A video" playing={false} />);
     expect(container.querySelector("iframe")).toBeNull();

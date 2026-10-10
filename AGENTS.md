@@ -20,12 +20,14 @@ steps with no travel between them. Flag any animation, transition or
 
 **The title's video is YouTube's.** It is played through YouTube's embedded
 player and never copied into the repository or the build. The one exception is
-`scripts/brand/still.jpg`, a single still the owner supplied, which is used
-only behind the title on the share image. Flag any other frame or clip of
-the video, and any use of that still on the page itself. It plays only while
-the title is the focused cell and never under reduced motion. It has no
-control of its own by the owner's decision; do not flag the missing pause
-button, and do flag anything that would let it play in another cell.
+`src/assets/title-still.jpg`, a single still the owner supplied. By the
+owner's decision it is used in two places: behind the title on the share
+image, and behind the title on the page in place of the video for a reader
+who has asked for reduced motion. Flag any other frame or clip of the video.
+The video plays only while the title is the focused cell and never under
+reduced motion. It has no control of its own by the owner's decision; do not
+flag the missing pause button, and do flag anything that would let it play in
+another cell.
 
 **Directions are fixed.** Swiping up or left, scrolling down or right, and the
 Down, Right, Page Down and Space keys go deeper; the opposites go back. Keys
