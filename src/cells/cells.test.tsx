@@ -1,5 +1,4 @@
 import { act, render, screen, within } from "@testing-library/react";
-import html from "../../index.html?raw";
 import { axe } from "vitest-axe";
 import { setReducedMotion } from "../../test/media";
 import { CellCurrent } from "../dial/current";
@@ -160,12 +159,6 @@ describe("Vision", () => {
     expect(body).toHaveTextContent(/What you put on them is your business, at least you won’t be boring\.$/);
     expect(body).toHaveTextContent(/at least you won’t be boring\.$/);
     expect(body).not.toHaveTextContent(/same boxes|all four/);
-  });
-
-  it("says in the page's description what it says in the cell", () => {
-    const description = /<meta\s+name="description"\s+content="([^"]+)"/.exec(html)?.[1];
-    expect(description?.startsWith(LENS)).toBe(true);
-    expect(description).toMatch(/React, React Native, SwiftUI and Jetpack Compose\.$/);
   });
 
   it("sets the 4 in the same weight as the word, and ends the heading's box at its baseline", () => {

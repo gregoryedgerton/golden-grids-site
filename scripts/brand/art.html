@@ -1,0 +1,88 @@
+<!doctype html>
+<!--
+  The artwork for the site's icon and share image, drawn the way the title
+  cell draws its name: Pacifico set tight, lemon to gold from top to bottom,
+  with depth that shrinks toward a point below and to the left. `make.mjs`
+  opens this page and photographs it. `?art=icon` draws GG on a square;
+  `?art=share` draws the first cell's composition at 1200 by 630.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@300&family=Pacifico&display=block" />
+    <style>
+      html, body { margin: 0; background: #14100c; }
+      #stage { position: relative; overflow: hidden; background: #14100c; }
+      svg { position: absolute; overflow: visible; }
+      text { font-family: "Pacifico"; letter-spacing: -0.035em; }
+      .presents { position: absolute; margin: 0; color: #f7f2e8; font: 300 58px/1 "Oswald"; letter-spacing: 0.01em; }
+      /* A soft light behind the name, where the video's picture would be. */
+      .glow { position: absolute; inset: 0; background: radial-gradient(60% 70% at 62% 45%, #3a2a16 0%, #14100c 70%); }
+    </style>
+  </head>
+  <body>
+    <div id="stage"></div>
+    <script>
+      const GOLD = ["#ffe23d", "#fff3a6", "#fbd128", "#eaa51b"];
+      const NEAR = [217, 138, 20], FAR = [107, 58, 12];
+      const NS = "http://www.w3.org/2000/svg";
+      const el = (name, attrs = {}, parent) => {
+        const node = document.createElementNS(NS, name);
+        for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+        if (parent) parent.append(node);
+        return node;
+      };
+
+      /** Lines at one size, each starting `indent` ems in, with depth receding to `vanish`. */
+      function lockup(svg, lines, { indent, leading, copies, step, vanish }) {
+        const probe = lines.map((line) => { const t = el("text", { "font-size": 100 }, svg); t.textContent = line; return t; });
+        const boxes = probe.map((t) => t.getBBox());
+        probe.forEach((t) => t.remove());
+        const spans = boxes.map((b, i) => b.width + indent[i] * 100);
+        const scale = 1000 / Math.max(...spans);
+        let cursor = 0, height = 0;
+        const placed = lines.map((line, i) => {
+          const top = cursor; cursor += boxes[i].height * scale * leading; height = top + boxes[i].height * scale;
+          return { line, transform: `translate(${(indent[i] * 100 - boxes[i].x) * scale} ${top - boxes[i].y * scale}) scale(${scale})` };
+        });
+        svg.setAttribute("viewBox", `0 0 1000 ${height}`);
+        const defs = el("defs", {}, svg);
+        const gradient = el("linearGradient", { id: "gold", x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+        GOLD.forEach((color, i) => el("stop", { offset: i / (GOLD.length - 1), "stop-color": color }, gradient));
+        const point = { x: vanish.x * 1000, y: vanish.y * height };
+        for (let far = copies; far >= 1; far--) {
+          const mix = far / copies;
+          const fill = `rgb(${NEAR.map((n, i) => Math.round(n + (FAR[i] - n) * mix)).join(" ")})`;
+          const layer = el("g", { transform: `translate(${point.x} ${point.y}) scale(${1 - far * step}) translate(${-point.x} ${-point.y})`, fill }, svg);
+          for (const p of placed) el("text", { "font-size": 100, transform: p.transform }, layer).textContent = p.line;
+        }
+        for (const p of placed) el("text", { "font-size": 100, transform: p.transform, fill: "url(#gold)" }, svg).textContent = p.line;
+        return height / 1000;
+      }
+
+      const art = new URLSearchParams(location.search).get("art");
+      const stage = document.getElementById("stage");
+      document.fonts.load('100px "Pacifico"').then(() => document.fonts.load('300 58px "Oswald"')).then(() => {
+        /** Size a lockup to fit a box of the stage and centre it there, nudged to leave room for its depth. */
+        const fit = (svg, ratio, box, nudge) => {
+          const width = Math.min(box.width, box.height / ratio);
+          const height = width * ratio;
+          svg.style.cssText = `width:${width}px;height:${height}px;left:${box.left + (box.width - width) / 2 + nudge.x}px;top:${box.top + (box.height - height) / 2 + nudge.y}px;transform:rotate(-7deg)`;
+        };
+        if (art === "icon") {
+          stage.style.cssText += "width:512px;height:512px";
+          const svg = el("svg", {}, stage);
+          const ratio = lockup(svg, ["GG"], { indent: [0], leading: 1, copies: 22, step: 0.005, vanish: { x: -0.2, y: 2.2 } });
+          fit(svg, ratio, { left: 56, top: 40, width: 400, height: 400 }, { x: 14, y: -34 });
+        } else {
+          stage.style.cssText += "width:1200px;height:630px";
+          stage.insertAdjacentHTML("beforeend", '<div class="glow"></div><p class="presents" style="left:64px;top:52px">GIFcommit presents</p>');
+          const svg = el("svg", {}, stage);
+          const ratio = lockup(svg, ["Golden", "Grids"], { indent: [0, 0.85], leading: 0.66, copies: 26, step: 0.004, vanish: { x: -0.15, y: 1.8 } });
+          fit(svg, ratio, { left: 190, top: 70, width: 860, height: 500 }, { x: 40, y: -22 });
+        }
+        document.body.dataset.ready = "yes";
+      });
+    </script>
+  </body>
+</html>

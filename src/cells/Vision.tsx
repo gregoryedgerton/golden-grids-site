@@ -5,7 +5,7 @@ import type { LogoName } from "../ui/logos";
 /** One word, a figure run into it, after the way GIFcommit is written. */
 const HEADING = "4platforms";
 
-/** What Golden Grids is, in a sentence. The page's description in search results says the same. */
+/** What Golden Grids is, in a sentence. */
 export const LENS =
   "Golden Grids is a new lens to view layouts through that leverages the golden ratio, a visual pattern that we all instinctually know through nature.";
 
