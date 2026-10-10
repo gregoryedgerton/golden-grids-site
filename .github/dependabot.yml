@@ -9,6 +9,11 @@ updates:
     commit-message:
       prefix: fix
       prefix-development: chore
+    ignore:
+      # semantic-release's notes generator carries an older changelog writer
+      # than version 10 of this preset needs, and the release job fails on it.
+      - dependency-name: conventional-changelog-conventionalcommits
+        update-types: ["version-update:semver-major"]
     groups:
       development:
         dependency-type: development
