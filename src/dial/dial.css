@@ -1,0 +1,92 @@
+.dial {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--ground);
+}
+
+.dial__stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  /* The dial takes every swipe, so the page behind it never scrolls. A pinch
+     still zooms. */
+  touch-action: pinch-zoom;
+  overscroll-behavior: none;
+}
+
+.dial__tile {
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* The library's per-tile transform assumes this origin. */
+  transform-origin: 0 0;
+  overflow: hidden;
+  visibility: hidden;
+  container-type: size;
+}
+
+.dial__tile[data-current="false"] {
+  cursor: pointer;
+}
+
+.dial__content {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+}
+
+.dial__nav {
+  position: absolute;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgb(20 16 12 / 0.86);
+  color: var(--paper);
+}
+
+.dial__nav button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.dial__nav button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.dial__nav button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: -2px;
+}
+
+.dial__nav svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dial__count {
+  min-width: 4.5ch;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
