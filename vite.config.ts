@@ -9,12 +9,12 @@ const library = JSON.parse(
   readFileSync(new URL("./node_modules/@gifcommit/golden-grids/package.json", import.meta.url), "utf8"),
 ) as { version: string };
 
-// On GitHub Pages the site is served from /<repository>/. The base is derived
-// so a fork or a rename needs no edit.
-const repository = process.env.GITHUB_REPOSITORY?.split("/")[1];
-
 export default defineConfig({
-  base: repository ? `/${repository}/` : "/",
+  // GitHub Pages serves the site from /<repository>/ on github.io and from the
+  // root of a domain of its own, and the same build has to work at both. So
+  // every address the build writes for one of the site's own files is
+  // relative to the file that names it. A fork or a rename needs no edit.
+  base: "./",
   plugins: [react()],
   define: {
     __LIBRARY_VERSION__: JSON.stringify(library.version),
