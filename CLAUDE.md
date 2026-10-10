@@ -23,8 +23,8 @@ Issue → pull request → review → merge. No exceptions, including for docs.
    is green. Then `gh pr merge --rebase --delete-branch`.
 
 `main` releases itself with semantic-release. It deploys to GitHub Pages only
-when the repository variable `PUBLISH_SITE` is `true`; the site is private
-until then.
+while the repository variable `PUBLISH_SITE` is `true`, which it is: the
+repository is private and the site is public.
 
 ## Rules
 

@@ -4,7 +4,7 @@ The marketing site for [Golden Grids](https://github.com/gregoryedgerton/golden-
 
 It is one page: a spiral dial. Swipe up or left, scroll, or use the arrow keys to go deeper; the opposites go back. The dial runs through a title, a statement of what the library is, its parameters, a gallery of the layout studies, and ends at a mailing-list sign-up.
 
-The site is private for now: the repository is private and nothing is deployed. Setting the repository variable `PUBLISH_SITE` to `true` (with GitHub Pages enabled, source GitHub Actions) publishes `main` to GitHub Pages.
+Live at <https://gregoryedgerton.github.io/golden-grids-site/>. The repository is private; the site is public. `main` is published to GitHub Pages while the repository variable `PUBLISH_SITE` is `true` (with Pages enabled, source GitHub Actions). Unset it and nothing is deployed.
 
 ## Adding a study
 
