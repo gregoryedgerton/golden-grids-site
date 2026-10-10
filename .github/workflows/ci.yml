@@ -47,7 +47,7 @@ jobs:
       - run: npm run build
       - name: Keep the built site for the deploy job
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.PUBLISH_SITE == 'true'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
