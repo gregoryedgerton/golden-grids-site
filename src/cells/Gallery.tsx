@@ -1,15 +1,28 @@
 import { FitText } from "../ui/FitText";
+import { site } from "../site";
 
-/** The cell that opens the gallery. */
+/** Said as large as the cell allows, before anyone meets a study. */
+const HEADING = ["THESE ARE", "FAKE"];
+
+/**
+ * The cell that opens the gallery: the studies are not the sites they look
+ * like. It says so first, then what they are, then how to make one.
+ */
 export function Gallery({ count }: { count: number }) {
   return (
     <div className="cell gallery">
-      <h2 className="gallery__heading">The studies</h2>
-      <FitText className="gallery__count" lines={[String(count)]} />
+      <p className="gallery__kicker">The studies</p>
+      <h2 className="visually-hidden">{HEADING.join(" ")}</h2>
+      <FitText className="gallery__heading" lines={HEADING} leading={0.74} />
       <p className="gallery__body">
-        <span className="visually-hidden">{count} </span>
-        {count === 1 ? "site" : "sites"} rebuilt on the grid, each under a parody name. None is affiliated with the site
-        it studies.
+        The next {count === 1 ? "cell is a layout study" : `${count} cells are layout studies`}. Each takes a site you
+        know and rebuilds it on Golden Grids under a parody name, to see how the grid carries a real layout. None is
+        affiliated with the site it studies, and nothing in them can be bought, booked or signed up for.
+      </p>
+      <p className="gallery__make">
+        <a href={site.template} target="_blank" rel="noopener">
+          Make your own <span className="visually-hidden">study from the template (opens in a new window)</span>
+        </a>
       </p>
     </div>
   );

@@ -6,6 +6,8 @@ export const site = {
   version: __LIBRARY_VERSION__,
   npm: "https://www.npmjs.com/package/@gifcommit/golden-grids",
   github: "https://github.com/gregoryedgerton/golden-grids",
+  /** The repository a new study starts from. */
+  template: "https://github.com/gregoryedgerton/golden-grids-study-template",
   /** The video behind the title, played from YouTube. */
   video: {
     id: "ohWEdv4bhdE",
