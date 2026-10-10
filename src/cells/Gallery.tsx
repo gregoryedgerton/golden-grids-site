@@ -6,9 +6,10 @@ const HEADING = ["THESE ARE", "FAKE"];
 
 /**
  * The cell that opens the gallery: the studies are not the sites they look
- * like. It says so first, then what they are, then how to make one.
+ * like. It says so first, then what they are, then how to make one. It gives
+ * no count: studies keep being added.
  */
-export function Gallery({ count }: { count: number }) {
+export function Gallery() {
   return (
     <div className="cell gallery">
       <p className="gallery__kicker">The studies</p>
@@ -17,9 +18,9 @@ export function Gallery({ count }: { count: number }) {
           the space under the heading is the space the eye sees. */}
       <FitText className="gallery__heading" lines={HEADING} leading={0.74} toBaseline />
       <p className="gallery__body">
-        The next {count === 1 ? "cell is a layout study" : `${count} cells are layout studies`}. Each takes a site you
-        know and rebuilds it on Golden Grids under a parody name, to see how the grid carries a real layout. None is
-        affiliated with the site it studies, and nothing in them can be bought, booked or signed up for.
+        The cells that follow are layout studies. Each rebuilds a real site on Golden Grids under a parody name, to
+        see how the grid carries a working layout. None is affiliated with the site it studies, and nothing in them
+        can be bought, booked or signed up for.
       </p>
       <p className="gallery__make">
         <a href={site.template} target="_blank" rel="noopener">
