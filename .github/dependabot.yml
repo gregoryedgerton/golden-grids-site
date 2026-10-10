@@ -20,10 +20,11 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "@eslint/js"
         update-types: ["version-update:semver-major"]
-      # typescript-eslint accepts TypeScript below 6.1. Lift this when it
-      # supports 7.
+      # typescript-eslint accepts TypeScript below 6.1, so a minor is as
+      # unusable as a major and would block the whole tooling group it rides
+      # in. Only patches are taken. Lift this when typescript-eslint moves.
       - dependency-name: typescript
-        update-types: ["version-update:semver-major"]
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
     groups:
       # Minor and patch updates of the tooling arrive together. A major
       # arrives alone, so one that cannot be taken does not hold up the rest.
