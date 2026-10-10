@@ -14,7 +14,7 @@ import { Vision } from "./Vision";
 export function buildCells(studies: Study[], subscribe: string): Cell[] {
   return [
     { id: "title", label: "Golden Grids", ground: "#14100c", content: <Title /> },
-    { id: "vision", label: "Four platforms", ground: "#7fa6d9", content: <Vision /> },
+    { id: "vision", label: "4platforms", ground: "#7fa6d9", content: <Vision /> },
     { id: "parameters", label: "The parameters", ground: "#f7f2e8", content: <Parameters /> },
     { id: "gallery", label: "The studies", ground: "#f0562e", content: <Gallery count={studies.length} /> },
     ...studies.map(

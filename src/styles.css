@@ -208,10 +208,12 @@ a {
   color: var(--ground);
 }
 
+/* One word across the whole cell. */
 .vision__heading {
   flex: 1 1 0;
   min-height: 0;
   font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 /* The four platforms in a row, each under its mark. */
