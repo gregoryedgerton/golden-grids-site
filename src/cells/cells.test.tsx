@@ -149,11 +149,13 @@ describe("Vision", () => {
     const { container } = render(<Vision />);
     const body = container.querySelector(".vision__body") as HTMLElement;
     expect(body).toHaveTextContent(/^Rows and columns have had a good run, but let’s make room for new ideas\./);
-    expect(body).toHaveTextContent(/You still need them; let’s push the envelope\./);
+    expect(body).toHaveTextContent(/You still need them, let’s push the envelope\./);
+    // The owner's own punctuation: commas.
+    expect(body).not.toHaveTextContent(";");
     expect(body).toHaveTextContent(LENS);
     expect(LENS).toMatch(/^Golden Grids is a new lens to view layouts through that leverages the golden ratio/);
     expect(LENS).toMatch(/instinctually know through nature\.$/);
-    expect(body).toHaveTextContent(/What you put on them is your business; at least you won’t be boring\.$/);
+    expect(body).toHaveTextContent(/What you put on them is your business, at least you won’t be boring\.$/);
     expect(body).toHaveTextContent(/at least you won’t be boring\.$/);
     expect(body).not.toHaveTextContent(/same boxes|all four/);
   });
@@ -220,15 +222,27 @@ describe("Parameters", () => {
     expect(says("clockwise")).toMatch(/clockwise, or counter-clockwise/);
   });
 
-  it("gives the whole range, 1 to 91, with JavaScript's lower ceiling, and 1 to 5 only as an example", () => {
+  it("gives the whole range, 1 to 91, and the lower React count as an asterisked note under it", () => {
     render(<Parameters />);
     const range = within(screen.getByRole("list", { name: "Values for from · to" })).getAllByRole("listitem");
     expect(range.map((li) => li.textContent)).toEqual(["1", "91"]);
-    const says = PARAMETERS[0].says;
-    // The lower ceiling is JavaScript's, so it is React Native's as well as the web's.
-    expect(says).toMatch(/from 1 to 91, or to 78 in React and React Native/);
-    expect(says).not.toMatch(/on the web/);
-    expect(says).toMatch(/1 to 5, say, is five squares/);
+    const item = screen.getByText("from · to").closest(".parameters__item") as HTMLElement;
+    const says = item.querySelector(".parameters__says") as HTMLElement;
+    expect(says).toHaveTextContent(/from 1 to 91\.\*/);
+    const note = says.querySelector("small.parameters__note") as HTMLElement;
+    expect(note).toHaveTextContent("* 1 to 78 in React and React Native.");
+    // The note closes the first row: nothing follows it there, and the next row is skip.
+    expect(says.lastElementChild).toBe(note);
+    expect(item.lastElementChild).toBe(says);
+    expect(item.nextElementSibling).toHaveTextContent(/^skip/);
+    // What a range of five makes is left unsaid.
+    expect(item).not.toHaveTextContent(/five squares|1 to 5/);
+  });
+
+  it("puts a note only where there is one", () => {
+    const { container } = render(<Parameters />);
+    expect(container.querySelectorAll(".parameters__note")).toHaveLength(1);
+    expect(PARAMETERS.filter((p) => "note" in p)).toHaveLength(1);
   });
 
   it("is not a grid", () => {

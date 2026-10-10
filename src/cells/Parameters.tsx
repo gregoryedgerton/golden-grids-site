@@ -10,7 +10,8 @@ export const PARAMETERS = [
     // numbers are JavaScript's, React Native included: the 79th term is past
     // the integers JavaScript holds exactly.
     values: ["1", "91"],
-    says: "The range to lay out: any two positions on the Fibonacci sequence, from 1 to 91, or to 78 in React and React Native. 1 to 5, say, is five squares.",
+    says: "The range to lay out: any two positions on the Fibonacci sequence, from 1 to 91.*",
+    note: "* 1 to 78 in React and React Native.",
   },
   {
     term: "skip",
@@ -29,13 +30,15 @@ export const PARAMETERS = [
   },
 ] as const;
 
+type Parameter = { term: string; values: readonly string[]; says: string; note?: string };
+
 /** The library's parameters, as a reference to read. */
 export function Parameters() {
   return (
     <div className="cell parameters">
       <h2 className="parameters__heading">The parameters</h2>
       <dl className="parameters__list">
-        {PARAMETERS.map(({ term, values, says }) => (
+        {PARAMETERS.map(({ term, values, says, note }: Parameter) => (
           <div key={term} className="parameters__item">
             <dt>
               <code>{term}</code>
@@ -50,7 +53,11 @@ export function Parameters() {
                 ))}
               </ul>
             </dd>
-            <dd className="parameters__says">{says}</dd>
+            <dd className="parameters__says">
+              {says}
+              {/* The small print: set smaller and lighter, under what it qualifies. */}
+              {note && <small className="parameters__note">{note}</small>}
+            </dd>
           </div>
         ))}
       </dl>
