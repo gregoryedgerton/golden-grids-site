@@ -1,4 +1,5 @@
 import { act, render, screen, within } from "@testing-library/react";
+import html from "../../index.html?raw";
 import { axe } from "vitest-axe";
 import { setReducedMotion } from "../../test/media";
 import { CellCurrent } from "../dial/current";
@@ -12,7 +13,7 @@ import { PARAMETERS, Parameters } from "./Parameters";
 import { Signup } from "./Signup";
 import { StudyCell } from "./StudyCell";
 import { Title } from "./Title";
-import { PLATFORMS, Vision } from "./Vision";
+import { LENS, PLATFORMS, Vision } from "./Vision";
 
 const espn = parseStudy(
   {
@@ -144,12 +145,32 @@ describe("Vision", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
-  it("teases rows and columns instead of promising the same boxes, and ends on not being boring", () => {
+  it("makes room beside rows and columns, says what Golden Grids is, and ends on not being boring", () => {
     const { container } = render(<Vision />);
     const body = container.querySelector(".vision__body") as HTMLElement;
-    expect(body).toHaveTextContent(/^Rows and columns had a good run\./);
+    expect(body).toHaveTextContent(/^Rows and columns have had a good run, but let’s make room for new ideas\./);
+    expect(body).toHaveTextContent(/You still need them; let’s push the envelope\./);
+    expect(body).toHaveTextContent(LENS);
+    expect(LENS).toMatch(/^Golden Grids is a new lens to view layouts through that leverages the golden ratio/);
+    expect(LENS).toMatch(/instinctually know through nature\.$/);
+    expect(body).toHaveTextContent(/What you put on them is your business; at least you won’t be boring\.$/);
     expect(body).toHaveTextContent(/at least you won’t be boring\.$/);
     expect(body).not.toHaveTextContent(/same boxes|all four/);
+  });
+
+  it("says in the page's description what it says in the cell", () => {
+    const description = /<meta\s+name="description"\s+content="([^"]+)"/.exec(html)?.[1];
+    expect(description?.startsWith(LENS)).toBe(true);
+    expect(description).toMatch(/React, React Native, SwiftUI and Jetpack Compose\.$/);
+  });
+
+  it("sets the 4 heavier than the word, and ends the heading's box at its baseline", () => {
+    const { container } = render(<Vision />);
+    const heading = container.querySelector(".vision__heading") as SVGSVGElement;
+    expect(heading.querySelector("tspan.fit__strong")).toHaveTextContent(/^4$/);
+    expect(heading.querySelector(".fit__line text")).toHaveTextContent("4platforms");
+    // Ten glyphs at 50 wide scale by 2; the baseline is 80 down the line, so 160, not the full 200.
+    expect(heading).toHaveAttribute("viewBox", "0 0 1000 160");
   });
 
   it("names each platform beside its mark, drawn in one colour and hidden as decoration", () => {
