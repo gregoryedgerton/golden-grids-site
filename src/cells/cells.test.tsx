@@ -278,8 +278,9 @@ describe("Gallery", () => {
   it("then says what a study is, and that none is the site it looks like", () => {
     const { container } = render(<Gallery />);
     const body = container.querySelector(".gallery__body") as HTMLElement;
-    expect(body).toHaveTextContent(/^The cells that follow are layout studies\./);
-    expect(body).toHaveTextContent(/Each rebuilds a real site on Golden Grids under a parody name/);
+    // It says what a study is, not what the cells after it are: the last of those is the sign-up.
+    expect(body).toHaveTextContent(/^A layout study rebuilds a real site on Golden Grids under a parody name/);
+    expect(body).not.toHaveTextContent(/cells? that follow|next/i);
     expect(body).not.toHaveTextContent(/you know/);
     expect(body).toHaveTextContent(/None is affiliated with the site it studies/);
     expect(body).toHaveTextContent(/nothing in them can be bought, booked or signed up for\.$/);
