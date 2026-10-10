@@ -75,5 +75,14 @@ any change that recolours, alters or restyles these three.
 mailing-list provider. Flag any code that stores, logs or sends an address
 anywhere else.
 
+**The built site does not know where it is served.** GitHub Pages serves it
+from `/golden-grids-site/` on github.io and from the root of a domain of its
+own, and one build goes to both. Flag any address of one of the site's own
+files that starts at the server's root, in the page, the styles or the
+script; anything that reads the path the page is served from; and any return
+to an absolute `base`. The canonical address and the share card's are the
+exception: they are whole addresses on purpose, because whatever reads them
+fetches from elsewhere, and `src/meta.test.ts` holds them to `site.url`.
+
 **A test that cannot fail is worse than no test.** Watch for assertions that
 only check a mock was called and tests that re-implement the code under test.
