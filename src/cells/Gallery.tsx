@@ -18,9 +18,9 @@ export function Gallery() {
           the space under the heading is the space the eye sees. */}
       <FitText className="gallery__heading" lines={HEADING} leading={0.74} toBaseline />
       <p className="gallery__body">
-        The cells that follow are layout studies. Each rebuilds a real site on Golden Grids under a parody name, to
-        see how the grid carries a working layout. None is affiliated with the site it studies, and nothing in them
-        can be bought, booked or signed up for.
+        A layout study rebuilds a real site on Golden Grids under a parody name, to see how the grid carries a working
+        layout. None is affiliated with the site it studies, and nothing in them can be bought, booked or signed up
+        for.
       </p>
       <p className="gallery__make">
         <a href={site.template} target="_blank" rel="noopener">
