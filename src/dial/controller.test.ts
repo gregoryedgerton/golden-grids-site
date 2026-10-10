@@ -518,7 +518,7 @@ describe("createDial, with motion", () => {
     expect(scroll(-4, 4)).toBe(11);
   });
 
-  it("takes a second push as gentle as the scroll it follows, but not a stumble in a gentler scroll still", () => {
+  it("looks for a second push only after a scroll that was itself a push", () => {
     const run = (sizes: number[]) => {
       const { dial, advance } = setup(20);
       for (const size of sizes) {
@@ -528,15 +528,16 @@ describe("createDial, with motion", () => {
       advance(3000);
       return dial.depth();
     };
-    // Four pixels, down to one, and four again: two pushes of a wheel that reports little.
-    expect(run([4, 1, 4])).toBe(2);
-    // Not quite as large as the first: still the first.
-    expect(run([4, 1, 3.9])).toBe(1);
-    // A scroll made a pixel at a time, with one event that falters. A pixel
-    // after it is not a push; a scroll's worth is.
-    expect(run([1, 1, 1, 0.3, 1])).toBe(1);
-    expect(run([1, 1, 1, 0.3, WHEEL_TICK_PX - 0.1])).toBe(1);
-    expect(run([1, 1, 1, 0.3, WHEEL_TICK_PX])).toBe(2);
+    // A flick that wobbles as it starts: down to a third and up again, all under a push's size, then the swell.
+    expect(run([1, 2, 0.6, 3, 8, 20, 40, 60, 50, 35])).toBe(1);
+    expect(run([2, 1, 0.6, 3, 8, 20, 40, 60, 50, 35])).toBe(1);
+    // Gentle travel that dips and recovers is one scroll, whichever way the numbers fall.
+    expect(run([4, 1, 4])).toBe(1);
+    expect(run([2, 1, 0.6, 3])).toBe(1);
+    expect(run([1, 1, 1, 0.3, 7.9])).toBe(1);
+    // A scroll has to have peaked at a push's size before it can fall away from it.
+    expect(run([WHEEL_PUSH_PX - 0.1, 2, 30])).toBe(1);
+    expect(run([WHEEL_PUSH_PX, 2, 30])).toBe(2);
   });
 
   it("keeps a scroll to the axis it began on, so a hand that drifts sideways does not scroll back", () => {

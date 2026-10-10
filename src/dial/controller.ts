@@ -27,10 +27,12 @@ export const WHEEL_IDLE_MS = 140;
  */
 export const WHEEL_TICK_PX = 3;
 /**
- * The size, in CSS pixels, that a second push has to reach. The faint end of
- * a hard flick can hand over a few pixels at once, and that must not turn the
- * dial. After a scroll gentler than this, a second push has only to reach
- * that scroll's own peak, and never less than a scroll's worth.
+ * The size, in CSS pixels, of a push: what an event of a scroll has to reach
+ * before the scroll can be said to fall away, and what a second push has to
+ * reach to be one. Below this a stream of wheel events wobbles by a factor of
+ * three on its own: as a flick starts, in the faint end of its tail, and all
+ * through a slow drag. So gentle travel is one scroll until the wheel goes
+ * quiet, and a second push is looked for only after a hard one.
  */
 export const WHEEL_PUSH_PX = 8;
 /**
@@ -217,11 +219,11 @@ export function createDial({ count, reduced, onDepth, onFocus, clock }: DialOpti
    * Two things in an unbroken stream are the reader and not the scroll
    * running on, and each turns the dial again:
    *
-   * - A second push. The scroll falls to a third of its peak and then climbs
-   *   to more than three times its lowest ebb, and to a push's size. A
-   *   flick's tail only shrinks and a mouse's notches are all one size, so
-   *   neither does that. A second flick made before the first has died away
-   *   does, however soon it comes.
+   * - A second push. A scroll that peaked at a push's size falls to a third
+   *   of that peak, and then an event is more than three times its lowest
+   *   ebb and a push's size itself. A flick's tail only shrinks and a
+   *   mouse's notches are all one size, so neither does that. A second flick
+   *   made before the first has died away does, however soon it comes.
    * - The wheel turned round. Travel against the scroll is gathered as travel
    *   toward a new one is.
    *
@@ -262,13 +264,12 @@ export function createDial({ count, reduced, onDepth, onFocus, clock }: DialOpti
     gathered[axis] = 0;
     if (ebb === 0) {
       peak = Math.max(peak, size);
-      if (size * WHEEL_RISE <= peak) ebb = size;
+      // Only a scroll that has been a push can fall away from being one.
+      if (peak >= WHEEL_PUSH_PX && size * WHEEL_RISE <= peak) ebb = size;
       return;
     }
     ebb = Math.min(ebb, size);
-    // As large as the push before it, within the least and the most a push has to be.
-    const push = Math.min(Math.max(peak, WHEEL_TICK_PX), WHEEL_PUSH_PX);
-    if (size > ebb * WHEEL_RISE && size >= push) turn(way, size, axis);
+    if (size >= WHEEL_PUSH_PX && size > ebb * WHEEL_RISE) turn(way, size, axis);
   };
 
   return {
