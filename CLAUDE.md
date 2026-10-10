@@ -35,6 +35,21 @@ file, and close the issue from the pull request. Anyone can read the
 repository, its history, its issues and its pull requests, so nothing secret
 goes into any of them.
 
+## Where it is served
+
+GitHub Pages, from `/golden-grids-site/` on github.io and, once its domain is
+set, from the root of `golden-grids.gifcommit.com`. One build goes to both, so
+the build is relative (`base: "./"` in `vite.config.ts`) and
+`src/build.test.ts` builds the site to check it. Do not address one of the
+site's own files from the server's root, and do not read the path the page is
+served from.
+
+Moving to the domain is a sequence with an order (README, "The address"). The
+custom domain is never set before its DNS name resolves: GitHub redirects the
+github.io address at once, and until the name resolves the site is down. The
+address in `src/site.ts`, `index.html` and the README changes only once the
+domain is live.
+
 ## Rules
 
 - **Accessible.** Every cell is a labelled section; only the focused cell is

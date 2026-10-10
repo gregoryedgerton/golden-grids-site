@@ -51,6 +51,20 @@ node scripts/brand/make.mjs <a directory whose node_modules has playwright>
 
 `subscribe` in `src/site.ts` is the address the sign-up form sends to: the Beehiiv publication's subscribe page. While it is empty the form is shown closed.
 
+## The address
+
+GitHub Pages publishes the site, today at <https://gregoryedgerton.github.io/golden-grids-site/>. It is to have a domain of its own as well, `golden-grids.gifcommit.com`, and the build is ready for it: every address it writes for its own files is relative, so one build works from `/golden-grids-site/` and from the root of a domain.
+
+Moving to the domain is these steps, in this order:
+
+1. Verify `gifcommit.com` for GitHub Pages: in the account's settings, under Pages, "Add a domain", which asks for a TXT record at the domain's DNS host. A verified domain's names can be attached only to its owner's sites.
+2. At the DNS host, add a CNAME record for `golden-grids` that points to `gregoryedgerton.github.io`.
+3. Once that name resolves, and not before, set it as the custom domain in the repository's settings, under Pages. From that moment GitHub redirects the github.io address to the domain; if the name does not resolve yet, that is a redirect to nothing and the site is down.
+4. Change the address in `src/site.ts`, in the three places in `index.html` that repeat it (the tests hold them together) and at the top of this file. Until the domain is live they stay as they are: a share card or a crawler sent to a name that does not resolve finds nothing.
+5. When GitHub has issued the certificate, turn on "Enforce HTTPS" in the same settings.
+
+The github.io address keeps working afterwards, as a redirect. No `CNAME` file is needed: a deploy from GitHub Actions ignores one.
+
 ## Running it
 
 ```bash
