@@ -36,6 +36,14 @@ Nothing else changes: the gallery comes from the folder and runs from the latest
 
 A file that breaks a rule fails the tests with the file's name and the reason.
 
+## Icons and the share image
+
+`public/og.png` and the icons are drawn from `scripts/brand/art.html`, which sets "Golden Grids" and "GG" the way the title cell does. Run this again if the title's lettering changes, and commit what it writes:
+
+```bash
+node scripts/brand/make.mjs <a directory whose node_modules has playwright>
+```
+
 ## The mailing list
 
 `subscribe` in `src/site.ts` is the address the sign-up form sends to: the Beehiiv publication's subscribe page. While it is empty the form is shown closed.
