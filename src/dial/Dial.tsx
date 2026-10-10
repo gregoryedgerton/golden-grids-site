@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { createDial } from "./controller";
 import type { DialClock, DialController } from "./controller";
 import { TEXTURE_PX, mountedAround, paintTile } from "./geometry";
-import { dragSteps, keyMove, ownsDrag, ownsKey, swipeAxis, wheelSteps } from "./input";
+import { dragSteps, keyMove, ownsDrag, ownsKey, pastSlop, swipeAxis, wheelSteps } from "./input";
 import type { Axis } from "./input";
 import { useReducedMotion } from "./motion";
 import "./dial.css";
@@ -136,14 +136,19 @@ function DialOf({ cells }: { cells: Cell[] }) {
       if (!swipe || event.pointerId !== swipe.id) return;
       const dx = event.clientX - swipe.x;
       const dy = event.clientY - swipe.y;
-      if (!swipe.axis) {
+      let travel: number;
+      if (swipe.axis) {
+        travel = swipe.axis === "x" ? dx : dy;
+      } else {
         swipe.axis = swipeAxis(dx, dy);
         if (!swipe.axis) return;
         swipedRef.current = true;
-      } else {
-        dial().nudge(dragSteps(swipe.axis === "x" ? dx : dy, stage.clientWidth, stage.clientHeight));
+        // A quick flick may be this one move and nothing more, so it counts:
+        // all of it but the slop, which the dial must not jump by.
+        travel = pastSlop(swipe.axis === "x" ? dx : dy);
       }
-      // Measured from here on, so the dial does not jump by the slop.
+      dial().nudge(dragSteps(travel, stage.clientWidth, stage.clientHeight));
+      // Measured from here on.
       swipe.x = event.clientX;
       swipe.y = event.clientY;
     };

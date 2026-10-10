@@ -171,6 +171,25 @@ describe("createDial, with motion", () => {
     expect(dial.depth()).toBe(4);
   });
 
+  it("stays on a cell that a long scroll has only just passed", () => {
+    const { dial, advance } = setup();
+    // Two cells and a little: the reader stopped on the third, not short of the fourth.
+    dial.nudge(2.05);
+    dial.release();
+    advance(3000);
+    expect(dial.depth()).toBe(2);
+    // And the same going back.
+    dial.nudge(-1.05);
+    dial.release();
+    advance(3000);
+    expect(dial.depth()).toBe(1);
+    // Well past it, the dial goes on.
+    dial.nudge(1.5);
+    dial.release();
+    advance(3000);
+    expect(dial.depth()).toBe(3);
+  });
+
   it("takes over from a journey when a finger lands", () => {
     const { dial, advance, frames } = setup();
     dial.step(3);
@@ -195,18 +214,54 @@ describe("createDial, with motion", () => {
     expect(timers.size).toBe(0);
   });
 
-  it("stops everything pending when destroyed", () => {
-    const { dial, advance, frames, timers, depths } = setup();
+  it("ends a wheel gesture the moment a key or a button names a cell", () => {
+    const { dial, advance, timers } = setup(20);
     dial.wheel(0.4);
-    dial.step(1);
-    expect(frames.size).toBe(1);
-    expect(timers.size).toBe(1);
-    dial.destroy();
-    expect(frames.size).toBe(0);
+    dial.goTo(19);
     expect(timers.size).toBe(0);
-    const reported = depths.length;
+    // Long enough for the wheel's quiet period to have ended in mid-journey.
+    advance(5000);
+    expect(dial.depth()).toBe(19);
+    dial.wheel(-0.4);
+    dial.step(-1);
+    expect(timers.size).toBe(0);
+    advance(5000);
+    expect(dial.depth()).toBe(18);
+  });
+
+  it("ends a wheel gesture when a finger takes over, and settles once when it lifts", () => {
+    const { dial, advance, timers, frames } = setup();
+    dial.wheel(0.1);
+    dial.nudge(0.1);
+    expect(timers.size).toBe(0);
+    advance(1000);
+    // Still held: the wheel's timer did not settle it under the finger.
+    expect(dial.depth()).toBeCloseTo(0.2, 9);
+    expect(frames.size).toBe(0);
+    dial.wheel(0.1);
+    dial.release();
+    expect(timers.size).toBe(0);
     advance(3000);
-    expect(depths).toHaveLength(reported);
+    expect(dial.depth()).toBe(1);
+  });
+
+  it("stops everything pending when destroyed", () => {
+    // A journey under way.
+    const a = setup();
+    a.dial.step(1);
+    expect(a.frames.size).toBe(1);
+    a.dial.destroy();
+    expect(a.frames.size).toBe(0);
+    a.advance(3000);
+    expect(a.depths).toEqual([]);
+    // A wheel waiting to go quiet.
+    const b = setup();
+    b.dial.wheel(0.4);
+    expect(b.timers.size).toBe(1);
+    b.dial.destroy();
+    expect(b.timers.size).toBe(0);
+    b.advance(3000);
+    expect(b.depths).toEqual([0.4]);
   });
 
   it("is safe to destroy at rest", () => {
@@ -250,6 +305,33 @@ describe("createDial, with motion reduced", () => {
     dial.nudge(COMMIT - 0.01);
     dial.release();
     expect(depths).toEqual([]);
+  });
+
+  it("settles on the nearest cell if the preference changes in mid-drag", () => {
+    const { dial, state, depths } = setup();
+    dial.nudge(0.4);
+    state.reduced = true;
+    dial.release();
+    expect(dial.depth()).toBe(0);
+    state.reduced = false;
+    dial.nudge(0.7);
+    state.reduced = true;
+    // The rest of the drag is counted from where the dial stands.
+    dial.nudge(0.5);
+    dial.release();
+    expect(dial.depth()).toBe(2);
+    expect(depths.at(-1)).toBe(2);
+  });
+
+  it("does not jump past either end", () => {
+    const { dial, depths } = setup(3, true);
+    dial.nudge(-1);
+    dial.release();
+    expect(depths).toEqual([]);
+    dial.goTo(2);
+    dial.nudge(1);
+    dial.release();
+    expect(depths).toEqual([2]);
   });
 
   it("forgets a counted drag when a key names a cell", () => {

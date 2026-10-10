@@ -1,3 +1,10 @@
+/* The dial is the whole page. Nothing behind it scrolls, bounces or pulls to refresh. */
+html,
+body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 .dial {
   position: fixed;
   inset: 0;
