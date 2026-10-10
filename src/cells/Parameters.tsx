@@ -6,10 +6,11 @@
 export const PARAMETERS = [
   {
     term: "from · to",
-    // The library's ceiling: 91 squares natively, 78 on the web, where the
-    // 79th term is past the integers JavaScript holds exactly.
+    // The library's ceiling: 91 squares in Swift and Kotlin, 78 wherever the
+    // numbers are JavaScript's, React Native included: the 79th term is past
+    // the integers JavaScript holds exactly.
     values: ["1", "91"],
-    says: "The range to lay out: any two positions on the Fibonacci sequence, from 1 to 91 (78 on the web). 1 to 5, say, is five squares.",
+    says: "The range to lay out: any two positions on the Fibonacci sequence, from 1 to 91, or to 78 in React and React Native. 1 to 5, say, is five squares.",
   },
   {
     term: "skip",

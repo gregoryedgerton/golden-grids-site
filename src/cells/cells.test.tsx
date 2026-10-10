@@ -79,12 +79,14 @@ describe("Parameters", () => {
     expect(says("clockwise")).toMatch(/clockwise, or counter-clockwise/);
   });
 
-  it("gives the whole range, 1 to 91, with the web's lower ceiling, and 1 to 5 only as an example", () => {
+  it("gives the whole range, 1 to 91, with JavaScript's lower ceiling, and 1 to 5 only as an example", () => {
     render(<Parameters />);
     const range = within(screen.getByRole("list", { name: "Values for from · to" })).getAllByRole("listitem");
     expect(range.map((li) => li.textContent)).toEqual(["1", "91"]);
     const says = PARAMETERS[0].says;
-    expect(says).toMatch(/from 1 to 91 \(78 on the web\)/);
+    // The lower ceiling is JavaScript's, so it is React Native's as well as the web's.
+    expect(says).toMatch(/from 1 to 91, or to 78 in React and React Native/);
+    expect(says).not.toMatch(/on the web/);
     expect(says).toMatch(/1 to 5, say, is five squares/);
   });
 
