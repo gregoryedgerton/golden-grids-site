@@ -23,8 +23,17 @@ Issue → pull request → review → merge. No exceptions, including for docs.
    is green. Then `gh pr merge --rebase --delete-branch`.
 
 `main` releases itself with semantic-release. It deploys to GitHub Pages only
-while the repository variable `PUBLISH_SITE` is `true`, which it is: the
-repository is private and the site is public.
+while the repository variable `PUBLISH_SITE` is `true`, which it is.
+
+The repository is public, by the owner's decision (2026-10-10), so that its
+issue board can take a study's request to join the gallery. Every published
+study opens "Gallery: add ⟨Brand⟩ (Study NN)" here, from
+`captures/site-issue.cjs` in the study's own repository, with its live
+address, the day it was first published and what its file in `src/studies/`
+needs. That issue is the one to work from: confirm the study is live, add its
+file, and close the issue from the pull request. Anyone can read the
+repository, its history, its issues and its pull requests, so nothing secret
+goes into any of them.
 
 ## Rules
 
