@@ -11,7 +11,7 @@ export const PARAMETERS = [
     // the integers JavaScript holds exactly.
     values: ["1", "91"],
     says: "The range to lay out: any two positions on the Fibonacci sequence, from 1 to 91.*",
-    byline: "Start above 1 and the squares before it are skipped. They fold into one open cell, for a layout that is not a plain run.",
+    byline: "Grid cells are always squared except when the sequence is skipped. If a grid starts at 3 then cells 1 and 2 are combined into a single rectangular cell.",
     note: "* 1 to 78 in React and React Native.",
   },
   {
@@ -53,9 +53,7 @@ export function Parameters() {
               {says}
               {/* What follows from the parameter, under it and a step quieter. */}
               {byline && (
-                <span className="parameters__byline">
-                  <b>Skip.</b> {byline}
-                </span>
+                <span className="parameters__byline">{byline}</span>
               )}
               {/* The small print: set smaller and lighter, at the foot of the row. */}
               {note && <small className="parameters__note">{note}</small>}

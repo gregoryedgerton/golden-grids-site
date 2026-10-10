@@ -221,7 +221,11 @@ describe("Parameters", () => {
     expect(PARAMETERS.map((p) => p.term)).not.toContain("skip");
     const range = screen.getByText("from · to").closest(".parameters__item") as HTMLElement;
     const byline = range.querySelector(".parameters__says .parameters__byline") as HTMLElement;
-    expect(byline).toHaveTextContent(/^Skip\. Start above 1 and the squares before it are skipped\..*not a plain run\.$/);
+    expect(byline).toHaveTextContent(
+      "Grid cells are always squared except when the sequence is skipped. If a grid starts at 3 then cells 1 and 2 are combined into a single rectangular cell.",
+    );
+    // The text is the owner's, with no label put in front of it.
+    expect(byline.querySelector("b")).toBeNull();
     // Only the range has one.
     expect(document.querySelectorAll(".parameters__byline")).toHaveLength(1);
   });
@@ -270,7 +274,7 @@ describe("Gallery", () => {
     expect(scales[1]).toBeGreaterThan(2 * (scales[0] as number));
     // Capitals sit on the baseline, so the heading's box ends there: shorter than the same lines drawn whole.
     const height = (svg: Element | null) => Number(svg?.getAttribute("viewBox")?.split(" ")[3]);
-    const whole = render(<FitText lines={["THESE ARE", "FAKE"]} leading={0.74} />);
+    const whole = render(<FitText lines={["THESE ARE", "FAKE"]} leading={0.86} />);
     expect(height(container.querySelector(".gallery__heading"))).toBeLessThan(height(whole.container.querySelector("svg")));
     whole.unmount();
     // The count is no longer the cell's big type.
@@ -287,9 +291,9 @@ describe("Gallery", () => {
     expect(body).not.toHaveTextContent(/you know/);
     expect(body).toHaveTextContent(/None is affiliated with the site it studies/);
     expect(body).toHaveTextContent(/nothing in them can be bought, booked or signed up for\.$/);
-    // In that order: the heading, the disclaimer, the call to act.
+    // In that order: the heading, then the disclaimer.
     const order = [...(container.querySelector(".gallery") as HTMLElement).children].map((c) => c.getAttribute("class"));
-    expect(order).toEqual(["gallery__kicker", "visually-hidden", "fit gallery__heading", "gallery__body", "gallery__make"]);
+    expect(order).toEqual(["gallery__kicker", "visually-hidden", "fit gallery__heading", "gallery__body"]);
   });
 
   it("gives no count, since studies keep being added", () => {
@@ -297,14 +301,12 @@ describe("Gallery", () => {
     expect(container.querySelector(".gallery")).not.toHaveTextContent(/\d/);
   });
 
-  it("ends by asking the reader to make their own, from the study template, in a new window", () => {
-    render(<Gallery />);
-    const link = screen.getByRole("link", { name: "Make your own study from the template (opens in a new window)" });
-    expect(link).toHaveAttribute("href", site.template);
-    expect(site.template).toBe("https://github.com/gregoryedgerton/golden-grids-study-template");
-    expect(link).toHaveAttribute("target", "_blank");
-    expect(link).toHaveAttribute("rel", "noopener");
-    expect(link.closest(".gallery")?.lastElementChild).toContainElement(link);
+  it("has no call to act: the disclaimer is the last thing in the cell", () => {
+    const { container } = render(<Gallery />);
+    expect(screen.queryByRole("link")).toBeNull();
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(container.querySelector(".gallery")?.lastElementChild).toHaveClass("gallery__body");
+    expect(container).not.toHaveTextContent(/make your own/i);
   });
 });
 
