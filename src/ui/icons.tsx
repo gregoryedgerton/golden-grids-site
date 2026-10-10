@@ -5,6 +5,8 @@ import type { ReactNode } from "react";
  * logo or a mark of any site a study names.
  */
 const ICONS = {
+  /** A golden rectangle. What a study gets when it names no icon. */
+  grid: <path d="M2.5 5.5h19v12h-19zM14.5 5.5v12M14.5 12.5h7M18 12.5v5" />,
   house: <path d="M3 11 12 3l9 8M5 9.5V21h5v-6h4v6h5V9.5" />,
   key: (
     <>
@@ -62,8 +64,18 @@ export type IconName = keyof typeof ICONS;
 
 export const ICON_NAMES = Object.keys(ICONS) as IconName[];
 
+/** An icon from the catalogue above, or one a study draws for itself as a single path on the same grid. */
+export type IconSource = IconName | { path: string };
+
+/** Path data and nothing else: commands, numbers and their separators, starting with a move. */
+const PATH = /^[Mm][MmLlHhVvCcSsQqTtAaZzEe\d\s.,+-]*$/;
+
+export function isPath(value: unknown): value is string {
+  return typeof value === "string" && PATH.test(value);
+}
+
 /** A decorative icon. It carries no meaning the text beside it does not. */
-export function Icon({ name, className }: { name: IconName; className?: string }) {
+export function Icon({ name, className }: { name: IconSource; className?: string }) {
   return (
     <svg
       className={className}
@@ -76,7 +88,7 @@ export function Icon({ name, className }: { name: IconName; className?: string }
       aria-hidden="true"
       focusable="false"
     >
-      {ICONS[name]}
+      {typeof name === "string" ? ICONS[name] : <path d={name.path} />}
     </svg>
   );
 }

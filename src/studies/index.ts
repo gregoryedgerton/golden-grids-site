@@ -1,5 +1,5 @@
-import { ICON_NAMES } from "../ui/icons";
-import type { IconName } from "../ui/icons";
+import { ICON_NAMES, isPath } from "../ui/icons";
+import type { IconName, IconSource } from "../ui/icons";
 import type { Face } from "../ui/fonts";
 
 /**
@@ -31,7 +31,12 @@ export type Study = {
     text: string;
   };
   font: Face;
-  icon: IconName;
+  /**
+   * A name from the catalogue, or the study's own drawing: `{ "path": "…" }`,
+   * SVG path data on a 24-unit grid, drawn as a line. Left out, the study
+   * gets the golden rectangle. Either way the study is one file.
+   */
+  icon: IconSource;
 };
 
 const HEX = /^#[0-9a-f]{6}$/i;
@@ -100,7 +105,17 @@ export function parseStudy(raw: unknown, file: string): Study {
   }
   if (typeof italic !== "boolean") fail(file, "font.italic must be true or false");
 
-  if (!ICON_NAMES.includes(icon as IconName)) fail(file, `icon must be one of ${ICON_NAMES.join(", ")}`);
+  let drawn: IconSource = "grid";
+  if (typeof icon === "object" && icon !== null) {
+    const { path } = icon as Record<string, unknown>;
+    if (!isPath(path)) fail(file, "icon.path must be SVG path data, starting with M");
+    drawn = { path };
+  } else if (icon !== undefined) {
+    if (!ICON_NAMES.includes(icon as IconName)) {
+      fail(file, `icon must be one of ${ICON_NAMES.join(", ")}, or { "path": "…" }, or left out`);
+    }
+    drawn = icon as IconName;
+  }
 
   return {
     number: number as number,
@@ -110,7 +125,7 @@ export function parseStudy(raw: unknown, file: string): Study {
     url,
     colors: { ...palette, text: readable(palette.ground, [palette.ink, palette.accent]) },
     font: { family, weight: weight as number, italic },
-    icon: icon as IconName,
+    icon: drawn,
   };
 }
 

@@ -62,6 +62,18 @@ describe("parseStudy", () => {
     expect(contrast(colors.text, colors.ground)).toBeGreaterThanOrEqual(4.5);
   });
 
+  it("takes an icon the study draws for itself, so a new kind of subject is still one file", () => {
+    const path = "M3 20 12 4l9 16zM12 10v5m0 2.5v.5";
+    expect(parseStudy({ ...valid, icon: { path, note: "x" } }, "./07.json").icon).toEqual({ path });
+    expect(parseStudy({ ...valid, icon: { path: "m1-1e-3 2.5,+3 A1 1 0 0 1 2 2z" } }, "./07.json").icon).toEqual({
+      path: "m1-1e-3 2.5,+3 A1 1 0 0 1 2 2z",
+    });
+  });
+
+  it("gives a study that names no icon the golden rectangle", () => {
+    expect(parseStudy(without("icon"), "./07.json").icon).toBe("grid");
+  });
+
   it("does not carry fields it does not know", () => {
     expect(parseStudy({ ...valid, note: "x" }, "./07.json")).not.toHaveProperty("note");
   });
@@ -96,8 +108,13 @@ describe("parseStudy", () => {
     ["a weight too heavy", { ...valid, font: { ...valid.font, weight: 950 } }, "font.weight must be from 100 to 900"],
     ["a weight in words", { ...valid, font: { ...valid.font, weight: "bold" } }, "font.weight must be from 100 to 900"],
     ["no italic", { ...valid, font: { family: "Inter", weight: 700 } }, "font.italic must be true or false"],
-    ["an icon that is not drawn", { ...valid, icon: "rocket" }, "icon must be one of house, key"],
-    ["no icon", without("icon"), "icon must be one of house, key"],
+    ["an icon that is not in the catalogue", { ...valid, icon: "rocket" }, "icon must be one of grid, house, key"],
+    ["an icon that is neither a name nor a drawing", { ...valid, icon: 4 }, "icon must be one of grid, house, key"],
+    ["an icon that is nothing", { ...valid, icon: null }, "icon must be one of grid, house, key"],
+    ["a drawing with no path", { ...valid, icon: {} }, "icon.path must be SVG path data, starting with M"],
+    ["a drawing that is not path data", { ...valid, icon: { path: "<script>" } }, "icon.path must be SVG path data, starting with M"],
+    ["a drawing that does not start with a move", { ...valid, icon: { path: "L3 4" } }, "icon.path must be SVG path data, starting with M"],
+    ["a drawing that carries markup", { ...valid, icon: { path: 'M0 0"/><script>' } }, "icon.path must be SVG path data, starting with M"],
   ])("refuses %s, and says why", (_, raw, problem) => {
     expect(() => parseStudy(raw, "./07-coinbase.json")).toThrow(`Study ./07-coinbase.json: ${problem}`);
   });
