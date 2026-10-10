@@ -1,0 +1,18 @@
+{
+  "number": 1,
+  "brand": "GIFbnb",
+  "reference": "Airbnb",
+  "subject": "A listing page",
+  "url": "https://gregoryedgerton.github.io/golden-grids-study-01-airbnb/",
+  "colors": {
+    "ground": "#ff385c",
+    "ink": "#ffffff",
+    "accent": "#222222"
+  },
+  "font": {
+    "family": "Figtree",
+    "weight": 800,
+    "italic": false
+  },
+  "icon": "house"
+}

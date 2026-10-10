@@ -6,4 +6,10 @@ export const site = {
   version: __LIBRARY_VERSION__,
   npm: "https://www.npmjs.com/package/@gifcommit/golden-grids",
   github: "https://github.com/gregoryedgerton/golden-grids",
+  /**
+   * Where the sign-up form sends an address: the Beehiiv publication's
+   * subscribe page, which takes it as `email`. Empty until the publication
+   * exists, and the form says so.
+   */
+  subscribe: "",
 } as const;

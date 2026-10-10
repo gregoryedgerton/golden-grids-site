@@ -40,6 +40,17 @@ Issue → pull request → review → merge. No exceptions, including for docs.
 - **Copy.** Plain and exact. No jokes at a reference's expense, no verdicts on
   whether the grid suits a site.
 
+## Where things are
+
+- `src/dial/` is the dial: `geometry.ts` (where each cell sits at a depth),
+  `input.ts` (what each gesture means), `controller.ts` (depth over time, with
+  an injected clock), `Dial.tsx` (the page wiring).
+- `src/cells/` is what is on it. `index.tsx` sets the order; the sign-up is
+  always last.
+- `src/studies/*.json` are the studies, validated by `src/studies/index.ts`.
+- `src/ui/FitText.tsx` fits display type to its box. A cell's square is
+  100cqw on a side at any size, so cell styles are written in `cqw`.
+
 ## Commands
 
 ```bash

@@ -1,0 +1,18 @@
+{
+  "number": 3,
+  "brand": "GIFflix",
+  "reference": "Netflix",
+  "subject": "Home and title pages",
+  "url": "https://gregoryedgerton.github.io/golden-grids-study-03-netflix/",
+  "colors": {
+    "ground": "#141414",
+    "ink": "#e50914",
+    "accent": "#ffffff"
+  },
+  "font": {
+    "family": "Jost",
+    "weight": 700,
+    "italic": false
+  },
+  "icon": "film"
+}

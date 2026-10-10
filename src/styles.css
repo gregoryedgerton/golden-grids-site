@@ -50,26 +50,329 @@ a {
   border: 0;
 }
 
-.plain {
-  display: grid;
-  place-content: center;
+/* Display type drawn to fit its box. */
+.fit {
+  display: block;
+  width: 100%;
   height: 100%;
+  overflow: visible;
+  fill: currentColor;
+}
+
+.fit__shadow {
+  fill: var(--fit-shadow, currentColor);
+}
+
+/*
+ * A cell. Its square is 100cqw on a side whatever size the dial draws it at,
+ * so every measure below is a share of the square and the type scales with it.
+ */
+.cell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 7cqw;
+  gap: 3cqw;
+  font-size: 3.4cqw;
+}
+
+.cell p,
+.cell h2,
+.cell h3,
+.cell ul {
   margin: 0;
-  padding: 8cqw;
+}
+
+.cell a {
+  color: inherit;
+  text-underline-offset: 0.18em;
+}
+
+.cell a:focus-visible,
+.cell button:focus-visible,
+.cell input:focus-visible {
+  outline: 0.5cqw solid currentColor;
+  outline-offset: 0.5cqw;
+}
+
+/* Title: the sleeve. Light sans above, gold script with depth, a boxed number. */
+.title {
+  color: var(--paper);
+}
+
+.title__presents {
   font-size: 5cqw;
-  text-align: center;
+  font-weight: 300;
+  letter-spacing: 0.04em;
 }
 
-.plain h1 {
-  margin: 0;
+.title__name {
+  flex: 1 1 0;
+  min-height: 0;
   font-family: var(--script);
-  font-size: 16cqw;
-  font-weight: 400;
   color: var(--gold);
+  --fit-shadow: var(--gold-deep);
+  transform: rotate(-6deg) scale(0.9);
 }
 
-.plain--number {
-  font-size: 40cqw;
+.title__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4cqw;
+}
+
+.title__version {
+  padding: 0.6cqw 1.6cqw 0.2cqw;
+  border: 0.4cqw solid currentColor;
+  font-size: 4cqw;
   font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.title__links {
+  display: flex;
+  gap: 4cqw;
+  padding: 0;
+  list-style: none;
+  font-size: 5cqw;
+  font-weight: 400;
+  color: var(--red);
+}
+
+.title__hint {
+  font-size: 2.6cqw;
+  letter-spacing: 0.04em;
+}
+
+/* Vision. */
+.vision {
   color: var(--ground);
+}
+
+.vision__heading {
+  flex: 1 1 0;
+  min-height: 0;
+  font-weight: 600;
+}
+
+.vision__body {
+  font-size: 3.5cqw;
+  font-weight: 400;
+}
+
+/* Parameters: a grid the library lays out, one prop to a box. */
+.parameters {
+  color: var(--ground);
+}
+
+.parameters__heading {
+  font-size: 7cqw;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.parameters__grid {
+  flex: 1 1 0;
+  min-height: 0;
+  display: grid;
+  align-content: center;
+}
+
+.parameters__box {
+  container-type: size;
+  overflow: hidden;
+}
+
+.golden-grid__box:nth-child(5n + 1) > .parameters__box { background: var(--gold); }
+.golden-grid__box:nth-child(5n + 2) > .parameters__box { background: var(--red); }
+.golden-grid__box:nth-child(5n + 3) > .parameters__box { background: var(--blue); }
+.golden-grid__box:nth-child(5n + 4) > .parameters__box { background: var(--ground); color: var(--paper); }
+.golden-grid__box:nth-child(5n + 5) > .parameters__box { background: var(--gold-deep); }
+
+.parameters__in {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 3cqmin;
+  height: 100%;
+  padding: 7cqmin;
+  font-size: 6.4cqmin;
+}
+
+.parameters__in h3 {
+  font-size: 13cqmin;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.parameters__in code {
+  font-family: inherit;
+}
+
+.parameters__in p {
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+/* The smallest boxes hold the name alone, set as large as it goes. */
+@container (max-width: 240px) {
+  .parameters__in {
+    padding: 6cqmin;
+  }
+
+  .parameters__in h3 {
+    font-size: 19cqmin;
+  }
+
+  .parameters__in p {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* Gallery. */
+.gallery {
+  color: var(--ground);
+}
+
+.gallery__heading {
+  font-size: 7cqw;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.gallery__count {
+  flex: 1 1 0;
+  min-height: 0;
+  font-weight: 600;
+}
+
+.gallery__body {
+  font-size: 3.5cqw;
+  font-weight: 400;
+}
+
+/* A study's lockup, in the study's own colours and face. */
+.study {
+  display: grid;
+  grid-template: auto minmax(0, 1fr) auto / 1fr auto;
+  align-items: start;
+  color: var(--text);
+}
+
+.study__number {
+  font-size: 3.4cqw;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.study__icon {
+  width: 13cqw;
+  height: 13cqw;
+  color: var(--accent);
+}
+
+.study__name {
+  grid-column: 1 / -1;
+  align-self: center;
+  max-height: 100%;
+  color: var(--ink);
+  font-family: var(--face), var(--sans);
+  font-weight: var(--face-weight);
+  font-style: var(--face-style);
+}
+
+.study__foot {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 4cqw;
+  padding-top: 2.5cqw;
+  border-top: 1cqw solid var(--accent);
+}
+
+.study__subject {
+  font-size: 3.2cqw;
+  font-weight: 400;
+}
+
+.study__after {
+  display: block;
+  font-size: 2.6cqw;
+}
+
+.study .study__link {
+  flex: none;
+  padding: 1.8cqw 3cqw 1.3cqw;
+  background: var(--text);
+  color: var(--ground);
+  font-size: 3.2cqw;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* The sign-up. */
+.signup {
+  color: var(--paper);
+}
+
+.signup__heading {
+  flex: 1 1 0;
+  min-height: 0;
+  font-family: var(--script);
+  color: var(--gold);
+  --fit-shadow: var(--gold-deep);
+}
+
+.signup__form {
+  display: grid;
+  gap: 1.5cqw;
+}
+
+.signup__form label {
+  font-size: 3.2cqw;
+  font-weight: 400;
+}
+
+.signup__row {
+  display: flex;
+  gap: 2cqw;
+}
+
+.signup__row input {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 2cqw 2.4cqw 1.5cqw;
+  border: 0.4cqw solid var(--paper);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ground);
+  font: 400 4cqw var(--sans);
+}
+
+.signup__row button {
+  padding: 2cqw 3.2cqw 1.5cqw;
+  border: 0.4cqw solid var(--gold);
+  border-radius: 0;
+  background: var(--gold);
+  color: var(--ground);
+  font: 600 4cqw var(--sans);
+  cursor: pointer;
+}
+
+.signup__row button:disabled {
+  border-color: var(--paper);
+  background: none;
+  color: var(--paper);
+  cursor: not-allowed;
+}
+
+.signup__note {
+  font-size: 2.6cqw;
 }

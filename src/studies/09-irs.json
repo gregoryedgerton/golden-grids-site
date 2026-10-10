@@ -1,0 +1,18 @@
+{
+  "number": 9,
+  "brand": "GIFrs",
+  "reference": "IRS.gov",
+  "subject": "Three pages of a government site",
+  "url": "https://gregoryedgerton.github.io/golden-grids-study-09-irs/",
+  "colors": {
+    "ground": "#002d62",
+    "ink": "#ffffff",
+    "accent": "#ffbe2e"
+  },
+  "font": {
+    "family": "Source Sans 3",
+    "weight": 700,
+    "italic": false
+  },
+  "icon": "columns"
+}

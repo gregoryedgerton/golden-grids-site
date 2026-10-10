@@ -1,0 +1,18 @@
+{
+  "number": 8,
+  "brand": "GIFx",
+  "reference": "X",
+  "subject": "A home timeline and Explore",
+  "url": "https://gregoryedgerton.github.io/golden-grids-study-08-x/",
+  "colors": {
+    "ground": "#0f1419",
+    "ink": "#ffffff",
+    "accent": "#1d9bf0"
+  },
+  "font": {
+    "family": "Inter",
+    "weight": 800,
+    "italic": false
+  },
+  "icon": "post"
+}

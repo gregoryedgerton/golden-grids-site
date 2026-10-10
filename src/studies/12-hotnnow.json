@@ -1,0 +1,18 @@
+{
+  "number": 12,
+  "brand": "GIFn'now",
+  "reference": "Hot 'n Now",
+  "subject": "A drive-through's five pages",
+  "url": "https://gregoryedgerton.github.io/golden-grids-study-12-hotnnow/",
+  "colors": {
+    "ground": "#0b145f",
+    "ink": "#febc12",
+    "accent": "#e31921"
+  },
+  "font": {
+    "family": "Archivo",
+    "weight": 900,
+    "italic": false
+  },
+  "icon": "burger"
+}

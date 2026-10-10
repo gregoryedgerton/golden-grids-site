@@ -1,0 +1,18 @@
+{
+  "number": 10,
+  "brand": "GIFbell",
+  "reference": "Taco Bell",
+  "subject": "A food menu and its box builder",
+  "url": "https://gregoryedgerton.github.io/golden-grids-study-10-tacobell/",
+  "colors": {
+    "ground": "#501098",
+    "ink": "#ffffff",
+    "accent": "#c99bff"
+  },
+  "font": {
+    "family": "Montserrat",
+    "weight": 900,
+    "italic": false
+  },
+  "icon": "bell"
+}
