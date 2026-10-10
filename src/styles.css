@@ -71,20 +71,22 @@ a {
 }
 
 /*
- * Light enough to see the picture through: lightest through the middle, where
- * the type is largest, and darkest at the foot, where it is smallest. The
- * video is a dark one; over a bright frame the small type would lose contrast.
+ * Light through the middle, so the picture shows, and dark in two bands: at
+ * the top and at the foot, where small type sits and has to keep its contrast
+ * over a white frame as well as a dark one. Large type set over the middle
+ * needs an edge of its own; the title's name has one.
  */
 .bgvideo__scrim {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgb(20 16 12 / 0.6) 0%,
+    rgb(20 16 12 / 0.76) 0%,
+    rgb(20 16 12 / 0.76) 15%,
     rgb(20 16 12 / 0.38) 30%,
-    rgb(20 16 12 / 0.38) 58%,
-    rgb(20 16 12 / 0.7) 82%,
-    rgb(20 16 12 / 0.78) 100%
+    rgb(20 16 12 / 0.38) 66%,
+    rgb(20 16 12 / 0.86) 82%,
+    rgb(20 16 12 / 0.9) 100%
   );
 }
 
@@ -172,6 +174,16 @@ a {
   --fit-shadow: #d98a14;
   --fit-shadow-far: #6b3a0c;
   transform: rotate(-7deg);
+}
+
+/* A dark edge round each letter of the name, drawn under its fill. Over a
+   bright frame of the video the gold would have nothing to stand against;
+   the edge and the brown depth behind it are what it is read by. */
+.title__name .fit__face {
+  stroke: #2e1804;
+  stroke-width: 7px;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
 }
 
 .title__foot {

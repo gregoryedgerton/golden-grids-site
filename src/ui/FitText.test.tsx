@@ -200,6 +200,32 @@ describe("FitText", () => {
     expect(deep.container.querySelector(".fit__layer tspan.fit__strong")).toHaveTextContent("4a");
   });
 
+  it("measures again when the marked part changes, since it may be set heavier and wider", () => {
+    // A marked glyph measures twice as wide as a plain one.
+    vi.spyOn(SVGElement.prototype as unknown as { getBBox: () => DOMRect }, "getBBox").mockImplementation(function (
+      this: SVGElement,
+    ) {
+      const marked = (this.querySelector("tspan")?.textContent as string | undefined)?.length ?? 0;
+      return { x: 0, y: -80, width: ((this.textContent as string).length + marked) * 50, height: 100 } as DOMRect;
+    });
+    const { container, rerender } = render(<FitText lines={["4abc"]} />);
+    expect(groups(container)).toEqual(["translate(0 400) scale(5)"]);
+    rerender(<FitText lines={["4abc"]} strong={1} />);
+    expect(groups(container)).toEqual(["translate(0 320) scale(4)"]);
+    rerender(<FitText lines={["4abc"]} strong={2} />);
+    expect(groups(container)[0]).toBe(`translate(0 ${80 * (1000 / 300)}) scale(${1000 / 300})`);
+    rerender(<FitText lines={["4abc"]} />);
+    expect(groups(container)).toEqual(["translate(0 400) scale(5)"]);
+  });
+
+  it("marks each line's own letters as its face, apart from the copies behind", () => {
+    const { container } = render(<FitText lines={["ab"]} extrude={2} />);
+    const faces = container.querySelectorAll("text.fit__face");
+    expect(faces).toHaveLength(1);
+    expect(faces[0]).not.toHaveClass("fit__shadow");
+    expect(faces[0]?.previousElementSibling).toHaveClass("fit__shadow");
+  });
+
   it("marks nothing unless asked", () => {
     const { container } = render(<FitText lines={["4abc"]} />);
     expect(container.querySelector("tspan")).toBeNull();
