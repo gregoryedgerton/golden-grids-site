@@ -264,10 +264,22 @@ describe("Dial", () => {
       fireEvent.wheel(stage(), { deltaY: 100 });
       act(() => void vi.advanceTimersByTime(3000));
       expect(announced()).toBe("Cell 3, 3 of 12");
-      // A notch too small to be a tick turns nothing.
-      fireEvent.wheel(stage(), { deltaY: 10 });
+      // Travel too small to be a scroll turns nothing.
+      fireEvent.wheel(stage(), { deltaY: 2 });
       act(() => void vi.advanceTimersByTime(3000));
       expect(announced()).toBe("Cell 3, 3 of 12");
+      // A scroll down whose fingers hook left as they lift is one cell deeper, not one back as well.
+      fireEvent.wheel(stage(), { deltaY: 60 });
+      for (const [deltaX, deltaY] of [
+        [-5, 4],
+        [-9, 2],
+        [-12, 0],
+      ] as const) {
+        act(() => void vi.advanceTimersByTime(16));
+        fireEvent.wheel(stage(), { deltaX, deltaY });
+      }
+      act(() => void vi.advanceTimersByTime(3000));
+      expect(announced()).toBe("Cell 4, 4 of 12");
     } finally {
       vi.useRealTimers();
     }

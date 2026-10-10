@@ -1,14 +1,5 @@
-import {
-  COMMIT,
-  SETTLE_MS,
-  WHEEL_HOLD_MS,
-  WHEEL_IDLE_MS,
-  WHEEL_PUSH,
-  WHEEL_RISE,
-  WHEEL_TICK,
-  createDial,
-} from "./controller";
-import type { DialClock } from "./controller";
+import { COMMIT, SETTLE_MS, WHEEL_IDLE_MS, WHEEL_PUSH_PX, WHEEL_RISE, WHEEL_TICK_PX, createDial } from "./controller";
+import type { DialClock, DialController } from "./controller";
 
 /** A clock the test turns by hand. */
 function fakeClock() {
@@ -62,6 +53,27 @@ function setup(count = 10, startReduced = false) {
     clock: fake.clock,
   });
   return { ...fake, dial, state, depths, focuses };
+}
+
+/**
+ * A flick on a trackpad, as the wheel reports it: a quick swell to a peak,
+ * then a tail dying away, an event a frame.
+ */
+function flick(
+  dial: DialController,
+  advance: (ms: number) => void,
+  { peak = 80, tail = 60 }: { peak?: number; tail?: number } = {},
+) {
+  for (const size of [2, 8, peak * 0.4, peak * 0.75, peak]) {
+    dial.wheel(0, size);
+    advance(16);
+  }
+  let size = peak;
+  for (let i = 0; i < tail; i++) {
+    size *= 0.93;
+    dial.wheel(0, size);
+    advance(16);
+  }
 }
 
 describe("createDial, with motion", () => {
@@ -180,7 +192,7 @@ describe("createDial, with motion", () => {
     expect(dial.depth()).toBe(4);
   });
 
-  it("stays on a cell that a long scroll has only just passed", () => {
+  it("stays on a cell that a long drag has only just passed", () => {
     const { dial, advance } = setup();
     // Two cells and a little: the reader stopped on the third, not short of the fourth.
     dial.nudge(2.05);
@@ -209,173 +221,316 @@ describe("createDial, with motion", () => {
     expect(dial.depth()).toBeCloseTo(caught + 0.05, 9);
   });
 
-  it("turns one tick for a scroll, at once, and comes to rest on that cell", () => {
+  it("turns one cell for a scroll, at once, and comes to rest on that cell", () => {
     const { dial, advance, focuses } = setup();
-    dial.wheel(WHEEL_TICK);
+    dial.wheel(0, 100);
     // The journey has begun, toward the next cell and no further.
     advance(32);
     expect(dial.depth()).toBeGreaterThan(0);
+    expect(dial.depth()).toBeLessThan(1);
     advance(3000);
     expect(dial.depth()).toBe(1);
     expect(focuses).toEqual([1]);
-    dial.wheel(-WHEEL_TICK);
+    dial.wheel(0, -100);
     advance(3000);
     expect(dial.depth()).toBe(0);
   });
 
-  it("does not move for a scroll too small to be a tick, and forgets it when the wheel goes quiet", () => {
+  it("goes deeper for a scroll down or right and back for one up or left, by whichever the event has more of", () => {
+    const { dial, advance } = setup(20);
+    const scroll = (x: number, y: number) => {
+      dial.wheel(x, y);
+      advance(3000);
+      return dial.depth();
+    };
+    expect(scroll(0, 50)).toBe(1);
+    expect(scroll(50, 0)).toBe(2);
+    expect(scroll(0, -50)).toBe(1);
+    expect(scroll(-50, 0)).toBe(0);
+    // The larger of the two is the scroll; the other is the hand's drift.
+    expect(scroll(-6, 50)).toBe(1);
+    expect(scroll(50, -6)).toBe(2);
+    expect(scroll(6, -50)).toBe(1);
+  });
+
+  it.each([
+    ["one line of a wheel that reports lines", 16],
+    ["the slowest notch of a mouse on a Mac", 4.000244140625],
+    ["exactly a scroll's worth", WHEEL_TICK_PX],
+  ])("takes %s as a scroll, notch after notch", (_, pixels) => {
+    const { dial, advance } = setup(20);
+    for (let notch = 1; notch <= 4; notch++) {
+      dial.wheel(0, pixels);
+      // Well after the wheel has gone quiet: each notch is on its own.
+      advance(1000);
+      expect(dial.depth()).toBe(notch);
+    }
+  });
+
+  it("does not move for travel too small to be a scroll, and forgets it when the wheel goes quiet", () => {
     const { dial, advance, depths, timers } = setup();
-    dial.wheel(WHEEL_TICK * 0.6);
+    dial.wheel(0, WHEEL_TICK_PX - 1);
     expect(depths).toEqual([]);
     advance(WHEEL_IDLE_MS + 20);
     expect(timers.size).toBe(0);
-    // Not carried over: the same again is still short of a tick.
-    dial.wheel(WHEEL_TICK * 0.6);
+    // Not carried over: the same again would make a scroll if it were, and does not.
+    dial.wheel(0, WHEEL_TICK_PX - 1);
     advance(3000);
     expect(depths).toEqual([]);
     expect(dial.depth()).toBe(0);
   });
 
-  it("gathers small scrolls into a tick, and starts again when the wheel turns round", () => {
+  it("gathers small events into a scroll, and starts again if the wheel turns round first", () => {
     const { dial, advance } = setup();
     dial.goTo(5);
     advance(3000);
-    dial.wheel(WHEEL_TICK * 0.4);
-    dial.wheel(WHEEL_TICK * 0.4);
+    dial.wheel(0, 1);
+    dial.wheel(0, 1);
     expect(dial.depth()).toBe(5);
     // Turned round: what was gathered going forward does not count going back.
-    dial.wheel(-WHEEL_TICK * 0.4);
-    dial.wheel(-WHEEL_TICK * 0.4);
+    dial.wheel(0, -1);
+    dial.wheel(0, -1);
     advance(16);
     expect(dial.depth()).toBe(5);
-    dial.wheel(-WHEEL_TICK * 0.4);
+    dial.wheel(0, -1);
     advance(3000);
     expect(dial.depth()).toBe(4);
   });
 
-  it("turns one tick, not several, for a long scroll or a hard flick", () => {
+  it("turns one cell, not several, for a long scroll or a hard flick", () => {
     const { dial, advance } = setup();
-    // Four cells' worth of travel in one event.
-    dial.wheel(4);
+    // Four screens' worth of travel in one event.
+    dial.wheel(0, 3200);
     advance(3000);
     expect(dial.depth()).toBe(1);
-    // And as a flick: a burst, then a long tail of ever smaller events.
-    let size = 0.6;
-    for (let i = 0; i < 80; i++) {
-      dial.wheel(size);
-      advance(16);
-      size *= 0.93;
-    }
+    // A hard flick: a swell to a peak, then a second and more of tail.
+    flick(dial, advance, { peak: 240, tail: 90 });
     advance(3000);
     expect(dial.depth()).toBe(2);
   });
 
   it("turns one cell for a wheel that is kept spinning, however long, until it pauses", () => {
     const { dial, advance } = setup(20);
-    // Notch after notch of a mouse wheel, each the same size, 50 ms apart, for well over three holds.
-    for (let t = 0; t < WHEEL_HOLD_MS * 3 + 100; t += 50) {
-      dial.wheel(0.125);
+    // Notch after notch of a mouse wheel, each the same size, 50 ms apart, for two seconds.
+    for (let t = 0; t < 2000; t += 50) {
+      dial.wheel(0, 100);
       advance(50);
     }
     advance(3000);
     expect(dial.depth()).toBe(1);
     // After the pause, the next notch is the next cell.
-    dial.wheel(0.125);
+    dial.wheel(0, 100);
     advance(3000);
     expect(dial.depth()).toBe(2);
   });
 
-  it("turns a cell for each notch of a wheel turned a notch at a time, small notches included", () => {
-    const { dial, advance } = setup(20);
-    // Three lines of sixteen pixels: 48 pixels, 0.06 of a step.
-    for (let notch = 1; notch <= 4; notch++) {
-      dial.wheel(0.06);
-      advance(WHEEL_IDLE_MS + 60);
-      advance(1000);
-      expect(dial.depth()).toBe(notch);
-    }
-  });
-
-  it("takes a second flick, made before the first has died away, as a second scroll", () => {
-    const { dial, advance } = setup(20);
-    const flick = () => {
-      let size = 0.5;
-      for (let i = 0; i < 30; i++) {
-        dial.wheel(size);
-        advance(16);
-        size *= 0.93;
-      }
-    };
-    // The tail of the first is still arriving when the second begins: the wheel never goes quiet.
-    flick();
-    flick();
-    advance(3000);
-    expect(dial.depth()).toBe(2);
-  });
-
-  it("does not take an event only a little larger than the last for a second push", () => {
+  it("stays latched to a scroll right up to the moment the wheel has been quiet", () => {
     const { dial, advance } = setup();
-    dial.wheel(0.1);
-    for (let t = 0; t < WHEEL_HOLD_MS * 3; t += 50) {
-      advance(50);
-      // A tail that wobbles: up and down by less than the rise a new push needs.
-      dial.wheel(t % 100 === 0 ? 0.1 : 0.1 * (WHEEL_RISE - 0.1));
-    }
-    advance(3000);
-    expect(dial.depth()).toBe(1);
-  });
-
-  it("ignores the wheel during the hold, however hard it is pushed", () => {
-    const { dial, advance } = setup();
-    dial.wheel(WHEEL_TICK);
-    // The wheel never goes quiet, and every event is twice the push of the last.
-    let size = WHEEL_TICK;
-    for (let t = 50; t < WHEEL_HOLD_MS; t += 50) {
-      advance(50);
-      size *= 2;
-      dial.wheel(size);
-    }
-    advance(3000);
-    expect(dial.depth()).toBe(1);
-  });
-
-  it("does not take the faint end of a flick for a new push, even after the hold", () => {
-    const { dial, advance } = setup();
-    dial.wheel(WHEEL_TICK);
-    // Still arriving long after the hold, never quiet, each no larger than a
-    // pixel or two and no smaller than the one before.
-    for (let t = 0; t < WHEEL_HOLD_MS * 4; t += 60) {
-      advance(60);
-      dial.wheel(WHEEL_PUSH * 0.5);
-    }
+    dial.wheel(0, 100);
+    advance(WHEEL_IDLE_MS - 20);
+    dial.wheel(0, 100);
+    advance(WHEEL_IDLE_MS - 20);
+    dial.wheel(0, 100);
     advance(3000);
     expect(dial.depth()).toBe(1);
   });
 
   it("is ready for a new scroll as soon as the wheel has been quiet", () => {
     const { dial, advance } = setup();
-    dial.wheel(WHEEL_TICK);
+    dial.wheel(0, 100);
     advance(WHEEL_IDLE_MS + 20);
-    // Well inside the hold, but the first gesture is over.
-    dial.wheel(WHEEL_TICK);
+    // The dial is still on its way, but the first scroll is over.
+    expect(dial.depth()).toBeLessThan(1);
+    dial.wheel(0, 100);
     advance(3000);
     expect(dial.depth()).toBe(2);
   });
 
-  it("ignores an empty wheel event", () => {
+  it("takes a second flick as a second scroll, though the first has not died away", () => {
+    const { dial, advance } = setup(20);
+    // Each tail is cut short by the next flick: the wheel never goes quiet.
+    flick(dial, advance, { tail: 12 });
+    flick(dial, advance, { tail: 12 });
+    flick(dial, advance);
+    advance(3000);
+    expect(dial.depth()).toBe(3);
+  });
+
+  it("takes the second flick however soon it comes", () => {
+    const { dial, advance, clock } = setup(20);
+    flick(dial, advance, { tail: 2 });
+    // A tenth of a second after the first: there is no wait before a second push counts.
+    expect(clock.now()).toBeLessThan(150);
+    flick(dial, advance);
+    advance(3000);
+    expect(dial.depth()).toBe(2);
+  });
+
+  it("counts a scroll as fallen away only once it is down to a third of its peak", () => {
+    const run = (dip: number) => {
+      const { dial, advance } = setup(20);
+      for (const size of [90, dip, 100]) {
+        dial.wheel(0, size);
+        advance(16);
+      }
+      advance(3000);
+      return dial.depth();
+    };
+    // Down to a little over a third and up again: the same push, still swelling.
+    expect(run(90 / WHEEL_RISE + 1)).toBe(1);
+    // Down to a third and up to more than three times that: a second push.
+    expect(run(90 / WHEEL_RISE)).toBe(2);
+  });
+
+  it("takes a climb to more than three times the ebb, from at least a push's size, and nothing less", () => {
+    /** A scroll that has fallen away to an ebb, then one more event. */
+    const after = (ebb: number, next: number) => {
+      const { dial, advance } = setup(20);
+      for (const size of [100, ebb, next]) {
+        dial.wheel(0, size);
+        advance(16);
+      }
+      advance(3000);
+      return dial.depth();
+    };
+    // Three times the ebb and no more is not a push; a hair over is.
+    expect(after(4, 4 * WHEEL_RISE)).toBe(1);
+    expect(after(4, 4 * WHEEL_RISE + 0.5)).toBe(2);
+    // Many times a one-pixel ebb is still not a push while it is under a push's size.
+    expect(after(1, WHEEL_PUSH_PX - 0.5)).toBe(1);
+    expect(after(1, WHEEL_PUSH_PX)).toBe(2);
+  });
+
+  it("does not take a stumble in a flick's swell, or a wobble or a doubled event in its tail, for a second push", () => {
+    const { dial, advance } = setup();
+    // The swell dips on its way up.
+    for (const size of [3, 8, 30, 25, 60, 80]) {
+      dial.wheel(0, size);
+      advance(16);
+    }
+    // The tail wobbles, and twice the browser hands over two events as one.
+    for (const size of [70, 52, 58, 40, 31, 26, 22, 44, 19, 16, 18, 13, 11, 22, 9, 8]) {
+      dial.wheel(0, size);
+      advance(16);
+    }
+    advance(3000);
+    expect(dial.depth()).toBe(1);
+  });
+
+  it("does not take the faint end of a flick for a second push, however it flutters", () => {
+    const { dial, advance } = setup();
+    flick(dial, advance);
+    // Still arriving, never quiet: a pixel or two, sometimes several times the one before.
+    const flutter = [1, 3, 1, 4, 1, 7, 2, 6, 1, 5];
+    expect(Math.max(...flutter)).toBeLessThan(WHEEL_PUSH_PX);
+    for (const size of flutter) {
+      dial.wheel(0, size);
+      advance(60);
+    }
+    advance(3000);
+    expect(dial.depth()).toBe(1);
+  });
+
+  it("turns back when the wheel is turned round in mid-scroll, without waiting for it to go quiet", () => {
+    const { dial, advance } = setup(20);
+    dial.goTo(5);
+    advance(3000);
+    flick(dial, advance, { tail: 10 });
+    // Straight into a scroll the other way, a pixel at a time.
+    for (let i = 0; i < 12; i++) {
+      dial.wheel(0, -1);
+      advance(16);
+    }
+    advance(3000);
+    // Forward one and back one, and no further back for the rest of that scroll.
+    expect(dial.depth()).toBe(5);
+  });
+
+  it("does not add up stray travel against a scroll across the scroll's own events", () => {
+    const { dial, advance } = setup(20);
+    dial.wheel(0, 100);
+    // One pixel back, now and then, in a stream that is otherwise still going
+    // forward. Three of them, a scroll's worth if they were added up, and the
+    // third is the last thing the wheel says.
+    for (let i = 0; i <= 6; i++) {
+      dial.wheel(0, i % 3 === 0 ? -1 : 100);
+      advance(16);
+    }
+    advance(3000);
+    expect(dial.depth()).toBe(1);
+  });
+
+  it("keeps a scroll to the axis it began on, so a hand that drifts sideways does not scroll back", () => {
+    const { dial, advance } = setup(20);
+    dial.goTo(5);
+    advance(3000);
+    dial.wheel(0, 60);
+    // The fingers hook to the left as they lift: more sideways travel than downward, and leftward is back.
+    for (const [x, y] of [
+      [-5, 4],
+      [-9, 2],
+      [-12, 1],
+      [-10, 0],
+      [-6, 0],
+    ] as const) {
+      dial.wheel(x, y);
+      advance(16);
+    }
+    advance(3000);
+    expect(dial.depth()).toBe(6);
+    // Once the wheel has been quiet, a scroll to the left is a scroll back.
+    dial.wheel(-12, 1);
+    advance(3000);
+    expect(dial.depth()).toBe(5);
+  });
+
+  it("holds a sideways scroll to its axis and to one cell in the same way", () => {
+    const { dial, advance } = setup(20);
+    // A scroll to the right, the hand drifting down and then up at the end.
+    dial.wheel(80, 0);
+    for (const [x, y] of [
+      [60, 5],
+      [30, 12],
+      [10, 14],
+      [0, 9],
+      [0, -6],
+    ] as const) {
+      dial.wheel(x, y);
+      advance(16);
+    }
+    advance(3000);
+    expect(dial.depth()).toBe(1);
+  });
+
+  it("counts an event off the scroll's axis as the scroll still going on", () => {
+    const { dial, advance } = setup(20);
+    dial.wheel(0, 100);
+    // Sideways only, for half a second: nothing along the scroll's axis, but the wheel is not quiet.
+    for (let t = 0; t < 500; t += 100) {
+      advance(100);
+      dial.wheel(7, 0);
+    }
+    advance(100);
+    // So this is more of the same scroll, and turns nothing.
+    dial.wheel(0, 100);
+    advance(3000);
+    expect(dial.depth()).toBe(1);
+  });
+
+  it("ignores a wheel event with no travel at all", () => {
     const { dial, timers, depths } = setup();
-    dial.wheel(0);
+    dial.wheel(0, 0);
     expect(timers.size).toBe(0);
     expect(depths).toEqual([]);
   });
 
   it("lets a key name a cell in the middle of a scroll, and goes there", () => {
     const { dial, advance } = setup(20);
-    dial.wheel(WHEEL_TICK);
+    dial.wheel(0, 100);
     dial.goTo(19);
     advance(5000);
     expect(dial.depth()).toBe(19);
-    dial.wheel(-WHEEL_TICK * 0.5);
+    dial.wheel(0, -1);
     dial.step(-1);
     advance(5000);
     expect(dial.depth()).toBe(18);
@@ -383,7 +538,7 @@ describe("createDial, with motion", () => {
 
   it("lets a finger take over from a scroll, and settles once when it lifts", () => {
     const { dial, advance, frames } = setup();
-    dial.wheel(WHEEL_TICK * 0.5);
+    dial.wheel(0, 1);
     dial.nudge(0.3);
     advance(1000);
     // Still held: nothing settled it under the finger.
@@ -403,9 +558,9 @@ describe("createDial, with motion", () => {
     expect(a.frames.size).toBe(0);
     a.advance(3000);
     expect(a.depths).toEqual([]);
-    // A wheel waiting to go quiet, short of a tick.
+    // A wheel waiting to go quiet, short of a scroll.
     const b = setup();
-    b.dial.wheel(WHEEL_TICK * 0.5);
+    b.dial.wheel(0, 1);
     expect(b.timers.size).toBe(1);
     b.dial.destroy();
     expect(b.timers.size).toBe(0);
@@ -493,10 +648,10 @@ describe("createDial, with motion reduced", () => {
 
   it("jumps one step for a scroll, at once, and one only", () => {
     const { dial, advance, depths } = setup(10, true);
-    dial.wheel(WHEEL_TICK);
+    dial.wheel(0, 100);
     expect(depths).toEqual([1]);
-    for (let i = 0; i < 20; i++) {
-      dial.wheel(0.2 * 0.9 ** i);
+    for (let i = 1; i < 30; i++) {
+      dial.wheel(0, 100 * 0.9 ** i);
       advance(16);
     }
     advance(WHEEL_IDLE_MS + 16);

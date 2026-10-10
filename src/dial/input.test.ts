@@ -1,4 +1,4 @@
-import { DRAG_SHARE, SLOP_PX, WHEEL_PX, dragSteps, keyMove, ownsDrag, ownsKey, pastSlop, swipeAxis, wheelSteps } from "./input";
+import { DRAG_SHARE, SLOP_PX, dragSteps, keyMove, ownsDrag, ownsKey, pastSlop, swipeAxis, wheelPixels } from "./input";
 
 describe("keyMove", () => {
   it.each(["ArrowDown", "ArrowRight", "PageDown", " "])("goes deeper on %j", (key) => {
@@ -105,21 +105,14 @@ describe("dragSteps", () => {
   });
 });
 
-describe("wheelSteps", () => {
-  it("goes deeper scrolling down or right, and back scrolling up or left", () => {
-    expect(wheelSteps(0, 100, 0, 900)).toBeGreaterThan(0);
-    expect(wheelSteps(100, 0, 0, 900)).toBeGreaterThan(0);
-    expect(wheelSteps(0, -100, 0, 900)).toBeLessThan(0);
-    expect(wheelSteps(-100, 0, 0, 900)).toBeLessThan(0);
+describe("wheelPixels", () => {
+  it("passes pixels through on both axes, sign and all", () => {
+    expect(wheelPixels(-12, 34.5, 0, 900)).toEqual({ x: -12, y: 34.5 });
   });
 
-  it("reads the larger delta as the gesture", () => {
-    expect(wheelSteps(-10, 200, 0, 900)).toBeCloseTo(200 / WHEEL_PX, 9);
-    expect(wheelSteps(-200, 10, 0, 900)).toBeCloseTo(-200 / WHEEL_PX, 9);
-  });
-
-  it("counts lines and pages in pixels", () => {
-    expect(wheelSteps(0, 3, 1, 900)).toBeCloseTo((3 * 16) / WHEEL_PX, 9);
-    expect(wheelSteps(0, 1, 2, 900)).toBeCloseTo(900 / WHEEL_PX, 9);
+  it("counts a line as sixteen pixels and a page as the stage's height", () => {
+    expect(wheelPixels(1, -3, 1, 900)).toEqual({ x: 16, y: -48 });
+    expect(wheelPixels(0, 1, 2, 900)).toEqual({ x: 0, y: 900 });
+    expect(wheelPixels(-1, 0, 2, 640)).toEqual({ x: -640, y: 0 });
   });
 });
