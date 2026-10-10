@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { axe } from "vitest-axe";
 import { setReducedMotion } from "../../test/media";
 import { CellCurrent } from "../dial/current";
@@ -84,6 +84,23 @@ describe("Title, and the video behind it", () => {
     fireEvent.click(screen.getByRole("button", { name: "Play video" }));
     expect(frame()).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Pause video" })).toBeInTheDocument();
+  });
+
+  it("remembers the reader's choice after the cell has been removed and drawn again", () => {
+    const first = render(focused(true));
+    fireEvent.click(screen.getByRole("button", { name: "Pause video" }));
+    first.unmount();
+    // Back from the gallery: still stopped.
+    const second = render(focused(true));
+    expect(frame()).toBeNull();
+    expect(screen.getByRole("button", { name: "Play video" })).toBeInTheDocument();
+    second.unmount();
+    // And a video asked for under reduced motion is still playing.
+    setReducedMotion(true);
+    fireEvent.click(render(focused(true)).getByRole("button", { name: "Play video" }));
+    cleanup();
+    render(focused(true));
+    expect(frame()).toBeInTheDocument();
   });
 
   it("does not start by itself for a reader who has asked for reduced motion, and plays if they ask", () => {

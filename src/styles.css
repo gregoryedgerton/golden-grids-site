@@ -138,8 +138,9 @@ a {
   color: var(--paper);
 }
 
-/* Everything in the cell sits above its video. */
-.title > :not(.bgvideo) {
+/* Everything in the cell sits above its video. The hidden heading keeps its
+   own positioning, which takes it out of the layout. */
+.title > :not(.bgvideo, .visually-hidden) {
   position: relative;
 }
 

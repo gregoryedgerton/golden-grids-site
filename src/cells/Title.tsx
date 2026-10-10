@@ -1,9 +1,9 @@
-import { useState } from "react";
 import { useCellCurrent } from "../dial/current";
 import { useReducedMotion } from "../dial/motion";
 import { BackgroundVideo } from "../ui/BackgroundVideo";
 import { FitText } from "../ui/FitText";
 import { site } from "../site";
+import { chooseVideo, useVideoChoice } from "./videoChoice";
 
 /**
  * The title screen: who presents it, its name, its version and where to get
@@ -16,8 +16,8 @@ import { site } from "../site";
 export function Title() {
   const current = useCellCurrent();
   const reduced = useReducedMotion();
-  /** The reader's own choice, once they have made one. */
-  const [chosen, setChosen] = useState<boolean | null>(null);
+  /** The reader's own choice, once they have made one. It outlives this cell. */
+  const chosen = useVideoChoice();
   const playing = chosen ?? !reduced;
 
   return (
@@ -44,7 +44,7 @@ export function Title() {
       <div className="title__base">
         <p className="title__hint">Swipe, scroll or use the arrow keys</p>
         <p className="title__video">
-          <button type="button" onClick={() => setChosen(!playing)}>
+          <button type="button" onClick={() => chooseVideo(!playing)}>
             {playing ? "Pause video" : "Play video"}
           </button>
           <a href={site.video.url}>{site.video.title}, on YouTube</a>
