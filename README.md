@@ -6,9 +6,11 @@ The marketing site for [Golden Grids](https://github.com/gregoryedgerton/golden-
 
 It is one page: a spiral dial. Swipe up or left, scroll, or use the arrow keys to go deeper; the opposites go back. The dial runs through a title, a statement of what the library is, its parameters, a gallery of the layout studies, and ends at a mailing-list sign-up.
 
-The repository is private; the site is public. `main` is published to GitHub Pages while the repository variable `PUBLISH_SITE` is `true` (with Pages enabled, source GitHub Actions). Unset it and nothing is deployed.
+The repository and the site are both public. `main` is published to GitHub Pages while the repository variable `PUBLISH_SITE` is `true` (with Pages enabled, source GitHub Actions). Unset it and nothing is deployed.
 
 ## Adding a study
+
+A study asks for its place here. When one is first published, `captures/site-issue.cjs` in the study's own repository opens an issue on this repository's board, "Gallery: add ⟨Brand⟩ (Study NN)", with the study's live address, the day it was first published and what its file needs. The repository is public so that the board can take those issues. Work from the issue, and close it from the pull request that adds the study.
 
 Add one file to `src/studies/`, named for its number and subject:
 
