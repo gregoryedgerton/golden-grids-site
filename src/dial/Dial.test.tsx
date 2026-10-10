@@ -173,6 +173,41 @@ describe("Dial", () => {
     }
   });
 
+  it("does not tell a cell the dial is landing on it while a finger rests on the dial without moving, and does when it lifts", () => {
+    setReducedMotion(false);
+    vi.useFakeTimers();
+    try {
+      render(<Dial cells={landable(3)} />);
+      const finger = { pointerId: 7, isPrimary: true, pointerType: "touch" };
+      // Sent to the next cell by a key, and a finger comes down before it is half way there.
+      fireEvent.keyDown(document.body, { key: "ArrowDown" });
+      fireEvent.pointerDown(stage(), { ...finger, clientX: 200, clientY: 400 });
+      const seen = new Set<string>();
+      for (let i = 0; i < 120; i++) {
+        act(() => void vi.advanceTimersByTime(16));
+        seen.add(lands().join());
+      }
+      // The dial arrived on the cell beneath the finger, and at no point was it landing there.
+      expect(announced()).toBe("Cell 2, 2 of 3");
+      expect(current().style.transform).toBe(paintTile(1, 1, 1440, 900).transform);
+      expect([...seen]).toEqual(["focused,waiting,waiting", "waiting,focused,waiting"]);
+
+      fireEvent.pointerUp(window, { ...finger, clientX: 200, clientY: 400 });
+      expect(lands()).toEqual(["waiting", "landing", "waiting"]);
+      // A touch on a dial at rest takes the landing away and gives it back, and moves nothing.
+      fireEvent.pointerDown(stage(), { ...finger, clientX: 200, clientY: 400 });
+      expect(lands()).toEqual(["waiting", "focused", "waiting"]);
+      fireEvent.pointerCancel(window, { ...finger, clientX: 200, clientY: 400 });
+      expect(lands()).toEqual(["waiting", "landing", "waiting"]);
+      expect(announced()).toBe("Cell 2, 2 of 3");
+      // A mouse is not a finger on the dial.
+      fireEvent.pointerDown(stage(), { pointerId: 1, isPrimary: true, pointerType: "mouse", clientX: 200, clientY: 400 });
+      expect(lands()).toEqual(["waiting", "landing", "waiting"]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("is landing on each cell at once when motion is reduced, and tells content outside any dial that nothing is", () => {
     const { unmount } = render(<Dial cells={landable(3)} />);
     fireEvent.keyDown(document.body, { key: "ArrowDown" });

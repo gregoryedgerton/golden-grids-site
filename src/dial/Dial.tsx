@@ -138,6 +138,8 @@ function DialOf({ cells }: { cells: Cell[] }) {
       // A mouse drags to select text; the wheel and the keys are its way round the dial.
       if (event.pointerType === "mouse" || !event.isPrimary || ownsDrag(event.target)) return;
       swipeRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY, axis: null };
+      // Before it has moved: the dial may be on its way to a cell, and must not land there under a finger.
+      dial().hold();
     };
 
     const onMove = (event: PointerEvent) => {
@@ -166,7 +168,8 @@ function DialOf({ cells }: { cells: Cell[] }) {
       const swipe = swipeRef.current;
       if (!swipe || event.pointerId !== swipe.id) return;
       swipeRef.current = null;
-      if (swipe.axis) dial().release();
+      // Whether it swiped or only touched: a swipe settles, and a touch lets the dial go on as it was.
+      dial().release();
     };
 
     const onClick = (event: MouseEvent) => {

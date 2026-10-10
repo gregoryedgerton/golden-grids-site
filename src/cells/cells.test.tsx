@@ -713,6 +713,23 @@ describe("the statement, on a dial that mounts only the cells near the focus", (
     expect(through(20_000)).toEqual([`${BLACK},${BLACK}`]);
   });
 
+  it("does not begin under a finger resting on the dial as the cell arrives, and begins when the finger lifts", () => {
+    setReducedMotion(false);
+    render(<Dial cells={buildCells(studies, "")} />);
+    key("ArrowDown");
+    frames(1000);
+    key("ArrowDown");
+    frames(1000);
+    const finger = { pointerId: 7, isPrimary: true, pointerType: "touch" };
+    key("ArrowDown");
+    fireEvent.pointerDown(document.querySelector(".dial__stage") as Element, { ...finger, clientX: 200, clientY: 400 });
+    // The cell arrives and is the focused one, with the finger still down: not a word.
+    expect(through(3000)).toEqual([`${BLACK},${BLACK}`]);
+    expect(announced()).toMatch(/^Case Studies, 4 of/);
+    fireEvent.pointerUp(window, { ...finger, clientX: 200, clientY: 400 });
+    expect(until((now) => !whole(now))).toBeLessThan(100);
+  });
+
   it("does not begin for a cell the dial only passes on its way to the far end, or on its way back", () => {
     setReducedMotion(false);
     render(<Dial cells={buildCells(studies, "")} />);

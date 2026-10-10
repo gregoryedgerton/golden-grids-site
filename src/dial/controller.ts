@@ -64,18 +64,21 @@ export type DialOptions = {
   onFocus: (index: number) => void;
   /**
    * Called with the cell the dial is heading for: the one it is at rest on or
-   * travelling to. Called with null while a finger holds the dial, which may
-   * yet let it go to either side, and with a cell again when the finger
-   * lifts. A dial starts headed for its first cell, at rest on it.
+   * travelling to. Called with null from the moment a finger comes down on
+   * the dial, since it may carry the dial off or lift where it is, and with
+   * a cell again when the finger lifts. A dial starts headed for its first
+   * cell, at rest on it.
    */
   onHeading: (index: number | null) => void;
   clock: DialClock;
 };
 
 export type DialController = {
+  /** A finger has come down on the dial. Nothing moves for that, but where the dial is headed is no longer known. */
+  hold: () => void;
   /** A finger's travel: move by a fraction of a step. Positive is deeper. */
   nudge: (steps: number) => void;
-  /** The finger has lifted: settle on a cell. */
+  /** The finger has lifted: settle on a cell if it moved the dial, and go on as before if it did not. */
   release: () => void;
   /** A wheel event's travel on each axis, in CSS pixels. Right and down are deeper. A scroll turns one cell. */
   wheel: (x: number, y: number) => void;
@@ -100,8 +103,12 @@ export function createDial({ count, reduced, onDepth, onFocus, onHeading, clock 
   /** Continuous input counted but not shown, under reduced motion. */
   let pending = 0;
   let focus = 0;
-  /** The cell the dial is at rest on or travelling to, or null while a finger holds it. */
+  /** The cell the dial is at rest on or travelling to, or null while a finger is on it. */
   let heading: number | null = 0;
+  /** Whether a finger is on the dial. */
+  let held = false;
+  /** Whether that finger has moved the dial, or been counted as moving it under reduced motion. */
+  let dragged = false;
   let frame = 0;
   let stamp = 0;
   let timer = 0;
@@ -157,7 +164,9 @@ export function createDial({ count, reduced, onDepth, onFocus, onHeading, clock 
   const travel = (to: number) => {
     target = clamp(to);
     pending = 0;
-    head(target);
+    // A key or a scroll with a finger down still sends the dial somewhere, but
+    // it is not headed there while the finger may yet carry it off.
+    if (!held) head(target);
     if (reduced()) {
       stop();
       arrive();
@@ -168,14 +177,22 @@ export function createDial({ count, reduced, onDepth, onFocus, onHeading, clock 
     frame = clock.requestFrame(tick);
   };
 
+  /**
+   * A finger is on the dial, and where it will let go is not known. That is
+   * so before it has moved, and under reduced motion, where it moves nothing
+   * until it lifts: travel already under way may still arrive beneath it, and
+   * the cell it arrives on is not yet where the dial is staying.
+   */
+  const hold = () => {
+    held = true;
+    head(null);
+  };
+
   const nudge = (steps: number) => {
     if (steps === 0) return;
     direction = Math.sign(steps);
-    // A finger has the dial, and where it will let go is not known. That is
-    // so under reduced motion too, where the finger moves nothing until it
-    // lifts: travel already under way may still arrive beneath it, and the
-    // cell it arrives on is not yet where the dial is staying.
-    head(null);
+    hold();
+    dragged = true;
     if (reduced()) {
       pending += steps;
       return;
@@ -187,6 +204,14 @@ export function createDial({ count, reduced, onDepth, onFocus, onHeading, clock 
   };
 
   const release = () => {
+    held = false;
+    if (!dragged) {
+      // The finger lifted without having moved the dial, which is where it
+      // was, or still on its way to where it was going.
+      head(target);
+      return;
+    }
+    dragged = false;
     if (reduced()) {
       const counted = pending;
       pending = 0;
@@ -297,6 +322,7 @@ export function createDial({ count, reduced, onDepth, onFocus, onHeading, clock 
   };
 
   return {
+    hold,
     nudge,
     release,
     wheel,
