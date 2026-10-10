@@ -22,9 +22,9 @@ export function Vision() {
   return (
     <div className="cell vision">
       <h2 className="visually-hidden">{HEADING}</h2>
-      {/* The figure is heavier than the word. The box ends at the baseline, so
-          the strip below is spaced from where the letters sit. */}
-      <FitText className="vision__heading" lines={[HEADING]} strong={1} toBaseline />
+      {/* The box ends at the baseline, so the strip below is spaced from where
+          the letters sit. The figure and the word are one weight. */}
+      <FitText className="vision__heading" lines={[HEADING]} toBaseline />
       <ul className="vision__platforms">
         {PLATFORMS.map(({ name, logo }) => (
           <li key={name}>

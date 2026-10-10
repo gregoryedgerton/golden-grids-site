@@ -1,7 +1,7 @@
 /**
- * What there is to set, in the order a reader meets it: the range, what
- * happens when the range does not start at the beginning, where the spiral
- * starts and which way it turns.
+ * What there is to set, in the order a reader meets it: the range, where the
+ * spiral starts and which way it turns. Skipping is not a parameter. It is
+ * what a range does when it starts above 1, so it is a byline of the range.
  */
 export const PARAMETERS = [
   {
@@ -11,12 +11,8 @@ export const PARAMETERS = [
     // the integers JavaScript holds exactly.
     values: ["1", "91"],
     says: "The range to lay out: any two positions on the Fibonacci sequence, from 1 to 91.*",
+    byline: "Start above 1 and the squares before it are skipped. They fold into one open cell, for a layout that is not a plain run.",
     note: "* 1 to 78 in React and React Native.",
-  },
-  {
-    term: "skip",
-    values: ["from 3"],
-    says: "Start above 1 and the squares before it are skipped. They fold into one open cell, for a layout that is not a plain run.",
   },
   {
     term: "placement",
@@ -30,7 +26,7 @@ export const PARAMETERS = [
   },
 ] as const;
 
-type Parameter = { term: string; values: readonly string[]; says: string; note?: string };
+type Parameter = { term: string; values: readonly string[]; says: string; byline?: string; note?: string };
 
 /** The library's parameters, as a reference to read. */
 export function Parameters() {
@@ -38,7 +34,7 @@ export function Parameters() {
     <div className="cell parameters">
       <h2 className="parameters__heading">The parameters</h2>
       <dl className="parameters__list">
-        {PARAMETERS.map(({ term, values, says, note }: Parameter) => (
+        {PARAMETERS.map(({ term, values, says, byline, note }: Parameter) => (
           <div key={term} className="parameters__item">
             <dt>
               <code>{term}</code>
@@ -55,7 +51,13 @@ export function Parameters() {
             </dd>
             <dd className="parameters__says">
               {says}
-              {/* The small print: set smaller and lighter, under what it qualifies. */}
+              {/* What follows from the parameter, under it and a step quieter. */}
+              {byline && (
+                <span className="parameters__byline">
+                  <b>Skip.</b> {byline}
+                </span>
+              )}
+              {/* The small print: set smaller and lighter, at the foot of the row. */}
               {note && <small className="parameters__note">{note}</small>}
             </dd>
           </div>

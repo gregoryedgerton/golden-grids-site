@@ -167,10 +167,11 @@ describe("Vision", () => {
     expect(description).toMatch(/React, React Native, SwiftUI and Jetpack Compose\.$/);
   });
 
-  it("sets the 4 heavier than the word, and ends the heading's box at its baseline", () => {
+  it("sets the 4 in the same weight as the word, and ends the heading's box at its baseline", () => {
     const { container } = render(<Vision />);
     const heading = container.querySelector(".vision__heading") as SVGSVGElement;
-    expect(heading.querySelector("tspan.fit__strong")).toHaveTextContent(/^4$/);
+    // Nothing in the heading is marked out from the rest.
+    expect(heading.querySelector("tspan")).toBeNull();
     expect(heading.querySelector(".fit__line text")).toHaveTextContent("4platforms");
     // Ten glyphs at 50 wide scale by 2; the baseline is 80 down the line, so 160, not the full 200.
     expect(heading).toHaveAttribute("viewBox", "0 0 1000 160");
@@ -196,34 +197,36 @@ describe("Vision", () => {
 });
 
 describe("Parameters", () => {
-  it("is a reference to read: each parameter, its values and what it does", async () => {
+  it("is a reference to read: three parameters, their values and what each does", async () => {
     const { container } = render(<Parameters />);
     expect(screen.getByRole("heading", { level: 2, name: "The parameters" })).toBeInTheDocument();
-    const terms = screen.getAllByRole("term").map((t) => t.textContent);
-    expect(terms).toEqual(["from · to", "skip", "placement", "clockwise"]);
+    expect(screen.getAllByRole("term").map((t) => t.textContent)).toEqual(["from · to", "placement", "clockwise"]);
     for (const { term, values, says } of PARAMETERS) {
       const list = screen.getByRole("list", { name: `Values for ${term}` });
       expect(within(list).getAllByRole("listitem").map((li) => li.textContent)).toEqual([...values]);
-      expect(screen.getByText(says)).toBeInTheDocument();
+      expect(screen.getByText(says, { exact: false })).toBeInTheDocument();
     }
     // Each term has two descriptions: what it takes, then what it does.
-    const item = screen.getByText("skip").closest(".parameters__item") as HTMLElement;
+    const item = screen.getByText("placement").closest(".parameters__item") as HTMLElement;
     expect([...item.children].map((c) => c.tagName)).toEqual(["DT", "DD", "DD"]);
-    expect(item.children[2]).toHaveTextContent(PARAMETERS[1].says);
     expect(screen.getAllByRole("definition")).toHaveLength(PARAMETERS.length * 2);
+    expect(within(screen.getByRole("list", { name: "Values for placement" })).getAllByRole("listitem")).toHaveLength(4);
+    expect(PARAMETERS[2].says).toMatch(/clockwise, or counter-clockwise/);
     expect(await axe(container)).toHaveNoViolations();
   });
 
-  it("covers the range, skipping, where the spiral starts and which way it turns", () => {
+  it("treats skipping as a byline of the range, not as a parameter", () => {
     render(<Parameters />);
-    const says = (term: string) => PARAMETERS.find((p) => p.term === term)?.says;
-    expect(says("from · to")).toMatch(/positions on the Fibonacci sequence/);
-    expect(says("skip")).toMatch(/squares before it are skipped.*not a plain run/);
-    expect(within(screen.getByRole("list", { name: "Values for placement" })).getAllByRole("listitem")).toHaveLength(4);
-    expect(says("clockwise")).toMatch(/clockwise, or counter-clockwise/);
+    expect(screen.queryByRole("term", { name: "skip" })).toBeNull();
+    expect(PARAMETERS.map((p) => p.term)).not.toContain("skip");
+    const range = screen.getByText("from · to").closest(".parameters__item") as HTMLElement;
+    const byline = range.querySelector(".parameters__says .parameters__byline") as HTMLElement;
+    expect(byline).toHaveTextContent(/^Skip\. Start above 1 and the squares before it are skipped\..*not a plain run\.$/);
+    // Only the range has one.
+    expect(document.querySelectorAll(".parameters__byline")).toHaveLength(1);
   });
 
-  it("gives the whole range, 1 to 91, and the lower React count as an asterisked note under it", () => {
+  it("gives the whole range, 1 to 91, and the lower React count as an asterisked note at the foot of its row", () => {
     render(<Parameters />);
     const range = within(screen.getByRole("list", { name: "Values for from · to" })).getAllByRole("listitem");
     expect(range.map((li) => li.textContent)).toEqual(["1", "91"]);
@@ -232,11 +235,11 @@ describe("Parameters", () => {
     expect(says).toHaveTextContent(/from 1 to 91\.\*/);
     const note = says.querySelector("small.parameters__note") as HTMLElement;
     expect(note).toHaveTextContent("* 1 to 78 in React and React Native.");
-    // The note closes the first row: nothing follows it there, and the next row is skip.
+    // The note closes the row, after the byline; the next row is placement.
     expect(says.lastElementChild).toBe(note);
+    expect(note.previousElementSibling).toHaveClass("parameters__byline");
     expect(item.lastElementChild).toBe(says);
-    expect(item.nextElementSibling).toHaveTextContent(/^skip/);
-    // What a range of five makes is left unsaid.
+    expect(item.nextElementSibling).toHaveTextContent(/^placement/);
     expect(item).not.toHaveTextContent(/five squares|1 to 5/);
   });
 
