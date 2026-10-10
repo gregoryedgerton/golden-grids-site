@@ -1,4 +1,13 @@
-import { COMMIT, SETTLE_MS, WHEEL_HOLD_MS, WHEEL_IDLE_MS, WHEEL_PUSH, WHEEL_TICK, createDial } from "./controller";
+import {
+  COMMIT,
+  SETTLE_MS,
+  WHEEL_HOLD_MS,
+  WHEEL_IDLE_MS,
+  WHEEL_PUSH,
+  WHEEL_RISE,
+  WHEEL_TICK,
+  createDial,
+} from "./controller";
 import type { DialClock } from "./controller";
 
 /** A clock the test turns by hand. */
@@ -261,25 +270,70 @@ describe("createDial, with motion", () => {
     expect(dial.depth()).toBe(2);
   });
 
-  it("ticks again for a wheel that is kept turning, once the hold is over", () => {
+  it("turns one cell for a wheel that is kept spinning, however long, until it pauses", () => {
     const { dial, advance } = setup(20);
-    // Notch after notch of a mouse wheel, each the same size, 50 ms apart.
+    // Notch after notch of a mouse wheel, each the same size, 50 ms apart, for well over three holds.
     for (let t = 0; t < WHEEL_HOLD_MS * 3 + 100; t += 50) {
-      dial.wheel(WHEEL_TICK * 1.25);
+      dial.wheel(0.125);
       advance(50);
     }
     advance(3000);
-    // The first notch, then one tick for each hold that passed: never one per notch.
-    expect(dial.depth()).toBe(4);
+    expect(dial.depth()).toBe(1);
+    // After the pause, the next notch is the next cell.
+    dial.wheel(0.125);
+    advance(3000);
+    expect(dial.depth()).toBe(2);
+  });
+
+  it("turns a cell for each notch of a wheel turned a notch at a time, small notches included", () => {
+    const { dial, advance } = setup(20);
+    // Three lines of sixteen pixels: 48 pixels, 0.06 of a step.
+    for (let notch = 1; notch <= 4; notch++) {
+      dial.wheel(0.06);
+      advance(WHEEL_IDLE_MS + 60);
+      advance(1000);
+      expect(dial.depth()).toBe(notch);
+    }
+  });
+
+  it("takes a second flick, made before the first has died away, as a second scroll", () => {
+    const { dial, advance } = setup(20);
+    const flick = () => {
+      let size = 0.5;
+      for (let i = 0; i < 30; i++) {
+        dial.wheel(size);
+        advance(16);
+        size *= 0.93;
+      }
+    };
+    // The tail of the first is still arriving when the second begins: the wheel never goes quiet.
+    flick();
+    flick();
+    advance(3000);
+    expect(dial.depth()).toBe(2);
+  });
+
+  it("does not take an event only a little larger than the last for a second push", () => {
+    const { dial, advance } = setup();
+    dial.wheel(0.1);
+    for (let t = 0; t < WHEEL_HOLD_MS * 3; t += 50) {
+      advance(50);
+      // A tail that wobbles: up and down by less than the rise a new push needs.
+      dial.wheel(t % 100 === 0 ? 0.1 : 0.1 * (WHEEL_RISE - 0.1));
+    }
+    advance(3000);
+    expect(dial.depth()).toBe(1);
   });
 
   it("ignores the wheel during the hold, however hard it is pushed", () => {
     const { dial, advance } = setup();
     dial.wheel(WHEEL_TICK);
-    // The wheel never goes quiet, and every event is a harder push than the last.
+    // The wheel never goes quiet, and every event is twice the push of the last.
+    let size = WHEEL_TICK;
     for (let t = 50; t < WHEEL_HOLD_MS; t += 50) {
       advance(50);
-      dial.wheel(1 + t);
+      size *= 2;
+      dial.wheel(size);
     }
     advance(3000);
     expect(dial.depth()).toBe(1);
