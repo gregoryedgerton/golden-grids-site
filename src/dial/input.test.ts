@@ -1,4 +1,4 @@
-import { DRAG_SHARE, SLOP_PX, WHEEL_PX, dragSteps, keyMove, ownsDrag, ownsKey, swipeAxis, wheelSteps } from "./input";
+import { DRAG_SHARE, SLOP_PX, WHEEL_PX, dragSteps, keyMove, ownsDrag, ownsKey, pastSlop, swipeAxis, wheelSteps } from "./input";
 
 describe("keyMove", () => {
   it.each(["ArrowDown", "ArrowRight", "PageDown", " "])("goes deeper on %j", (key) => {
@@ -41,13 +41,19 @@ describe("ownsKey and ownsDrag", () => {
     }
   });
 
-  it("leaves Space, and only Space, to a button or a link", () => {
-    for (const html of ["<button data-t>Go</button>", "<a href='#x'><span data-t>Go</span></a>", "<summary data-t>More</summary>"]) {
+  it("leaves Space, and only Space, to whatever Space presses", () => {
+    for (const html of ["<button data-t>Go</button>", "<div role='button' tabindex='0'><span data-t>Go</span></div>", "<summary data-t>More</summary>"]) {
       const element = make(html);
       expect(ownsKey(element, " ")).toBe(true);
       expect(ownsKey(element, "ArrowDown")).toBe(false);
       expect(ownsDrag(element)).toBe(false);
     }
+  });
+
+  it("claims nothing for a link: Enter follows it, and Space does nothing there", () => {
+    const element = make("<a href='#x'><span data-t>Go</span></a>");
+    expect(ownsKey(element, " ")).toBe(false);
+    expect(ownsKey(element, "ArrowDown")).toBe(false);
   });
 
   it("claims nothing for plain content or for a target that is not an element", () => {
@@ -75,6 +81,15 @@ describe("swipeAxis", () => {
     expect(swipeAxis(10, 40)).toBe("y");
     // A perfect diagonal is read as vertical.
     expect(swipeAxis(20, 20)).toBe("y");
+  });
+});
+
+describe("pastSlop", () => {
+  it("is the travel less the slop, in the travel's own direction", () => {
+    expect(pastSlop(300)).toBe(300 - SLOP_PX);
+    expect(pastSlop(-300)).toBe(-300 + SLOP_PX);
+    expect(pastSlop(SLOP_PX)).toBe(0);
+    expect(pastSlop(-SLOP_PX)).toBe(0);
   });
 });
 

@@ -39,8 +39,9 @@ export function keyMove(key: string): KeyMove | null {
 export function ownsKey(target: EventTarget | null, key: string): boolean {
   if (!(target instanceof Element)) return false;
   if (target.closest("input, textarea, select, [contenteditable]")) return true;
-  // Space presses a button and follows nothing else; it must still press it.
-  return key === " " && target.closest("button, a, summary") !== null;
+  // Space presses a button, and must go on pressing it. It does nothing on a
+  // link, which Enter follows, so on a link it is the dial's.
+  return key === " " && target.closest("button, summary, [role='button']") !== null;
 }
 
 /** Whether a touch that starts on this element is left to the element: text is selected by dragging. */
@@ -52,6 +53,11 @@ export function ownsDrag(target: EventTarget | null): boolean {
 export function swipeAxis(dx: number, dy: number): Axis | null {
   if (Math.max(Math.abs(dx), Math.abs(dy)) < SLOP_PX) return null;
   return Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+}
+
+/** A swipe's travel along its axis on the move that gave it one: everything past the slop. */
+export function pastSlop(travel: number): number {
+  return travel - Math.sign(travel) * SLOP_PX;
 }
 
 /** Steps for a finger's travel along its axis. Up and left are deeper. */

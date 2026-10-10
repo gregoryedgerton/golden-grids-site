@@ -242,18 +242,67 @@ describe("Dial", () => {
     expect(announced()).toBe("Cell 3, 3 of 6");
   });
 
-  it("does not count the slop as travel", () => {
+  it("counts a swipe's travel from the edge of the slop, on its first move as on its later ones", () => {
     setReducedMotion(false);
     render(<Dial cells={makeCells(6)} />);
     const init = { pointerId: 7, isPrimary: true, pointerType: "touch" };
     fireEvent.pointerDown(stage(), { ...init, clientX: 200, clientY: 200 });
-    fireEvent.pointerMove(window, { ...init, clientX: 200, clientY: 150 });
-    // The move that gave the swipe its axis moved nothing.
-    expect(current().style.transform).toBe(paintTile(0, 0, 1440, 900).transform);
-    fireEvent.pointerMove(window, { ...init, clientX: 200, clientY: 96 });
-    // 54 px of a 900 px stage at 0.6 of the side per step is a tenth of a step.
+    // 62 px up: the 8 px of slop, then 54 px, which on a 900 px stage at 0.6
+    // of the side per step is a tenth of a step.
+    fireEvent.pointerMove(window, { ...init, clientX: 200, clientY: 138 });
     expect(current().style.transform).toBe(paintTile(0, 0.1, 1440, 900).transform);
+    fireEvent.pointerMove(window, { ...init, clientX: 200, clientY: 84 });
+    expect(current().style.transform).toBe(paintTile(0, 0.2, 1440, 900).transform);
     fireEvent.pointerUp(window, init);
+  });
+
+  it("turns for a flick that is one move long", () => {
+    render(<Dial cells={makeCells(6)} />);
+    const init = { pointerId: 7, isPrimary: true, pointerType: "touch" };
+    for (const [x, y, lands] of [
+      [200, -100, "Cell 2, 2 of 6"],
+      [-100, 200, "Cell 3, 3 of 6"],
+      [200, 500, "Cell 2, 2 of 6"],
+      [500, 200, "Cell 1, 1 of 6"],
+    ] as const) {
+      fireEvent.pointerDown(stage(), { ...init, clientX: 200, clientY: 200 });
+      fireEvent.pointerMove(window, { ...init, clientX: x, clientY: y });
+      fireEvent.pointerUp(window, init);
+      expect(announced()).toBe(lands);
+    }
+  });
+
+  it("goes deeper for Space on a link, which Space does not follow", () => {
+    render(<Dial cells={makeCells(6)} />);
+    fireEvent.keyDown(document.body, { key: "ArrowDown" });
+    expect(fireEvent.keyDown(screen.getByRole("link", { name: "A link" }), { key: " " })).toBe(false);
+    expect(announced()).toBe("Cell 3, 3 of 6");
+  });
+
+  it("comes to rest on a whole cell if motion is reduced in the middle of a gesture", () => {
+    setReducedMotion(false);
+    vi.useFakeTimers();
+    try {
+      render(<Dial cells={makeCells(6)} />);
+      // A wheel has carried the dial 0.4 of the way to the next cell.
+      fireEvent.wheel(stage(), { deltaY: 320 });
+      expect(current().style.transform).toBe(paintTile(0, 0.4, 1440, 900).transform);
+      act(() => setReducedMotion(true));
+      act(() => void vi.advanceTimersByTime(WHEEL_IDLE_MS + 20));
+      expect(current().style.transform).toBe(paintTile(0, 0, 1440, 900).transform);
+      // And a drag.
+      act(() => setReducedMotion(false));
+      const init = { pointerId: 7, isPrimary: true, pointerType: "touch" };
+      fireEvent.pointerDown(stage(), { ...init, clientX: 200, clientY: 400 });
+      fireEvent.pointerMove(window, { ...init, clientX: 200, clientY: 68 });
+      expect((tiles()[1] as HTMLElement).style.transform).toBe(paintTile(1, 0.6, 1440, 900).transform);
+      act(() => setReducedMotion(true));
+      fireEvent.pointerUp(window, init);
+      expect(announced()).toBe("Cell 2, 2 of 6");
+      expect(current().style.transform).toBe(paintTile(1, 1, 1440, 900).transform);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("ignores a tap, a mouse, a second finger and another pointer's moves", () => {

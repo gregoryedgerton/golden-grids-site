@@ -62,8 +62,6 @@ export function createDial({ count, reduced, onDepth, onFocus, clock }: DialOpti
 
   let depth = 0;
   let target = 0;
-  /** The cell the dial last rested on: where an abandoned gesture returns to. */
-  let origin = 0;
   /** The direction of the latest continuous input. */
   let direction = 1;
   /** Continuous input counted but not shown, under reduced motion. */
@@ -89,7 +87,6 @@ export function createDial({ count, reduced, onDepth, onFocus, clock }: DialOpti
 
   const arrive = () => {
     depth = target;
-    origin = target;
     frame = 0;
     emit();
   };
@@ -136,11 +133,17 @@ export function createDial({ count, reduced, onDepth, onFocus, clock }: DialOpti
     if (reduced()) {
       const counted = pending;
       pending = 0;
-      if (Math.abs(counted) >= COMMIT) travel(origin + Math.sign(counted));
+      // From the nearest cell, in case the preference changed in mid-drag and
+      // left the dial between two.
+      const to = clamp(Math.round(depth) + (Math.abs(counted) >= COMMIT ? Math.sign(counted) : 0));
+      if (to !== depth) travel(to);
       return;
     }
-    if (Math.abs(depth - origin) < COMMIT) travel(origin);
-    else travel(direction > 0 ? Math.ceil(depth) : Math.floor(depth));
+    // The cell the input last passed, and the one it is heading for. A long
+    // scroll that stops just past a cell stays on that cell.
+    const passed = direction > 0 ? Math.floor(depth) : Math.ceil(depth);
+    const ahead = direction > 0 ? Math.ceil(depth) : Math.floor(depth);
+    travel(Math.abs(depth - passed) < COMMIT ? passed : ahead);
   };
 
   const quiet = () => {
@@ -148,23 +151,41 @@ export function createDial({ count, reduced, onDepth, onFocus, clock }: DialOpti
     release();
   };
 
+  /**
+   * A wheel gesture is over the moment anything else moves the dial. Left
+   * pending, its quiet timer would settle a journey it knows nothing about.
+   */
+  const forgetWheel = () => {
+    if (timer) clock.clearTimer(timer);
+    timer = 0;
+  };
+
   return {
-    nudge,
-    release,
-    wheel(steps) {
+    nudge(steps) {
+      forgetWheel();
       nudge(steps);
-      if (timer) clock.clearTimer(timer);
+    },
+    release() {
+      forgetWheel();
+      release();
+    },
+    wheel(steps) {
+      forgetWheel();
+      nudge(steps);
       timer = clock.setTimer(quiet, WHEEL_IDLE_MS);
     },
     step(by) {
+      forgetWheel();
       travel(Math.round(target) + by);
     },
-    goTo: travel,
+    goTo(index) {
+      forgetWheel();
+      travel(index);
+    },
     depth: () => depth,
     destroy() {
       stop();
-      if (timer) clock.clearTimer(timer);
-      timer = 0;
+      forgetWheel();
     },
   };
 }
