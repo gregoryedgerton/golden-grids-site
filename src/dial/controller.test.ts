@@ -697,18 +697,54 @@ describe("createDial, and where it is heading", () => {
     expect(headings).toEqual([null, 0]);
   });
 
-  it("is never headed nowhere when motion is reduced: a finger moves nothing until it lifts", () => {
+  it("is headed nowhere under a finger when motion is reduced too, though the finger moves nothing until it lifts", () => {
     const { dial, advance, headings, focuses } = setup(10, true);
     dial.step(1);
     dial.goTo(4);
-    dial.nudge(0.6);
     expect(headings).toEqual([1, 4]);
+    dial.nudge(0.3);
+    dial.nudge(0.3);
+    // Held: the dial has not moved, and where it will go is not known until the finger lifts.
+    expect(dial.depth()).toBe(4);
+    expect(headings).toEqual([1, 4, null]);
     dial.release();
+    expect(headings).toEqual([1, 4, null, 5]);
     dial.wheel(0, 40);
     advance(1000);
-    expect(headings).toEqual([1, 4, 5, 6]);
+    expect(headings).toEqual([1, 4, null, 5, 6]);
     expect(focuses.at(-1)).toBe(6);
     expect(dial.depth()).toBe(6);
+
+    // A finger that does not carry it far enough lets it go where it was.
+    dial.nudge(0.05);
+    dial.release();
+    expect(headings).toEqual([1, 4, null, 5, 6, null, 6]);
+    expect(dial.depth()).toBe(6);
+  });
+
+  it("is not headed for a cell it arrives on beneath a finger: travel under way, motion then reduced, and a finger down", () => {
+    for (const [drag, lets] of [
+      [0.3, 2],
+      [0.05, 1],
+    ] as const) {
+      const { dial, advance, headings, focuses, state } = setup();
+      dial.step(1);
+      advance(16);
+      expect(dial.depth()).toBeLessThan(0.5);
+      // The preference changes with the dial on its way, and a finger comes down before the next frame.
+      state.reduced = true;
+      dial.nudge(drag);
+      expect(headings).toEqual([1, null]);
+      // The travel that was under way arrives beneath the finger. The cell is the nearest; the dial is not headed for it.
+      advance(16);
+      expect(dial.depth()).toBe(1);
+      expect(focuses).toEqual([1]);
+      expect(headings).toEqual([1, null]);
+      // The finger lifts, and only now is it known: on to the next cell, or staying on this one.
+      dial.release();
+      expect(headings).toEqual([1, null, lets]);
+      expect(dial.depth()).toBe(lets);
+    }
   });
 
   it("tells of the destination before it tells of the cell, so the cell it lands on already knows it is the one", () => {
