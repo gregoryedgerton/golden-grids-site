@@ -65,8 +65,8 @@ export type DialOptions = {
   /**
    * Called with the cell the dial is heading for: the one it is at rest on or
    * travelling to. Called with null while a finger holds the dial, which may
-   * yet let it go to either side. A dial starts headed for its first cell,
-   * at rest on it.
+   * yet let it go to either side, and with a cell again when the finger
+   * lifts. A dial starts headed for its first cell, at rest on it.
    */
   onHeading: (index: number | null) => void;
   clock: DialClock;
@@ -171,6 +171,11 @@ export function createDial({ count, reduced, onDepth, onFocus, onHeading, clock 
   const nudge = (steps: number) => {
     if (steps === 0) return;
     direction = Math.sign(steps);
+    // A finger has the dial, and where it will let go is not known. That is
+    // so under reduced motion too, where the finger moves nothing until it
+    // lifts: travel already under way may still arrive beneath it, and the
+    // cell it arrives on is not yet where the dial is staying.
+    head(null);
     if (reduced()) {
       pending += steps;
       return;
@@ -178,7 +183,6 @@ export function createDial({ count, reduced, onDepth, onFocus, onHeading, clock 
     stop();
     depth = clamp(depth + steps);
     target = depth;
-    head(null);
     emit();
   };
 
@@ -190,8 +194,7 @@ export function createDial({ count, reduced, onDepth, onFocus, onHeading, clock 
       // left the dial between two.
       const to = clamp(Math.round(depth) + (Math.abs(counted) >= COMMIT ? Math.sign(counted) : 0));
       if (to !== depth) travel(to);
-      // Already on the cell, with nowhere to go. The finger may have taken
-      // hold of the dial before the preference changed; it has lifted, and
+      // Already on the cell, with nowhere to go. The finger has lifted, and
       // this cell is where the dial is headed again.
       else head(to);
       return;

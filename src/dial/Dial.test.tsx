@@ -177,6 +177,14 @@ describe("Dial", () => {
     const { unmount } = render(<Dial cells={landable(3)} />);
     fireEvent.keyDown(document.body, { key: "ArrowDown" });
     expect(lands()).toEqual(["waiting", "landing", "waiting"]);
+    // A finger on the dial: nothing moves until it lifts, and until then the dial is landing nowhere.
+    const finger = { pointerId: 7, isPrimary: true, pointerType: "touch" };
+    fireEvent.pointerDown(stage(), { ...finger, clientX: 200, clientY: 800 });
+    fireEvent.pointerMove(window, { ...finger, clientX: 200, clientY: 790 });
+    fireEvent.pointerMove(window, { ...finger, clientX: 200, clientY: 500 });
+    expect(lands()).toEqual(["waiting", "focused", "waiting"]);
+    fireEvent.pointerUp(window, { ...finger, clientX: 200, clientY: 500 });
+    expect(lands()).toEqual(["waiting", "waiting", "landing"]);
     unmount();
     render(<Lands name={0} />);
     expect(lands()).toEqual(["waiting"]);
