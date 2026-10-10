@@ -1,0 +1,43 @@
+:root {
+  /* After the sleeve of David Bowie's "Golden Years" single: a warm black
+     ground, gold display lettering, white light sans, a red second line and
+     the blue of the suit. */
+  --ground: #14100c;
+  --gold: #f6c62c;
+  --gold-deep: #c9781a;
+  --paper: #f7f2e8;
+  --red: #f0562e;
+  --blue: #7fa6d9;
+  --sans: "Josefin Sans", "Avenir Next", "Century Gothic", sans-serif;
+  --script: "Pacifico", "Brush Script MT", cursive;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--ground);
+  color: var(--paper);
+  font-family: var(--sans);
+  font-weight: 300;
+  line-height: 1.3;
+}
+
+a {
+  color: var(--gold);
+}
+
+.app {
+  padding: 2rem;
+}
