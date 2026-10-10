@@ -18,6 +18,11 @@ only the focused cell may hold focusable content: every other cell is inert.
 steps with no travel between them. Flag any animation, transition or
 `requestAnimationFrame` loop that does not consult the preference.
 
+**The title's video is YouTube's.** It is played through YouTube's embedded
+player and never copied into the repository or the build. It plays only while
+the title is the focused cell, never starts by itself under reduced motion,
+and always has a button that stops it.
+
 **Directions are fixed.** Swiping up or left, scrolling down or right, and the
 Down, Right, Page Down and Space keys go deeper; the opposites go back. Keys
 typed into a form field never move the dial.

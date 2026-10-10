@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { axe } from "vitest-axe";
 import { mediaListeners, setReducedMotion } from "../../test/media";
 import { WHEEL_IDLE_MS } from "./controller";
+import { useCellCurrent } from "./current";
 import { Dial } from "./Dial";
 import type { Cell } from "./Dial";
 import { AHEAD, BEHIND, TEXTURE_PX, paintTile } from "./geometry";
@@ -56,7 +57,25 @@ beforeEach(() => {
   setReducedMotion(true);
 });
 
+function Says() {
+  return <span data-says>{useCellCurrent() ? "focused" : "waiting"}</span>;
+}
+
 describe("Dial", () => {
+  it("tells each cell's content whether its cell is the focused one", () => {
+    const cells = makeCells(3).map((cell) => ({ ...cell, content: <Says /> }));
+    render(<Dial cells={cells} />);
+    const said = () => [...document.querySelectorAll("[data-says]")].map((s) => s.textContent);
+    expect(said()).toEqual(["focused", "waiting", "waiting"]);
+    fireEvent.keyDown(document.body, { key: "ArrowDown" });
+    expect(said()).toEqual(["waiting", "focused", "waiting"]);
+  });
+
+  it("tells content outside any dial that it is not focused", () => {
+    render(<Says />);
+    expect(document.querySelector("[data-says]")).toHaveTextContent("waiting");
+  });
+
   it("shows the first cell as the only one that can be read or reached", async () => {
     const { container } = render(<Dial cells={makeCells(5)} />);
     const all = tiles();
