@@ -4,7 +4,7 @@ import { createDial } from "./controller";
 import type { DialClock, DialController } from "./controller";
 import { CellCurrent } from "./current";
 import { TEXTURE_PX, mountedAround, navFits, paintTile } from "./geometry";
-import { dragSteps, keyMove, ownsDrag, ownsKey, pastSlop, swipeAxis, wheelSteps } from "./input";
+import { dragSteps, keyMove, ownsDrag, ownsKey, pastSlop, swipeAxis, wheelPixels } from "./input";
 import type { Axis } from "./input";
 import { useReducedMotion } from "./motion";
 import "./dial.css";
@@ -133,7 +133,8 @@ function DialOf({ cells }: { cells: Cell[] }) {
     const onWheel = (event: WheelEvent) => {
       if (event.ctrlKey) return;
       event.preventDefault();
-      dial().wheel(wheelSteps(event.deltaX, event.deltaY, event.deltaMode, stage.clientHeight));
+      const { x, y } = wheelPixels(event.deltaX, event.deltaY, event.deltaMode, stage.clientHeight);
+      dial().wheel(x, y);
     };
 
     const onDown = (event: PointerEvent) => {

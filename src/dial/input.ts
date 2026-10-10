@@ -5,8 +5,6 @@
 
 /** Finger travel, in CSS pixels, before a touch is a swipe and has an axis. */
 export const SLOP_PX = 8;
-/** Wheel travel, in CSS pixels, that turns the dial one step. */
-export const WHEEL_PX = 800;
 /** The share of the stage's shorter side a finger travels to turn the dial one step. */
 export const DRAG_SHARE = 0.6;
 
@@ -65,15 +63,19 @@ export function dragSteps(travel: number, width: number, height: number): number
   return -travel / (Math.min(width, height) * DRAG_SHARE);
 }
 
-/** Lines and pages of wheel travel, in CSS pixels. */
+/** A line of wheel travel, in CSS pixels, for a wheel that reports lines. */
 const LINE_PX = 16;
 
 /**
- * Steps for one wheel event. Scrolling down or right is deeper. The larger
- * of the two deltas is the gesture; the other is the hand's drift.
+ * One wheel event's travel on each axis, in CSS pixels, whatever unit the
+ * browser reported it in. Right and down are deeper.
  */
-export function wheelSteps(deltaX: number, deltaY: number, deltaMode: number, pagePx: number): number {
-  const delta = Math.abs(deltaX) > Math.abs(deltaY) ? deltaX : deltaY;
+export function wheelPixels(
+  deltaX: number,
+  deltaY: number,
+  deltaMode: number,
+  pagePx: number,
+): { x: number; y: number } {
   const unit = deltaMode === 1 ? LINE_PX : deltaMode === 2 ? pagePx : 1;
-  return (delta * unit) / WHEEL_PX;
+  return { x: deltaX * unit, y: deltaY * unit };
 }
