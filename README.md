@@ -38,7 +38,7 @@ A file that breaks a rule fails the tests with the file's name and the reason.
 
 ## Icons and the share image
 
-`public/og.png` and the icons are drawn from `scripts/brand/art.html`, which sets "Golden Grids" and "GG" the way the title cell does. Run this again if the title's lettering changes, and commit what it writes:
+`public/og.png` and the icons are drawn from `scripts/brand/art.html`, which sets "Golden Grids" and "GG" the way the title cell does. The share image sets the name over `scripts/brand/still.jpg`, a still from the title's video that the owner supplied, under a scrim. Run this again if the title's lettering changes, and commit what it writes:
 
 ```bash
 node scripts/brand/make.mjs <a directory whose node_modules has playwright>

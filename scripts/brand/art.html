@@ -4,7 +4,8 @@
   cell draws its name: Pacifico set tight, lemon to gold from top to bottom,
   with depth that shrinks toward a point below and to the left. `make.mjs`
   opens this page and photographs it. `?art=icon` draws GG on a square;
-  `?art=share` draws the name alone, centred, at 1200 by 630.
+  `?art=share` draws the name alone, centred, at 1200 by 630, over `still.jpg`
+  under a scrim.
 -->
 <html lang="en">
   <head>
@@ -15,8 +16,18 @@
       #stage { position: relative; overflow: hidden; background: #14100c; }
       svg { position: absolute; overflow: visible; }
       text { font-family: "Pacifico"; letter-spacing: -0.035em; }
-      /* A soft light behind the name, where the video's picture would be. */
-      .glow { position: absolute; inset: 0; background: radial-gradient(60% 75% at 50% 48%, #3a2a16 0%, #14100c 72%); }
+      /* The owner's still from the video, filling the frame. */
+      .still { position: absolute; inset: 0; background: url("still.jpg") 50% 46% / cover; }
+      /* The scrim over it: light enough to see the picture, darkest behind
+         the name, and warm, so the picture takes the ground's colour. */
+      .scrim {
+        position: absolute; inset: 0;
+        background:
+          radial-gradient(62% 78% at 50% 50%, rgb(20 16 12 / 0.56) 0%, rgb(20 16 12 / 0.34) 100%),
+          rgb(60 34 8 / 0.25);
+      }
+      /* A dark glow behind the letters, as on the title cell. */
+      .still ~ svg { filter: drop-shadow(0 0 26px rgb(20 16 12 / 0.75)) drop-shadow(0 0 8px rgb(20 16 12 / 0.5)); }
     </style>
   </head>
   <body>
@@ -75,7 +86,7 @@
           fit(svg, ratio, { left: 56, top: 40, width: 400, height: 400 }, { x: 14, y: -34 });
         } else {
           stage.style.cssText += "width:1200px;height:630px";
-          stage.insertAdjacentHTML("beforeend", '<div class="glow"></div>');
+          stage.insertAdjacentHTML("beforeend", '<div class="still"></div><div class="scrim"></div>');
           const svg = el("svg", {}, stage);
           const ratio = lockup(svg, ["Golden", "Grids"], { indent: [0, 0.85], leading: 0.66, copies: 26, step: 0.004, vanish: { x: -0.15, y: 1.8 } });
           // The name alone, centred. Its depth falls down and to the left, so the

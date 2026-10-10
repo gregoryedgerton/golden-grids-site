@@ -19,7 +19,10 @@ steps with no travel between them. Flag any animation, transition or
 `requestAnimationFrame` loop that does not consult the preference.
 
 **The title's video is YouTube's.** It is played through YouTube's embedded
-player and never copied into the repository or the build. It plays only while
+player and never copied into the repository or the build. The one exception is
+`scripts/brand/still.jpg`, a single still the owner supplied, which is used
+only behind the title on the share image. Flag any other frame or clip of
+the video, and any use of that still on the page itself. It plays only while
 the title is the focused cell and never under reduced motion. It has no
 control of its own by the owner's decision; do not flag the missing pause
 button, and do flag anything that would let it play in another cell.
