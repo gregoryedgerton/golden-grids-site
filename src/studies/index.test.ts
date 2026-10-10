@@ -34,9 +34,16 @@ describe("readable", () => {
     expect(readable("#ff385c", ["#ffffff", "#222222"])).toBe("#222222");
   });
 
-  it("falls back to white or the site's ink when no candidate reads", () => {
+  it("falls back to white or black when no candidate reads", () => {
     expect(readable("#121212", ["#222222", "#333333"])).toBe("#ffffff");
-    expect(readable("#f7f7f7", ["#eeeeee", "#dddddd"])).toBe("#14100c");
+    expect(readable("#f7f7f7", ["#eeeeee", "#dddddd"])).toBe("#000000");
+  });
+
+  it("finds a colour that reads on every grey there is", () => {
+    for (let v = 0; v < 256; v++) {
+      const grey = `#${v.toString(16).padStart(2, "0").repeat(3)}`;
+      expect(contrast(readable(grey, []), grey)).toBeGreaterThanOrEqual(4.5);
+    }
   });
 });
 
@@ -46,6 +53,13 @@ describe("parseStudy", () => {
       ...valid,
       colors: { ...valid.colors, text: "#ffffff" },
     });
+  });
+
+  it("gives small text a colour that reads even on a mid grey, where neither the name nor the accent does", () => {
+    const grey = { ...valid, colors: { ground: "#777777", ink: "#ffffff", accent: "#eeeeee" } };
+    const { colors } = parseStudy(grey, "./grey.json");
+    expect(colors.text).toBe("#000000");
+    expect(contrast(colors.text, colors.ground)).toBeGreaterThanOrEqual(4.5);
   });
 
   it("does not carry fields it does not know", () => {
