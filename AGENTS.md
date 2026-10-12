@@ -84,8 +84,15 @@ Flag any other frame or clip of film in the repository or the build.
   showing has an address of its own, because a browser that has played a GIF
   may show a new picture of the same file at its last frame. Flag a change
   that shows it from the file's own address, or lets it play in another cell.
-- Under reduced motion the clip is not shown and not fetched. The still stands
+- Under reduced motion the clip is not shown and not fetched, and a fetch of
+  it under way when the preference is turned on is stopped. The still stands
   in for it, whether or not the title is the focused cell.
+- The clip ends on a cut to a dark shot, and rests there. The owner wants that
+  shot kept: it is the rhythm of the clip. Do not flag the dark frame the
+  title rests on, and do flag a change that trims the clip or ends it sooner.
+- The owner hosts the clip rather than embed a player for it, having weighed
+  what the player cost every reader in load. Do not flag that it is a file
+  here and not an embed.
 
 **Directions are fixed.** Swiping up or left, scrolling down or right, and the
 Down, Right, Page Down and Space keys go deeper; the opposites go back. Keys
