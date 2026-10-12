@@ -177,12 +177,15 @@ describe("Title, and the clip behind it", () => {
 });
 
 describe("Vision", () => {
-  it("is headed 4platforms, one word set large, and no longer says one layout model", async () => {
+  it("is headed SUPPORTS, one word in capitals set large, which the platforms under it finish", async () => {
     const { container } = render(<Vision />);
-    expect(screen.getByRole("heading", { level: 2, name: "4platforms" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "SUPPORTS" })).toBeInTheDocument();
     // One line, so it is as wide as the cell.
-    expect([...container.querySelectorAll(".vision__heading .fit__line")].map((g) => g.textContent)).toEqual(["4platforms"]);
-    expect(container).not.toHaveTextContent(/one layout model/i);
+    expect([...container.querySelectorAll(".vision__heading .fit__line")].map((g) => g.textContent)).toEqual(["SUPPORTS"]);
+    // The heading it had, a count of platforms, is gone: the marks are no longer four.
+    expect(container).not.toHaveTextContent(/4platforms|one layout model/i);
+    // The heading is read straight into the list: supports these.
+    expect(container.querySelector(".vision__heading")?.nextElementSibling).toHaveClass("vision__platforms");
     expect(await axe(container)).toHaveNoViolations();
   });
 
@@ -201,21 +204,26 @@ describe("Vision", () => {
     expect(body).not.toHaveTextContent(/same boxes|all four/);
   });
 
-  it("sets the 4 in the same weight as the word, and ends the heading's box at its baseline", () => {
+  it("sets the heading in one weight, and ends its box at the baseline its capitals sit on", () => {
     const { container } = render(<Vision />);
     const heading = container.querySelector(".vision__heading") as SVGSVGElement;
     // Nothing in the heading is marked out from the rest.
     expect(heading.querySelector("tspan")).toBeNull();
-    expect(heading.querySelector(".fit__line text")).toHaveTextContent("4platforms");
-    // Ten glyphs at 50 wide scale by 2; the baseline is 80 down the line, so 160, not the full 200.
-    expect(heading).toHaveAttribute("viewBox", "0 0 1000 160");
+    expect(heading.querySelector(".fit__line text")).toHaveTextContent("SUPPORTS");
+    // Written in capitals, not made so by a style.
+    expect(heading.querySelector(".fit__line text")?.textContent).toBe("SUPPORTS");
+    // Eight glyphs at 50 wide scale by 2.5; the baseline is 80 down the line, so 200, not the full 250.
+    expect(heading).toHaveAttribute("viewBox", "0 0 1000 200");
   });
 
   it("names each platform beside its mark, drawn in one colour and hidden as decoration", () => {
     render(<Vision />);
     const items = screen.getAllByRole("listitem");
-    expect(items.map((li) => li.textContent)).toEqual(["React", "React Native", "SwiftUI", "Jetpack Compose"]);
-    expect(PLATFORMS.map((p) => p.logo)).toEqual(["react", "react", "apple", "android"]);
+    // React and React Native are one entry under one mark. The space in "React Native" does not break,
+    // so the name turns after the ampersand; read aloud, or searched for, it is an ordinary space.
+    expect(items.map((li) => li.textContent)).toEqual(["React & React\u00a0Native", "SwiftUI", "Jetpack Compose"]);
+    expect(items.map((li) => li.textContent?.replace(/\u00a0/g, " "))).toEqual(["React & React Native", "SwiftUI", "Jetpack Compose"]);
+    expect(PLATFORMS.map((p) => p.logo)).toEqual(["react", "apple", "android"]);
     for (const item of items) {
       const mark = item.querySelector("svg") as SVGSVGElement;
       expect(mark).toHaveAttribute("aria-hidden", "true");
@@ -223,10 +231,11 @@ describe("Vision", () => {
       expect(mark.querySelectorAll("path")).toHaveLength(1);
       expect(mark.querySelector("[fill], [stroke]")).toBeNull();
     }
-    // React and React Native share React's mark; the other two differ from it and from each other.
+    // Three marks, each drawn once: React's is not repeated for React Native.
     const drawn = items.map((li) => li.querySelector("path")?.getAttribute("d"));
-    expect(drawn[0]).toBe(drawn[1]);
+    expect(drawn).toHaveLength(3);
     expect(new Set(drawn).size).toBe(3);
+    expect(document.querySelectorAll(".vision__platforms svg")).toHaveLength(3);
   });
 });
 
@@ -234,7 +243,9 @@ describe("Parameters", () => {
   it("is a reference to read: three parameters, their values and what each does", async () => {
     const { container } = render(<Parameters />);
     expect(screen.getByRole("heading", { level: 2, name: "Parameters" })).toBeInTheDocument();
-    expect(screen.getAllByRole("term").map((t) => t.textContent)).toEqual(["from · to", "placement", "clockwise"]);
+    // The names are headings here, written in capitals. The values under them are as code takes them.
+    expect(screen.getAllByRole("term").map((t) => t.textContent)).toEqual(["FROM – TO", "PLACEMENT", "CLOCKWISE"]);
+    expect(PARAMETERS.flatMap((p) => [...p.values]).filter((value) => value !== value.toLowerCase())).toEqual([]);
     for (const { term, values, says } of PARAMETERS) {
       const list = screen.getByRole("list", { name: `Values for ${term}` });
       expect(within(list).getAllByRole("listitem").map((li) => li.textContent)).toEqual([...values]);
@@ -242,17 +253,17 @@ describe("Parameters", () => {
       expect(item.querySelector(".parameters__says")).toHaveTextContent(says);
     }
     // Each term has two descriptions: what it takes, then what it does.
-    const item = screen.getByText("placement").closest(".parameters__item") as HTMLElement;
+    const item = screen.getByText("PLACEMENT").closest(".parameters__item") as HTMLElement;
     expect([...item.children].map((c) => c.tagName)).toEqual(["DT", "DD", "DD"]);
     expect(screen.getAllByRole("definition")).toHaveLength(PARAMETERS.length * 2);
-    expect(within(screen.getByRole("list", { name: "Values for placement" })).getAllByRole("listitem")).toHaveLength(4);
+    expect(within(screen.getByRole("list", { name: "Values for PLACEMENT" })).getAllByRole("listitem")).toHaveLength(4);
     expect(PARAMETERS[2].says).toMatch(/clockwise, or counter-clockwise/);
     expect(await axe(container)).toHaveNoViolations();
   });
 
   it("describes the range in the owner's words, with skipping as part of it and not a parameter or a byline", () => {
     const { container } = render(<Parameters />);
-    const range = screen.getByText("from · to").closest(".parameters__item") as HTMLElement;
+    const range = screen.getByText("FROM – TO").closest(".parameters__item") as HTMLElement;
     // toHaveTextContent with a string would pass on a part of it; this is the whole of it.
     expect(range.querySelector(".parameters__says")?.textContent).toBe(
       "Determines number of boxes a grid contains using Fibonacci indexes for box count and values for box proportions. Grid cells are always squares except when the sequence is skipped. If a grid starts at index 4 then previous indexes are combined into a single rectangular box.",
@@ -265,10 +276,10 @@ describe("Parameters", () => {
 
   it("puts the asterisk on the range itself, 0 – 91*, and the note it points to right under it", () => {
     render(<Parameters />);
-    const range = within(screen.getByRole("list", { name: "Values for from · to" })).getAllByRole("listitem");
+    const range = within(screen.getByRole("list", { name: "Values for FROM – TO" })).getAllByRole("listitem");
     // One chip, read as a range, not two numbers. It starts at 0: from 0 to 1 is a grid of one box.
     expect(range.map((li) => li.textContent)).toEqual(["0 – 91*"]);
-    const item = screen.getByText("from · to").closest(".parameters__item") as HTMLElement;
+    const item = screen.getByText("FROM – TO").closest(".parameters__item") as HTMLElement;
     const takes = item.querySelector(".parameters__takes") as HTMLElement;
     const note = takes.querySelector("small.parameters__note") as HTMLElement;
     expect(note).toHaveTextContent("* 0 – 78 in React and React Native.");
@@ -279,7 +290,7 @@ describe("Parameters", () => {
     const says = item.querySelector(".parameters__says") as HTMLElement;
     expect(says).not.toHaveTextContent("*");
     expect(says.querySelector("small")).toBeNull();
-    expect(item.nextElementSibling).toHaveTextContent(/^placement/);
+    expect(item.nextElementSibling).toHaveTextContent(/^PLACEMENT/);
   });
 
   it("puts a note, and an asterisk, only where there is one", () => {
@@ -916,6 +927,11 @@ describe("buildCells", () => {
       "signup",
     ]);
     expect(new Set(cells.map((cell) => cell.id)).size).toBe(cells.length);
+  });
+
+  it("names the introduction's cells for what a reader finds in them", () => {
+    // What is announced as each takes the focus, and what its section is called.
+    expect(cells.slice(0, 4).map((cell) => cell.label)).toEqual(["Golden Grids", "Supports", "Parameters", "Case Studies"]);
   });
 
   it("labels each study by its name, and draws it on its own ground", () => {

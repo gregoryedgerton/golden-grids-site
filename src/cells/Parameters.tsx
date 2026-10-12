@@ -3,10 +3,14 @@
  * spiral starts and which way it turns. Skipping is not a parameter. It is
  * what a range does when it starts above 1, so the range's own description
  * says it.
+ *
+ * The names are set in capitals, by the owner's direction: they are headings
+ * here. In code the props are `from`, `to`, `placement` and `clockwise`, and
+ * the values under each name are written as code takes them.
  */
 export const PARAMETERS = [
   {
-    term: "from · to",
+    term: "FROM – TO",
     // One value, a range: indexes on the Fibonacci sequence. It starts at 0,
     // which the library accepts. Index 0 is the sequence's zero and draws no
     // box, so from 0 to 1 is a grid of one box. (GoldenGrid renders a single
@@ -21,12 +25,12 @@ export const PARAMETERS = [
     says: "Determines number of boxes a grid contains using Fibonacci indexes for box count and values for box proportions. Grid cells are always squares except when the sequence is skipped. If a grid starts at index 4 then previous indexes are combined into a single rectangular box.",
   },
   {
-    term: "placement",
+    term: "PLACEMENT",
     values: ["right", "bottom", "left", "top"],
     says: "The side the spiral starts from.",
   },
   {
-    term: "clockwise",
+    term: "CLOCKWISE",
     values: ["true", "false"],
     says: "Which way the spiral turns: clockwise, or counter-clockwise.",
   },
