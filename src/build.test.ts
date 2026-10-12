@@ -59,14 +59,16 @@ describe("the built site, which is served from more than one path", () => {
     expect(own.filter((address) => !address.startsWith("./"))).toEqual([]);
   });
 
-  it("finds the title's still beside the script, not from the server's root", () => {
+  it("finds the title's clip and its still beside the script, not from the server's root", () => {
     const script = file(/\.js$/).text;
-    // The script names the still, so it is the script that has to find it:
-    // every address it holds for the still, as written there.
-    const named = [...script.matchAll(/["'`]([^"'`]*title-still[^"'`]*)["'`]/g)].map((quoted) => quoted[1] as string);
+    // The script names both pictures, so it is the script that has to find
+    // them: every address it holds for either, as written there.
+    const named = [...script.matchAll(/["'`]([^"'`]*title-[^"'`]*\.(?:gif|jpg))["'`]/g)].map((quoted) => quoted[1] as string);
 
     expect(file(/title-still/).name).toMatch(/^assets\/[^/]+\.jpg$/);
-    expect(named).not.toEqual([]);
+    expect(file(/title-[^/]*\.gif$/).name).toMatch(/^assets\/[^/]+\.gif$/);
+    expect(named.some((address) => address.endsWith(".gif"))).toBe(true);
+    expect(named.some((address) => address.endsWith(".jpg"))).toBe(true);
     expect(named.filter((address) => address.startsWith("/"))).toEqual([]);
   });
 });

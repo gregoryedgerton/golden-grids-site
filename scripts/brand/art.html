@@ -4,8 +4,10 @@
   cell draws its name: Pacifico set tight, lemon to gold from top to bottom,
   with depth that shrinks toward a point below and to the left. `make.mjs`
   opens this page and photographs it. `?art=icon` draws GG on a square;
-  `?art=share` draws the name alone, centred, at 1200 by 630, over the still
-  from the title's video (`src/assets/title-still.jpg`) under a scrim.
+  `?art=share` draws the name alone, centred, at 1200 by 630, over a still
+  the owner supplied (`share-still.jpg`, beside this file) under a scrim. It
+  is the shopfront of the title's clip, taken closer and at twice the size of
+  the still the page shows, which a share image needs.
 -->
 <html lang="en">
   <head>
@@ -16,8 +18,8 @@
       #stage { position: relative; overflow: hidden; background: #14100c; }
       svg { position: absolute; overflow: visible; }
       text { font-family: "Pacifico"; letter-spacing: -0.035em; }
-      /* The owner's still from the video, filling the frame. */
-      .still { position: absolute; inset: 0; background: url("../../src/assets/title-still.jpg") 50% 46% / cover; }
+      /* The owner's still, filling the frame. */
+      .still { position: absolute; inset: 0; background: url("./share-still.jpg") 50% 46% / cover; }
       /* The scrim over it: light enough to see the picture, darkest behind
          the name, and warm, so the picture takes the ground's colour. */
       .scrim {
@@ -96,7 +98,7 @@
         // The share image is not ready until its picture has arrived: a
         // screenshot taken before then would have the scrim over nothing.
         const picture = new Image();
-        picture.src = "../../src/assets/title-still.jpg";
+        picture.src = "./share-still.jpg";
         const ready = () => { document.body.dataset.ready = "yes"; };
         if (art === "icon") ready();
         else picture.decode().then(ready, () => { document.body.dataset.ready = "failed"; });

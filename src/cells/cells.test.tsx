@@ -7,7 +7,6 @@ import { CellCurrent, CellLanding } from "../dial/current";
 import { Dial } from "../dial/Dial";
 import { prefersReducedMotion } from "../dial/motion";
 import { site } from "../site";
-import { embedUrl } from "../ui/BackgroundVideo";
 import { contrast, parseStudy, studies } from "../studies";
 import { FitText } from "../ui/FitText";
 import { fontHref } from "../ui/fonts";
@@ -85,7 +84,7 @@ describe("Title", () => {
     expect(shrink).toBeGreaterThan(0.8);
   });
 
-  it("puts the version at the foot, first, and carries no instructions, video link or video button", () => {
+  it("puts the version at the foot, first, and carries no instructions, link to a video or button for one", () => {
     const { container } = render(<Title />);
     const cell = container.querySelector(".title") as HTMLElement;
     const foot = cell.lastElementChild as HTMLElement;
@@ -94,73 +93,86 @@ describe("Title", () => {
     expect(screen.queryByText(/swipe|scroll|arrow keys/i)).toBeNull();
     expect(screen.queryByRole("button")).toBeNull();
     expect(screen.getAllByRole("link").map((a) => a.textContent)).toEqual(["npm", "GitHub"]);
-    expect(container.innerHTML).not.toMatch(/youtube\.com\/watch/);
+    // Nothing of YouTube's is left: no player and no address.
+    expect(container.querySelector("iframe")).toBeNull();
+    expect(container.innerHTML).not.toMatch(/youtu/i);
   });
 });
 
-describe("Title, and the video behind it", () => {
-  const frame = () => document.querySelector(".bgvideo iframe");
+describe("Title, and the clip behind it", () => {
+  /** The pictures behind the title: the address each is shown from. */
+  const pictures = () => [...document.querySelectorAll(".title .backdrop img")].map((picture) => picture.getAttribute("src"));
+  /** Let what has been fetched arrive and be drawn. */
+  const arrived = () => act(async () => {});
   const focused = (current: boolean) => (
     <CellCurrent value={current}>
       <Title />
     </CellCurrent>
   );
+  const STILL = expect.stringMatching(/title-still.*\.jpg$/);
 
-  it("plays the video behind the title while the title is the focused cell", async () => {
+  it("plays the owner's clip behind the title while the title is the focused cell", async () => {
     const { container } = render(focused(true));
-    expect(frame()).toHaveAttribute("src", embedUrl(site.video.id));
-    expect(frame()).toHaveAttribute("title", site.video.title);
-    // Behind: the video is the cell's first child, and everything else follows it.
-    expect(container.querySelector(".title")?.firstElementChild).toHaveClass("bgvideo");
-    expect(container.querySelector(".bgvideo__scrim")).toBeInTheDocument();
+    await arrived();
+    // The clip, fetched once and shown from an address of its own.
+    expect(vi.mocked(fetch).mock.calls.map(([address]) => address)).toEqual([expect.stringMatching(/title.*\.gif$/)]);
+    expect(pictures()).toEqual(["blob:showing/1"]);
+    // Behind: the picture is the cell's first child, and everything else follows it.
+    expect(container.querySelector(".title")?.firstElementChild).toHaveClass("backdrop");
+    expect(container.querySelector(".backdrop__scrim")).toBeInTheDocument();
     expect(await axe(container)).toHaveNoViolations();
   });
 
-  it("has no player while another cell is focused, or outside a dial", () => {
+  it("has no clip while another cell is focused, or outside a dial, and plays it afresh each time the title is focused again", async () => {
     const { rerender } = render(focused(false));
-    expect(frame()).toBeNull();
+    await arrived();
+    expect(pictures()).toEqual([]);
+    expect(fetch).not.toHaveBeenCalled();
     rerender(focused(true));
-    expect(frame()).toBeInTheDocument();
+    await arrived();
+    expect(pictures()).toEqual(["blob:showing/1"]);
     rerender(focused(false));
-    expect(frame()).toBeNull();
+    expect(pictures()).toEqual([]);
+    // Back on the title: a new showing, which starts from the first frame. Nothing is fetched again.
+    rerender(focused(true));
+    expect(pictures()).toEqual(["blob:showing/2"]);
+    expect(fetch).toHaveBeenCalledTimes(1);
     rerender(<Title />);
-    expect(frame()).toBeNull();
+    expect(pictures()).toEqual([]);
   });
 
-  const picture = () => document.querySelector(".bgvideo__still");
-
-  it("shows a still from the video, and no player, for a reader who has asked for reduced motion", () => {
+  it("shows the owner's still, and no clip, for a reader who has asked for reduced motion", async () => {
     setReducedMotion(true);
     render(focused(true));
-    expect(frame()).toBeNull();
-    expect(picture()).toHaveAttribute("src", expect.stringMatching(/title-still.*\.jpg$/));
-    expect(document.querySelector(".bgvideo__scrim")).toBeInTheDocument();
+    await arrived();
+    expect(pictures()).toEqual([STILL]);
+    // The clip is not even fetched for a reader it will not be shown to.
+    expect(fetch).not.toHaveBeenCalled();
+    expect(document.querySelector(".backdrop__scrim")).toBeInTheDocument();
   });
 
   it("keeps the still while another cell is focused, since it does not move", () => {
     setReducedMotion(true);
     render(focused(false));
-    expect(picture()).toBeInTheDocument();
-    expect(frame()).toBeNull();
+    expect(pictures()).toEqual([STILL]);
   });
 
-  it("shows no still while motion is allowed, playing or not", () => {
+  it("shows no still while motion is allowed, playing or not", async () => {
     const { rerender } = render(focused(true));
-    expect(picture()).toBeNull();
+    await arrived();
+    expect(pictures()).toEqual(["blob:showing/1"]);
     rerender(focused(false));
-    expect(picture()).toBeNull();
-    expect(frame()).toBeNull();
+    expect(pictures()).toEqual([]);
   });
 
-  it("swaps the video for the still if reduced motion is turned on while it plays, and back", () => {
+  it("swaps the clip for the still if reduced motion is turned on while it plays, and back", async () => {
     render(focused(true));
-    expect(frame()).toBeInTheDocument();
+    await arrived();
+    expect(pictures()).toEqual(["blob:showing/1"]);
     act(() => setReducedMotion(true));
-    expect(frame()).toBeNull();
-    expect(picture()).toBeInTheDocument();
+    expect(pictures()).toEqual([STILL]);
     act(() => setReducedMotion(false));
-    expect(frame()).toBeInTheDocument();
-    expect(picture()).toBeNull();
+    expect(pictures()).toEqual(["blob:showing/2"]);
   });
 });
 

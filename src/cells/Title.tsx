@@ -1,8 +1,9 @@
 import { useCellCurrent } from "../dial/current";
 import { useReducedMotion } from "../dial/motion";
-import { BackgroundVideo } from "../ui/BackgroundVideo";
+import { Backdrop } from "../ui/Backdrop";
 import { FitText } from "../ui/FitText";
 import { site } from "../site";
+import clip from "../assets/title.gif";
 import still from "../assets/title-still.jpg";
 
 /** "Grids" starts this many ems in: a little after the G of "Golden" above it. */
@@ -18,7 +19,9 @@ const GOLD = ["#ffe23d", "#fff3a6", "#fbd128", "#eaa51b"];
  * to a point, its second word set under the first and a little along, a second line in red, and the
  * version in a box at the foot.
  *
- * The video behind it plays only while this is the focused cell. A reader who
+ * Behind it is a clip the owner supplied, five seconds of an old film: a car
+ * passes at night and a shopfront goes up. It is shown through once each time
+ * this becomes the focused cell, and rests on its last frame. A reader who
  * has asked for reduced motion gets a still from it instead.
  */
 export function Title() {
@@ -27,13 +30,8 @@ export function Title() {
 
   return (
     <div className="cell title">
-      {/* With motion reduced, a still from the video stands in for it. */}
-      <BackgroundVideo
-        id={site.video.id}
-        title={site.video.title}
-        playing={current && !reduced}
-        still={reduced ? still : undefined}
-      />
+      {/* With motion reduced, a still from the clip stands in for it. */}
+      <Backdrop clip={clip} playing={current && !reduced} still={reduced ? still : undefined} />
       <p className="title__presents">{site.presenter} presents</p>
       <h1 className="visually-hidden">{site.name}</h1>
       <FitText

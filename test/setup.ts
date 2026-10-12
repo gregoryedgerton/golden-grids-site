@@ -1,7 +1,8 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
-import { afterEach, expect } from "vitest";
+import { afterEach, beforeEach, expect, vi } from "vitest";
 import * as axeMatchers from "vitest-axe/matchers";
+import { answer } from "./clip";
 import { resetMedia } from "./media";
 
 expect.extend(axeMatchers);
@@ -46,6 +47,22 @@ Object.defineProperty(SVGElement.prototype, "getEndPositionOfChar", {
   writable: true,
   configurable: true,
   value: (index: number) => ({ x: (index + 1) * 50, y: 0 }),
+});
+
+// jsdom fetches nothing and has no object URLs. A file fetched here arrives at
+// once, and each address made for a showing of it is numbered from one in
+// every test, so a test can tell one showing from the next.
+let showings = 0;
+Object.defineProperty(URL, "createObjectURL", {
+  writable: true,
+  configurable: true,
+  value: () => `blob:showing/${++showings}`,
+});
+Object.defineProperty(URL, "revokeObjectURL", { writable: true, configurable: true, value: () => {} });
+
+beforeEach(() => {
+  showings = 0;
+  vi.spyOn(globalThis, "fetch").mockImplementation(async () => answer());
 });
 
 afterEach(() => {
