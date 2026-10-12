@@ -19,10 +19,10 @@ const GOLD = ["#ffe23d", "#fff3a6", "#fbd128", "#eaa51b"];
  * to a point, its second word set under the first and a little along, a second line in red, and the
  * version in a box at the foot.
  *
- * Behind it is a clip the owner supplied, four seconds of an old film: a car
+ * Behind it is a clip the owner supplied, five seconds of an old film: a car
  * passes at night and a shopfront goes up. It is shown through once each time
- * this becomes the focused cell, and rests on its last frame, the explosion.
- * A reader who has asked for reduced motion gets a still from it instead.
+ * this becomes the focused cell, and rests on its last frame. A reader who
+ * has asked for reduced motion gets a still from it instead.
  */
 export function Title() {
   const current = useCellCurrent();
