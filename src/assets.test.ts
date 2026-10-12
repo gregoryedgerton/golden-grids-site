@@ -70,9 +70,11 @@ describe("the title's clip", () => {
     expect(clip.applications).toEqual([]);
   });
 
-  it("moves for five seconds and no more", () => {
-    // All fifty frames, the last five of them the dark shot it cuts to and rests on, which the owner wants kept.
-    expect(clip.frames).toBe(50);
+  it("moves for five seconds and no more, and ends where the explosion does", () => {
+    // Forty-one frames: the car, then the shopfront going up, and it rests on the last of that. The
+    // film cuts to a dark shot next, nine frames of it in the owner's file, which the owner had taken
+    // off (`scripts/brand/cut.mjs`). A count that grows has let them, or something like them, back.
+    expect(clip.frames).toBe(41);
     expect(clip.held).toHaveLength(clip.frames);
     // Every frame says how long it is held. One that said nothing would be held as long as the browser liked.
     expect(Math.min(...clip.held)).toBeGreaterThan(0);
