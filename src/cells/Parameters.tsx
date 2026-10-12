@@ -21,8 +21,8 @@ export const PARAMETERS = [
     // range points at the note under it.
     values: ["0 – 91*"],
     note: "* 0 – 78 in React and React Native.",
-    // The owner's words.
-    says: "Determines number of boxes a grid contains using Fibonacci indexes for box count and values for box proportions. Grid cells are always squares except when the sequence is skipped. If a grid starts at index 4 then previous indexes are combined into a single rectangular box.",
+    // The owner's words, but for "an inner" where they had "a inner".
+    says: "Determines number of boxes a grid contains using Fibonacci indexes for box count and values for box proportions. Grid cells are always squares except when the sequence is skipped resulting in an inner rectangular grid cell.",
   },
   {
     term: "PLACEMENT",
