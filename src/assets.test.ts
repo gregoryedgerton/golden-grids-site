@@ -71,6 +71,7 @@ describe("the title's clip", () => {
   });
 
   it("moves for five seconds and no more", () => {
+    // All fifty frames, the last five of them the dark shot it cuts to and rests on, which the owner wants kept.
     expect(clip.frames).toBe(50);
     expect(clip.held).toHaveLength(clip.frames);
     // Every frame says how long it is held. One that said nothing would be held as long as the browser liked.
