@@ -65,7 +65,7 @@ does not repeat: the owner asked that it not loop once it is back to black.
   and needs none. Flag a change that would make it run longer.
 
 **The title's clip is the owner's, and it plays once.** Behind the title is a
-GIF the owner supplied, a few seconds of an old film, in `src/assets/title.gif`,
+GIF the owner supplied, five seconds of an old film, in `src/assets/title.gif`,
 and beside it the still the owner supplied to stand in for it,
 `src/assets/title-still.jpg`. They replace YouTube's embedded player by the
 owner's decision; nothing of YouTube's is left. A third picture,
@@ -73,7 +73,7 @@ owner's decision; nothing of YouTube's is left. A third picture,
 Flag any other frame or clip of film in the repository or the build.
 
 - A GIF cannot be paused, so this one has to end by itself, and soon. It
-  carries no instruction to repeat and its frames add up to 4.1 seconds.
+  carries no instruction to repeat and its frames add up to five seconds.
   WCAG 2.2.2 asks for a control only for what moves for more than five
   seconds, which is why the cell has none: do not flag the missing control.
   `src/assets.test.ts` reads the file and holds it to both. Flag any change
@@ -87,13 +87,9 @@ Flag any other frame or clip of film in the repository or the build.
 - Under reduced motion the clip is not shown and not fetched, and a fetch of
   it under way when the preference is turned on is stopped. The still stands
   in for it, whether or not the title is the focused cell.
-- The clip ends on the explosion and rests there, the smoke and the falling
-  timber behind the name. The film cuts to a dark shot next, which the owner
-  first kept and then had taken off: the explosion is the picture of what the
-  library is for, blowing up the status quo. Flag a change that ends the clip
-  anywhere else, sooner or later, or brings back a shot after the explosion.
-  `scripts/brand/cut.mjs` ends a GIF after a number of frames without drawing
-  any of them again.
+- The clip ends on a cut to a dark shot, and rests there. The owner wants that
+  shot kept: it is the rhythm of the clip. Do not flag the dark frame the
+  title rests on, and do flag a change that trims the clip or ends it sooner.
 - The owner hosts the clip rather than embed a player for it, having weighed
   what the player cost every reader in load. Do not flag that it is a file
   here and not an embed.

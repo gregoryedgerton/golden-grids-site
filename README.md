@@ -49,18 +49,12 @@ node scripts/brand/make.mjs <a directory whose node_modules has playwright>
 
 ## The title's clip
 
-Behind the title is `src/assets/title.gif`, a GIF the owner supplied: a car passes at night and a shopfront goes up. It plays once each time the title is the focused cell and rests on its last frame, the explosion. A reader who has asked for reduced motion gets `src/assets/title-still.jpg` instead, a frame of it at the same size.
+Behind the title is `src/assets/title.gif`, a five-second GIF the owner supplied. It plays once each time the title is the focused cell and rests on its last frame. A reader who has asked for reduced motion gets `src/assets/title-still.jpg` instead, a frame of it at the same size.
 
 A GIF cannot be paused, so it must not repeat and must not run past five seconds; the tests read the file and fail if it does either. A GIF usually arrives set to repeat for ever. To replace the clip, take that instruction out and leave every frame as it is:
 
 ```bash
 node scripts/brand/once.mjs <the new clip> src/assets/title.gif
-```
-
-The owner's file ran on into the next shot of the film. To end a clip sooner, on the frame it should rest on, keep its first frames and no others. Nothing is drawn again:
-
-```bash
-node scripts/brand/cut.mjs src/assets/title.gif src/assets/title.gif <frames to keep>
 ```
 
 ## The mailing list
