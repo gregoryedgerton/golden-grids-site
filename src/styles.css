@@ -160,7 +160,7 @@ a {
    owner's direction: slightly off, and the d then rises through the space
    between the two words and not under the p of the second. */
 .title__presents {
-  top: 4.6cqw;
+  top: 4cqw;
   padding-left: 1em;
   font-family: var(--tall);
   font-size: 8cqw;
