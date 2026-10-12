@@ -88,8 +88,11 @@ Flag any other frame or clip of film in the repository or the build.
   it under way when the preference is turned on is stopped. The still stands
   in for it, whether or not the title is the focused cell.
 - The clip ends on a cut to a dark shot, and rests there. The owner wants that
-  shot kept: it is the rhythm of the clip. Do not flag the dark frame the
-  title rests on, and do flag a change that trims the clip or ends it sooner.
+  shot kept: it is the rhythm of the clip. It has been tried without. The
+  owner had the shot taken off so that the clip ended on the explosion, saw
+  it, and had it put back: a clip that stops dead on the explosion looks like
+  a glitch. Do not flag the dark frame the title rests on, and do flag a
+  change that trims the clip or ends it sooner.
 - The owner hosts the clip rather than embed a player for it, having weighed
   what the player cost every reader in load. Do not flag that it is a file
   here and not an embed.
