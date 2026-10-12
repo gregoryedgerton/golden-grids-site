@@ -152,21 +152,26 @@ a {
   position: relative;
 }
 
-/* Tall, light and white, as the artist's name is set on the sleeve. */
+/* Tall, light and white, as the artist's name is set on the sleeve. It sits
+   to the right, over the end of the name that the tilt lifts toward it. */
 .title__presents {
   font-family: var(--tall);
   font-size: 8cqw;
   font-weight: 300;
   line-height: 1;
   letter-spacing: 0.01em;
+  text-align: right;
 }
 
 /* The name, as large as the cell allows: tilted up to the right, its depth
-   falling down and to the left. It may run a little past the cell's padding. */
+   falling down and to the left. It may run a little past the cell's padding.
+   Its box reaches up behind the line above, since the top of that box is the
+   empty headroom of the script and not its letters: that brings the letters
+   up close under the line, and gives them the height to be larger. */
 .title__name {
   flex: 1 1 0;
   min-height: 0;
-  margin: -3cqw -3cqw -1cqw;
+  margin: -9cqw -3cqw -1cqw;
   font-family: var(--script);
   letter-spacing: -0.035em;
   color: var(--gold);
@@ -224,8 +229,8 @@ a {
   justify-content: space-between;
 }
 
-/* One word across the whole cell, as tall as that makes it. Its box ends at
-   the baseline, so the p hangs below and the strip is spaced from the letters. */
+/* One word across the whole cell, as tall as that makes it. It is set in
+   capitals, so its box ends at the baseline with nothing hanging below. */
 .vision__heading {
   flex: none;
   height: auto;
@@ -234,10 +239,10 @@ a {
 }
 
 
-/* The four platforms in a row, each under its mark. */
+/* The platforms in a row, each under its mark. */
 .vision__platforms {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 3cqw;
   margin: 0;
   padding: 2.5cqw 0;
@@ -301,11 +306,14 @@ a {
 .parameters__item:nth-child(3n + 2) { --mark: var(--red); }
 .parameters__item:nth-child(3n + 3) { --mark: var(--blue); }
 
+/* Set in capitals, which are wide: at this size the longest name, PLACEMENT,
+   stays inside its column and clear of what is said beside it. */
 .parameters__item dt {
   grid-area: 2 / 1;
-  font-size: 7cqw;
+  font-size: 5.8cqw;
   font-weight: 600;
   line-height: 1;
+  white-space: nowrap;
 }
 
 /* The name is underlined in its row's colour: a highlighter, not a link. */
