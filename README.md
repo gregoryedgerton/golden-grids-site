@@ -41,10 +41,20 @@ A file that breaks a rule fails the tests with the file's name and the reason.
 
 ## Icons and the share image
 
-`public/og.png` and the icons are drawn from `scripts/brand/art.html`, which sets "Golden Grids" and "GG" the way the title cell does. The share image sets the name over `src/assets/title-still.jpg`, a still from the title's video that the owner supplied, under a scrim. The title cell shows the same still in place of the video when motion is reduced. Run this again if the title's lettering changes, and commit what it writes:
+`public/og.png` and the icons are drawn from `scripts/brand/art.html`, which sets "Golden Grids" and "GG" the way the title cell does. The share image sets the name over `scripts/brand/share-still.jpg`, a still the owner supplied, under a scrim. Run this again if the title's lettering changes, and commit what it writes:
 
 ```bash
 node scripts/brand/make.mjs <a directory whose node_modules has playwright>
+```
+
+## The title's clip
+
+Behind the title is `src/assets/title.gif`, a five-second GIF the owner supplied. It plays once each time the title is the focused cell and rests on its last frame. A reader who has asked for reduced motion gets `src/assets/title-still.jpg` instead, a frame of it at the same size.
+
+A GIF cannot be paused, so it must not repeat and must not run past five seconds; the tests read the file and fail if it does either. A GIF usually arrives set to repeat for ever. To replace the clip, take that instruction out and leave every frame as it is:
+
+```bash
+node scripts/brand/once.mjs <the new clip> src/assets/title.gif
 ```
 
 ## The mailing list

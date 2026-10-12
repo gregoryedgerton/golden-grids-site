@@ -51,32 +51,23 @@ a {
   border: 0;
 }
 
-/* A video behind a cell, and the scrim that keeps the type over it legible. */
-.bgvideo {
+/* A picture behind a cell, and the scrim that keeps the type over it legible. */
+.backdrop {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
 }
 
-/* The still that stands in for the video: the same crop of the same picture. */
-.bgvideo__still {
+/* The clip, or the still that stands in for it: a 16:9 picture covering the
+   square, full height and centred, its sides cropped. Both are the same
+   footage at the same size, so one takes the other's place without a jump. */
+.backdrop__picture {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-/* A 16:9 picture covering a square: full height, centred, the sides cropped. */
-.bgvideo iframe {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 177.78%;
-  height: 100%;
-  border: 0;
-  translate: -50% -50%;
 }
 
 /*
@@ -85,7 +76,7 @@ a {
  * over a white frame as well as a dark one. Large type set over the middle
  * needs help of its own; the title's name carries a dark glow.
  */
-.bgvideo__scrim {
+.backdrop__scrim {
   position: absolute;
   inset: 0;
   background: linear-gradient(
@@ -155,9 +146,9 @@ a {
   color: var(--paper);
 }
 
-/* Everything in the cell sits above its video. The hidden heading keeps its
+/* Everything in the cell sits above its picture. The hidden heading keeps its
    own positioning, which takes it out of the layout. */
-.title > :not(.bgvideo, .visually-hidden) {
+.title > :not(.backdrop, .visually-hidden) {
   position: relative;
 }
 

@@ -83,7 +83,7 @@ domain is live.
 - A cell's content reads `useCellCurrent()` to know its cell is the focused
   one, and `useCellLanding()` to know the dial is landing on it: at rest on
   it or coming to rest on it, not passing it and not under a finger
-  (`src/dial/current.ts`). The title's video runs on the first, the gallery's
+  (`src/dial/current.ts`). The title's clip plays on the first, the gallery's
   statement starts on the second.
 - `src/studies/*.json` are the studies, validated by `src/studies/index.ts`.
 - `src/ui/FitText.tsx` fits display type to its box. A cell's square is

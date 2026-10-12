@@ -18,18 +18,20 @@ describe("App", () => {
     expect(announced()).toBe(`Golden Grids, 1 of ${total}`);
   });
 
-  it("plays the title's video only while the title is the focused cell", () => {
+  it("plays the title's clip only while the title is the focused cell, and afresh on each return to it", async () => {
     setReducedMotion(false);
+    render(<App />);
+    const clip = () => document.querySelector(".title .backdrop img")?.getAttribute("src");
+    await act(async () => {});
+    expect(clip()).toBe("blob:showing/1");
     vi.useFakeTimers();
     try {
-      render(<App />);
-      expect(document.querySelector(".bgvideo iframe")).toBeInTheDocument();
       fireEvent.keyDown(document.body, { key: "ArrowDown" });
-      act(() => void vi.advanceTimersByTime(3000));
-      expect(document.querySelector(".bgvideo iframe")).toBeNull();
+      for (let i = 0; i < 120; i++) act(() => void vi.advanceTimersByTime(16));
+      expect(clip()).toBeUndefined();
       fireEvent.keyDown(document.body, { key: "ArrowUp" });
-      act(() => void vi.advanceTimersByTime(3000));
-      expect(document.querySelector(".bgvideo iframe")).toBeInTheDocument();
+      for (let i = 0; i < 120; i++) act(() => void vi.advanceTimersByTime(16));
+      expect(clip()).toBe("blob:showing/2");
     } finally {
       vi.useRealTimers();
     }

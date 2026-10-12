@@ -64,16 +64,28 @@ does not repeat: the owner asked that it not loop once it is back to black.
 - All of it is over in under five seconds, so it has no control of its own
   and needs none. Flag a change that would make it run longer.
 
-**The title's video is YouTube's.** It is played through YouTube's embedded
-player and never copied into the repository or the build. The one exception is
-`src/assets/title-still.jpg`, a single still the owner supplied. By the
-owner's decision it is used in two places: behind the title on the share
-image, and behind the title on the page in place of the video for a reader
-who has asked for reduced motion. Flag any other frame or clip of the video.
-The video plays only while the title is the focused cell and never under
-reduced motion. It has no control of its own by the owner's decision; do not
-flag the missing pause button, and do flag anything that would let it play in
-another cell.
+**The title's clip is the owner's, and it plays once.** Behind the title is a
+GIF the owner supplied, five seconds of an old film, in `src/assets/title.gif`,
+and beside it the still the owner supplied to stand in for it,
+`src/assets/title-still.jpg`. They replace YouTube's embedded player by the
+owner's decision; nothing of YouTube's is left. A third picture,
+`scripts/brand/share-still.jpg`, is the owner's still behind the share image.
+Flag any other frame or clip of film in the repository or the build.
+
+- A GIF cannot be paused, so this one has to end by itself, and soon. It
+  carries no instruction to repeat and its frames add up to five seconds.
+  WCAG 2.2.2 asks for a control only for what moves for more than five
+  seconds, which is why the cell has none: do not flag the missing control.
+  `src/assets.test.ts` reads the file and holds it to both. Flag any change
+  that lets it repeat or run longer, and any replacement of the file that has
+  not been through `scripts/brand/once.mjs`.
+- It is on the page only while the title is the focused cell, and it plays
+  once, from its first frame, each time the title is focused again. Each
+  showing has an address of its own, because a browser that has played a GIF
+  may show a new picture of the same file at its last frame. Flag a change
+  that shows it from the file's own address, or lets it play in another cell.
+- Under reduced motion the clip is not shown and not fetched. The still stands
+  in for it, whether or not the title is the focused cell.
 
 **Directions are fixed.** Swiping up or left, scrolling down or right, and the
 Down, Right, Page Down and Space keys go deeper; the opposites go back. Keys
