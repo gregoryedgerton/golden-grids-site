@@ -155,9 +155,13 @@ a {
 /* Tall, light and white, as the artist's name is set on the sleeve. It is
    centred over the name and set low enough that the two tallest letters of
    "Golden", the l and the d, come up over the foot of it a little. The name
-   is drawn after this line, so it is the name that is on top. */
+   is drawn after this line, so it is the name that is on top. An em of
+   padding on the left sets the line half an em right of centre, by the
+   owner's direction: slightly off, and the d then rises through the space
+   between the two words and not under the p of the second. */
 .title__presents {
   top: 4.6cqw;
+  padding-left: 1em;
   font-family: var(--tall);
   font-size: 8cqw;
   font-weight: 300;
