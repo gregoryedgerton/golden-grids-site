@@ -4,8 +4,8 @@
 //
 // A GIF repeats only if it carries the NETSCAPE2.0 application extension, which says how many
 // times. This removes that one block and nothing else: every frame, colour table and delay in the
-// copy is byte for byte what it was. The title's clip has to play once, because it is five seconds
-// long and anything that moves for longer than that needs a way to stop it.
+// copy is byte for byte what it was. The title's clip has to play once: a GIF cannot be paused,
+// and anything that moves for more than five seconds needs a way to stop it.
 import { readFileSync, writeFileSync } from "node:fs";
 
 const [source, target] = process.argv.slice(2);
