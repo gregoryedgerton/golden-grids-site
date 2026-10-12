@@ -25,8 +25,7 @@ describe("Backdrop", () => {
     // Nothing to show until it has arrived.
     expect(pictures(container)).toEqual([]);
     await arrived();
-    expect(fetch).toHaveBeenCalledTimes(1);
-    expect(fetch).toHaveBeenCalledWith("/clip.gif");
+    expect(vi.mocked(fetch).mock.calls.map(([address]) => address)).toEqual(["/clip.gif"]);
     const picture = container.querySelector("img") as HTMLImageElement;
     expect(picture).toHaveAttribute("src", "blob:showing/1");
     // Decoration: no description, inside the hidden wrapper, and the scrim after it, so drawn over it.
@@ -113,22 +112,47 @@ describe("Backdrop", () => {
     expect(fetch).toHaveBeenCalledTimes(3);
   });
 
-  it("does not show a clip that arrives after it has stopped being wanted, and shows it when it is wanted again", async () => {
-    let arrive: (answer: Response) => void = () => {};
-    vi.mocked(fetch).mockImplementationOnce(() => new Promise<Response>((resolve) => (arrive = resolve)));
+  it("stops fetching a clip that stops being wanted before it has arrived, and asks for it again when it is wanted", async () => {
+    // A fetch that takes its time, and gives up when it is told to, as a real one does.
+    const asked: AbortSignal[] = [];
+    vi.mocked(fetch).mockImplementationOnce(
+      (_, init) =>
+        new Promise<Response>((_resolve, reject) => {
+          const signal = init?.signal as AbortSignal;
+          asked.push(signal);
+          signal.addEventListener("abort", () => reject(new DOMException("stopped", "AbortError")));
+        }),
+    );
     const { container, rerender } = render(<Backdrop clip="/clip.gif" playing />);
     await arrived();
     expect(pictures(container)).toEqual([]);
-    // The reader has moved on before it comes.
-    rerender(<Backdrop clip="/clip.gif" playing={false} />);
-    arrive(answer());
+    expect(asked.map((signal) => signal.aborted)).toEqual([false]);
+
+    // The reader turns motion off, or moves on, with most of it still to come. The rest is not fetched.
+    rerender(<Backdrop clip="/clip.gif" playing={false} still="/still.jpg" />);
+    expect(asked.map((signal) => signal.aborted)).toEqual([true]);
     await arrived();
-    expect(pictures(container)).toEqual([]);
-    // Wanted again: asked for again, and this time shown.
+    expect(pictures(container)).toEqual(["/still.jpg"]);
+
+    // Wanted again: asked for again, and this time it comes and is shown.
     rerender(<Backdrop clip="/clip.gif" playing />);
     await arrived();
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(pictures(container)).toEqual(["blob:showing/1"]);
+  });
+
+  it("does not stop a fetch it still wants, and stops one left in the air when it is removed", async () => {
+    const asked: AbortSignal[] = [];
+    vi.mocked(fetch).mockImplementation((_, init) => {
+      asked.push(init?.signal as AbortSignal);
+      return new Promise<Response>(() => {});
+    });
+    const { rerender, unmount } = render(<Backdrop clip="/clip.gif" playing />);
+    // Drawn again for any other reason, the same fetch goes on.
+    rerender(<Backdrop clip="/clip.gif" playing still="/still.jpg" />);
+    expect(asked.map((signal) => signal.aborted)).toEqual([false]);
+    unmount();
+    expect(asked.map((signal) => signal.aborted)).toEqual([true]);
   });
 
   it("ends with one showing at a live address when React mounts it twice, as it does in development", async () => {

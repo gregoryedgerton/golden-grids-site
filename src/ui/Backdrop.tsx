@@ -2,24 +2,24 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 /**
  * The clip's bytes, fetched once, when the clip is first wanted, and null
- * until they have arrived. A reader it is never shown to fetches nothing.
+ * until they have arrived. A reader it is never shown to fetches nothing, and
+ * the fetch is stopped if the clip stops being wanted before it has come: a
+ * reader who turns motion off, or moves on, is not made to take the rest of
+ * it. It is asked for afresh the next time it is wanted.
  */
 function useFetched(clip: string, wanted: boolean): Blob | null {
   const [fetched, setFetched] = useState<Blob | null>(null);
 
   useEffect(() => {
     if (!wanted || fetched) return;
-    let waiting = true;
-    fetch(clip)
+    const asking = new AbortController();
+    fetch(clip, { signal: asking.signal })
       .then((answer) => (answer.ok ? answer.blob() : Promise.reject(new Error(`${answer.status} for the clip`))))
-      .then((blob) => {
-        if (waiting) setFetched(blob);
-      })
-      // Without the clip the cell stands on its plain ground. Nothing is lost that a reader has to be told of.
+      .then(setFetched)
+      // Stopped, refused or lost on the way: without the clip the cell stands on
+      // its plain ground. Nothing is lost that a reader has to be told of.
       .catch(() => {});
-    return () => {
-      waiting = false;
-    };
+    return () => asking.abort();
   }, [clip, wanted, fetched]);
 
   return fetched;
