@@ -266,7 +266,7 @@ describe("Parameters", () => {
     const range = screen.getByText("FROM – TO").closest(".parameters__item") as HTMLElement;
     // toHaveTextContent with a string would pass on a part of it; this is the whole of it.
     expect(range.querySelector(".parameters__says")?.textContent).toBe(
-      "Determines number of boxes a grid contains using Fibonacci indexes for box count and values for box proportions. Grid cells are always squares except when the sequence is skipped. If a grid starts at index 4 then previous indexes are combined into a single rectangular box.",
+      "Determines number of boxes a grid contains using Fibonacci indexes for box count and values for box proportions. Grid cells are always squares except when the sequence is skipped resulting in an inner rectangular grid cell.",
     );
     expect(PARAMETERS.map((p) => p.term)).not.toContain("skip");
     expect(container.querySelector(".parameters__byline")).toBeNull();
