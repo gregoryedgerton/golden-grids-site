@@ -152,15 +152,18 @@ a {
   position: relative;
 }
 
-/* Tall, light and white, as the artist's name is set on the sleeve. It sits
-   to the right, over the end of the name that the tilt lifts toward it. */
+/* Tall, light and white, as the artist's name is set on the sleeve. It is
+   centred over the name and set low enough that the two tallest letters of
+   "Golden", the l and the d, come up over the foot of it a little. The name
+   is drawn after this line, so it is the name that is on top. */
 .title__presents {
+  top: 4.6cqw;
   font-family: var(--tall);
   font-size: 8cqw;
   font-weight: 300;
   line-height: 1;
   letter-spacing: 0.01em;
-  text-align: right;
+  text-align: center;
 }
 
 /* The name, as large as the cell allows: tilted up to the right, its depth
