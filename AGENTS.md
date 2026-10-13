@@ -64,6 +64,12 @@ does not repeat: the owner asked that it not loop once it is back to black.
 - All of it is over in under five seconds, so it has no control of its own
   and needs none. Flag a change that would make it run longer.
 
+**The presenter's line stands where the owner put it.** "GIFcommit presents"
+is set 1cqw down from the top of the title's column. The owner has moved it
+more than once, last upward when the stamp's line at the foot made the name
+a little smaller. Do not flag where it stands, and flag a change that moves
+it without the owner's word.
+
 **The title's clip is the owner's, and it plays once.** Behind the title is a
 GIF the owner supplied, five seconds of an old film, in `src/assets/title.gif`,
 and beside it the still the owner supplied to stand in for it,
@@ -136,12 +142,17 @@ the library's on the title, which is the library's; and the site's own on the
 last cell, with the sign-up.
 
 The stamp is small and light, by the owner's direction: release numbers are
-to be discreet. It carries no date, and no cell shows one. The owner tried
-the serial at the top left, tried the day beside it, and settled on this. A
-study's day stays in its file. Do not flag the size, the light weight, the
-missing date or the empty top left of a study's cell; do flag a stamp set
-larger or heavier than the cell's other fine print, one that shares its line
-with anything or is not the cell's last, and a date brought back to a cell.
+to be discreet. The stamp carries no date. The owner tried the serial at the
+top left, tried the day beside it, and settled on this. Do not flag the size
+or the light weight; do flag a stamp set larger or heavier than the cell's
+other fine print, one that shares its line with anything or is not the
+cell's last, and a date put into a stamp.
+
+**Only a study's cell shows a day.** The day a study was published is at the
+top left of its cell, where it always was, by the owner's direction. The
+title, which is the library's, and the last cell show none: the owner asked
+for the day on the case studies and nowhere else. Flag a day on any other
+cell, and a study's cell without one.
 
 Numbers are GIFcommit's, and are copied from its list, never made up here.
 Flag a serial written any way but the name exactly and the number to five

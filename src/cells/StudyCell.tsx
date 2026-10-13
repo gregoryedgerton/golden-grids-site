@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { writeDate } from "../studies";
 import type { Study } from "../studies";
 import { FitText } from "../ui/FitText";
 import { useFont } from "../ui/fonts";
@@ -7,12 +8,12 @@ import { Stamp } from "../ui/Stamp";
 
 /**
  * One study's lockup: its parody name in its own colours and face, and the
- * way to it. Its stamp, the study's serial among GIFcommit's releases, is the
- * cell's last line, a line of its own under the foot. The day it was
- * published used to be at the top left, and no cell shows a date now.
+ * way to it. The day it was published is at its top left. Its stamp, the
+ * study's serial among GIFcommit's releases, is the cell's last line, a line
+ * of its own under the foot.
  */
 export function StudyCell({ study }: { study: Study }) {
-  const { brand, colors, font, release, reference, subject, url } = study;
+  const { brand, colors, font, published, release, reference, subject, url } = study;
   useFont(font, brand);
   const style = {
     "--ink": colors.ink,
@@ -26,6 +27,10 @@ export function StudyCell({ study }: { study: Study }) {
 
   return (
     <div className="cell study" style={style}>
+      <p className="study__date">
+        <span className="visually-hidden">Published </span>
+        <time dateTime={published}>{writeDate(published)}</time>
+      </p>
       <Icon name={study.icon} className="study__icon" />
       {/* The name is written exactly; nothing here changes its case. */}
       <h2 className="visually-hidden">{brand}</h2>
