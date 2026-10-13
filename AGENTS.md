@@ -127,10 +127,10 @@ second flick the reader made, or leaves the dial between two cells.
 
 **Serials are GIFcommit's, and are copied, never made up.** GIFcommit numbers
 its releases on a master list kept with the GIFcommit site. By the owner's
-direction this site shows three kinds of serial from it: its own, at the top
-left of the title; the library's, under the library's version; and each
-study's, at the top left of its cell, where the day it was published used to
-be. The day is still in the study's file and is not shown. Flag a serial
+direction this site shows three kinds of serial from it, each at the top
+left of a cell: the library's on the title, which is the library's; each
+study's on its own cell, where the day it was published used to be; and the
+site's own on the last cell, with the sign-up. The day is still in the study's file and is not shown. Flag a serial
 written any way but the name exactly and the number to five places, a number
 that is not on that list, two studies with one release, and any return of the
 date to the cell. The README opens with this site's serial alone on its first

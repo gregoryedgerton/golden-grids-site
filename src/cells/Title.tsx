@@ -19,9 +19,9 @@ const GOLD = ["#ffe23d", "#fff3a6", "#fbd128", "#eaa51b"];
  * to a point, its second word set under the first and a little along, a second line in red, and the
  * version in a box at the foot.
  *
- * It carries two serials from GIFcommit's list of releases, by the owner's
- * direction: this site's own at the top left, where every study's cell has
- * its own, and the library's under the library's version.
+ * At its top left, where every study's cell has its own, is the library's
+ * serial among GIFcommit's releases, by the owner's direction: the title is
+ * the library's. This site's own serial is on the last cell.
  *
  * Behind it is a clip the owner supplied, five seconds of an old film: a car
  * passes at night and a shopfront goes up. It is shown through once each time
@@ -37,8 +37,8 @@ export function Title() {
       {/* With motion reduced, a still from the clip stands in for it. */}
       <Backdrop clip={clip} playing={current && !reduced} still={reduced ? still : undefined} />
       <p className="title__release">
-        <span className="visually-hidden">Release </span>
-        {serial(site.release)}
+        <span className="visually-hidden">Library release </span>
+        {serial(site.libraryRelease)}
       </p>
       <p className="title__presents">{site.presenter} presents</p>
       <h1 className="visually-hidden">{site.name}</h1>
@@ -53,17 +53,11 @@ export function Title() {
         uniform
       />
       <div className="title__foot">
-        <div className="title__library">
-          <p className="title__version">
-            <span className="visually-hidden">Version </span>
-            <span aria-hidden="true">v</span>
-            {site.version}
-          </p>
-          <p className="title__library-release">
-            <span className="visually-hidden">Library release </span>
-            {serial(site.libraryRelease)}
-          </p>
-        </div>
+        <p className="title__version">
+          <span className="visually-hidden">Version </span>
+          <span aria-hidden="true">v</span>
+          {site.version}
+        </p>
         <ul className="title__links">
           <li>
             <a href={site.npm}>npm</a>
