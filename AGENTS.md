@@ -125,16 +125,21 @@ only that axis is read. Flag anything that lets a steady or dying stream of
 wheel events carry the dial across several cells, drops a notch or a hard
 second flick the reader made, or leaves the dial between two cells.
 
-**Serials are GIFcommit's, and are copied, never made up.** GIFcommit numbers
-its releases on a master list kept with the GIFcommit site. By the owner's
-direction this site shows three kinds of serial from it, each at the top
-left of a cell: the library's on the title, which is the library's; each
-study's on its own cell, where the day it was published used to be; and the
-site's own on the last cell, with the sign-up. The day is still in the study's file and is not shown. Flag a serial
-written any way but the name exactly and the number to five places, a number
-that is not on that list, two studies with one release, and any return of the
-date to the cell. The README opens with this site's serial alone on its first
-line, above its heading: do not flag that line.
+**Every cell that is a release wears one stamp.** GIFcommit numbers its
+releases on a master list kept with the GIFcommit site. By the owner's
+direction a cell that stands for a release carries that release's stamp at
+its top left: the day it was released, and then its serial, in that order,
+the same on every such cell (`src/ui/Stamp.tsx`). There are three kinds: each
+study's on its own cell; the library's on the title, which is the library's;
+and the site's own on the last cell, with the sign-up. The library's version
+stays in its box at the foot of the title: a version is not a release.
+
+Numbers and days are GIFcommit's, and are copied from its list, never made up
+here. Flag a serial written any way but the name exactly and the number to
+five places, a stamp with the serial before the day or with either missing, a
+number that is not on that list, two studies with one release, and a cell
+that is a release and has no stamp. The README opens with this site's serial
+alone on its first line, above its heading: do not flag that line.
 
 **A study is data.** Adding a study is one file in `src/studies/`. Flag a
 change that needs a second edit elsewhere to add one, and any study entry

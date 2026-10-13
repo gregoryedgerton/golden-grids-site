@@ -2,7 +2,8 @@ import { useCellCurrent } from "../dial/current";
 import { useReducedMotion } from "../dial/motion";
 import { Backdrop } from "../ui/Backdrop";
 import { FitText } from "../ui/FitText";
-import { serial, site } from "../site";
+import { site } from "../site";
+import { Stamp } from "../ui/Stamp";
 import clip from "../assets/title.gif";
 import still from "../assets/title-still.jpg";
 
@@ -20,8 +21,9 @@ const GOLD = ["#ffe23d", "#fff3a6", "#fbd128", "#eaa51b"];
  * version in a box at the foot.
  *
  * At its top left, where every study's cell has its own, is the library's
- * serial among GIFcommit's releases, by the owner's direction: the title is
- * the library's. This site's own serial is on the last cell.
+ * stamp, by the owner's direction: the day it was released and its serial
+ * among GIFcommit's releases. The title is the library's. This site's own
+ * stamp is on the last cell.
  *
  * Behind it is a clip the owner supplied, five seconds of an old film: a car
  * passes at night and a shopfront goes up. It is shown through once each time
@@ -36,10 +38,7 @@ export function Title() {
     <div className="cell title">
       {/* With motion reduced, a still from the clip stands in for it. */}
       <Backdrop clip={clip} playing={current && !reduced} still={reduced ? still : undefined} />
-      <p className="title__release">
-        <span className="visually-hidden">Library release </span>
-        {serial(site.libraryRelease)}
-      </p>
+      <Stamp className="title__release" says="The library, released" released={site.library.released} release={site.library.number} />
       <p className="title__presents">{site.presenter} presents</p>
       <h1 className="visually-hidden">{site.name}</h1>
       <FitText
