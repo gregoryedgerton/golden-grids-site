@@ -65,10 +65,12 @@ does not repeat: the owner asked that it not loop once it is back to black.
   and needs none. Flag a change that would make it run longer.
 
 **The presenter's line stands where the owner put it.** "GIFcommit presents"
-is set 1cqw down from the top of the title's column. The owner has moved it
-more than once, last upward when the stamp's line at the foot made the name
-a little smaller. Do not flag where it stands, and flag a change that moves
-it without the owner's word.
+is set 1cqw down from the top of the title's column, and centred exactly.
+The owner has moved it more than once: last upward, when the stamp's line at
+the foot made the name a little smaller, and back to the centre from half an
+em right of it, which it no longer needed once it stood clear of the name.
+Do not flag where it stands, and flag a change that moves it without the
+owner's word.
 
 **The title's clip is the owner's, and it plays once.** Behind the title is a
 GIF the owner supplied, five seconds of an old film, in `src/assets/title.gif`,
