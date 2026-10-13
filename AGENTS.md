@@ -128,19 +128,20 @@ second flick the reader made, or leaves the dial between two cells.
 **Every cell that is a release wears one stamp.** GIFcommit numbers its
 releases on a master list kept with the GIFcommit site. By the owner's
 direction a cell that stands for a release carries that release's stamp: its
-serial, alone, as the last line of fine print at the cell's bottom left,
-where a disclaimer would be (`src/ui/Stamp.tsx`). There are three kinds: each
-study's, under the line that says the study is not affiliated with what it
-studies; the library's on the title, which is the library's, under its
-version; and the site's own on the last cell, under the sign-up's note.
+serial, alone, as fine print where a disclaimer would be
+(`src/ui/Stamp.tsx`). It is the cell's last line and has that line to itself,
+across the cell's whole width, with everything else in the cell above it and
+a little room over it. There are three kinds: each study's on its own cell;
+the library's on the title, which is the library's; and the site's own on the
+last cell, with the sign-up.
 
 The stamp is small and light, by the owner's direction: release numbers are
 to be discreet. It carries no date, and no cell shows one. The owner tried
 the serial at the top left, tried the day beside it, and settled on this. A
 study's day stays in its file. Do not flag the size, the light weight, the
 missing date or the empty top left of a study's cell; do flag a stamp set
-larger or heavier than the fine print beside it, one moved up out of the
-foot, and a date brought back to a cell.
+larger or heavier than the cell's other fine print, one that shares its line
+with anything or is not the cell's last, and a date brought back to a cell.
 
 Numbers are GIFcommit's, and are copied from its list, never made up here.
 Flag a serial written any way but the name exactly and the number to five

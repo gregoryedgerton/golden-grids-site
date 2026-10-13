@@ -9,10 +9,9 @@ const HEADING = ["Next study,", "by email."];
  * The last cell: the mailing list. The form goes straight to the list's
  * provider; this site never holds an address.
  *
- * Its last line, at the bottom left under the form's note, is this site's own
- * stamp, by the owner's direction: its serial among GIFcommit's releases, as
- * fine print. The site signs off with its own, as the title carries the
- * library's.
+ * Its last line, under the form, is this site's own stamp, by the owner's
+ * direction: its serial among GIFcommit's releases, as fine print. The site
+ * signs off with its own, as the title carries the library's.
  */
 export function Signup({ action }: { action: string }) {
   const id = useId();

@@ -8,9 +8,8 @@ import { Stamp } from "../ui/Stamp";
 /**
  * One study's lockup: its parody name in its own colours and face, and the
  * way to it. Its stamp, the study's serial among GIFcommit's releases, is the
- * last line of the fine print at its foot, under the line that says the
- * study is not affiliated with what it studies. The day it was published
- * used to be at the top left, and no cell shows a date now.
+ * cell's last line, a line of its own under the foot. The day it was
+ * published used to be at the top left, and no cell shows a date now.
  */
 export function StudyCell({ study }: { study: Study }) {
   const { brand, colors, font, release, reference, subject, url } = study;
@@ -32,17 +31,15 @@ export function StudyCell({ study }: { study: Study }) {
       <h2 className="visually-hidden">{brand}</h2>
       <FitText className="study__name" lines={brand.split(" ")} leading={0.9} tints={colors.letters} />
       <div className="study__foot">
-        <div className="study__print">
-          <p className="study__subject">
-            {subject}
-            <span className="study__after"> After {reference}; not affiliated with it.</span>
-          </p>
-          <Stamp className="study__release" says="Release" release={release} />
-        </div>
+        <p className="study__subject">
+          {subject}
+          <span className="study__after"> After {reference}; not affiliated with it.</span>
+        </p>
         <a className="study__link" href={url}>
           Open the study<span className="visually-hidden">: {brand}</span>
         </a>
       </div>
+      <Stamp className="study__release" says="Release" release={release} />
     </div>
   );
 }
