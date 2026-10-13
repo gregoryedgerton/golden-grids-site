@@ -125,6 +125,17 @@ only that axis is read. Flag anything that lets a steady or dying stream of
 wheel events carry the dial across several cells, drops a notch or a hard
 second flick the reader made, or leaves the dial between two cells.
 
+**Serials are GIFcommit's, and are copied, never made up.** GIFcommit numbers
+its releases on a master list kept with the GIFcommit site. By the owner's
+direction this site shows three kinds of serial from it: its own, at the top
+left of the title; the library's, under the library's version; and each
+study's, at the top left of its cell, where the day it was published used to
+be. The day is still in the study's file and is not shown. Flag a serial
+written any way but the name exactly and the number to five places, a number
+that is not on that list, two studies with one release, and any return of the
+date to the cell. The README opens with this site's serial alone on its first
+line, above its heading: do not flag that line.
+
 **A study is data.** Adding a study is one file in `src/studies/`. Flag a
 change that needs a second edit elsewhere to add one, and any study entry
 whose brand is case-transformed in CSS: the parody names are written exactly

@@ -1,13 +1,17 @@
 import type { CSSProperties } from "react";
-import { writeDate } from "../studies";
+import { serial } from "../site";
 import type { Study } from "../studies";
 import { FitText } from "../ui/FitText";
 import { useFont } from "../ui/fonts";
 import { Icon } from "../ui/icons";
 
-/** One study's lockup: its parody name in its own colours and face, and the way to it. */
+/**
+ * One study's lockup: its parody name in its own colours and face, and the
+ * way to it. At its top left is the study's serial among GIFcommit's
+ * releases, by the owner's direction, where the day it was published was.
+ */
 export function StudyCell({ study }: { study: Study }) {
-  const { brand, colors, font, published, reference, subject, url } = study;
+  const { brand, colors, font, release, reference, subject, url } = study;
   useFont(font, brand);
   const style = {
     "--ink": colors.ink,
@@ -21,9 +25,9 @@ export function StudyCell({ study }: { study: Study }) {
 
   return (
     <div className="cell study" style={style}>
-      <p className="study__date">
-        <span className="visually-hidden">Published </span>
-        <time dateTime={published}>{writeDate(published)}</time>
+      <p className="study__release">
+        <span className="visually-hidden">Release </span>
+        {serial(release)}
       </p>
       <Icon name={study.icon} className="study__icon" />
       {/* The name is written exactly; nothing here changes its case. */}

@@ -12,7 +12,12 @@ import type { Face } from "../ui/fonts";
 export type Study = {
   /** The study's number in the series. Orders the gallery, latest first. It is not shown. */
   number: number;
-  /** The day the study was first published, as YYYY-MM-DD. Shown on its cell. */
+  /**
+   * The study's place among GIFcommit's releases, from GIFcommit's master
+   * list. Shown on its cell as a serial: GIFcommit00012.
+   */
+  release: number;
+  /** The day the study was first published, as YYYY-MM-DD. Kept, and no longer shown. */
   published: string;
   /** The parody name, exactly as written: GIF, then the tail of the reference's name. */
   brand: string;
@@ -47,6 +52,8 @@ export type Study = {
   icon: IconSource;
 };
 
+/** How many releases GIFcommit has promised. No release has a number past it. */
+const PROMISED = 10_000;
 const HEX = /^#[0-9a-f]{6}$/i;
 /** WCAG AA for large type and for graphics. */
 const LARGE = 3;
@@ -84,13 +91,6 @@ export function isDate(value: string): boolean {
   return !Number.isNaN(day.getTime()) && day.toISOString().slice(0, 10) === value;
 }
 
-const written = new Intl.DateTimeFormat("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
-
-/** A YYYY-MM-DD day as it is written on a cell: Oct 9, 2026. */
-export function writeDate(value: string): string {
-  return written.format(new Date(`${value}T00:00:00Z`));
-}
-
 function fail(file: string, problem: string): never {
   throw new Error(`Study ${file}: ${problem}`);
 }
@@ -98,9 +98,12 @@ function fail(file: string, problem: string): never {
 /** Reads one study file, or says exactly what is wrong with it. */
 export function parseStudy(raw: unknown, file: string): Study {
   if (typeof raw !== "object" || raw === null) fail(file, "is not an object");
-  const { number, published, brand, reference, subject, url, colors, font, icon } = raw as Record<string, unknown>;
+  const { number, release, published, brand, reference, subject, url, colors, font, icon } = raw as Record<string, unknown>;
 
   if (!Number.isInteger(number) || (number as number) < 1) fail(file, "number must be a whole number from 1");
+  if (!Number.isInteger(release) || (release as number) < 1 || (release as number) > PROMISED) {
+    fail(file, `release must be the study's number on GIFcommit's master list, a whole number from 1 to ${PROMISED}`);
+  }
   if (typeof published !== "string" || !isDate(published)) fail(file, "published must be a real date, as YYYY-MM-DD");
   if (typeof brand !== "string" || !/^GIF\S/.test(brand)) fail(file, 'brand must be a parody name starting "GIF"');
   for (const [name, value] of [["reference", reference], ["subject", subject]] as const) {
@@ -156,6 +159,7 @@ export function parseStudy(raw: unknown, file: string): Study {
 
   return {
     number: number as number,
+    release: release as number,
     published,
     brand,
     reference: reference as string,
@@ -171,13 +175,15 @@ export function parseStudy(raw: unknown, file: string): Study {
   };
 }
 
-/** From the latest study to the oldest. Two studies cannot share a number. */
+/** From the latest study to the oldest. Two studies cannot share a number, nor a release. */
 export function latestFirst(list: Study[]): Study[] {
   const sorted = [...list].sort((a, b) => b.number - a.number);
   sorted.forEach((study, i) => {
     if (i > 0 && (sorted[i - 1] as Study).number === study.number) {
       throw new Error(`Two studies are numbered ${study.number}: ${(sorted[i - 1] as Study).brand} and ${study.brand}`);
     }
+    const twin = sorted.slice(0, i).find((other) => other.release === study.release);
+    if (twin) throw new Error(`Two studies are release ${study.release}: ${twin.brand} and ${study.brand}`);
   });
   return sorted;
 }

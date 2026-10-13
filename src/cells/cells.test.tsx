@@ -23,6 +23,7 @@ import { LENS, PLATFORMS, Vision } from "./Vision";
 const espn = parseStudy(
   {
     number: 6,
+    release: 5,
     published: "2026-10-06",
     brand: "GIFspn",
     reference: "ESPN",
@@ -84,12 +85,35 @@ describe("Title", () => {
     expect(shrink).toBeGreaterThan(0.8);
   });
 
+  it("carries this site's serial among GIFcommit's releases, ahead of everything else it says", () => {
+    const { container } = render(<Title />);
+    const cell = container.querySelector(".title") as HTMLElement;
+    const release = cell.querySelector(".title__release") as HTMLElement;
+    expect(release).toHaveTextContent(/^Release GIFcommit00017$/);
+    expect(release.querySelector(".visually-hidden")).toHaveTextContent(/^Release$/);
+    // First of what is read: only the picture is before it.
+    const said = [...cell.children].filter((child) => !child.classList.contains("backdrop"));
+    expect(said[0]).toBe(release);
+    expect(said[1]).toHaveClass("title__presents");
+  });
+
+  it("carries the library's serial under the library's version, and says whose it is", () => {
+    const { container } = render(<Title />);
+    const library = container.querySelector(".title__foot")?.firstElementChild as HTMLElement;
+    expect(library).toHaveClass("title__library");
+    expect([...library.children].map((child) => child.className)).toEqual(["title__version", "title__library-release"]);
+    expect(library.lastElementChild).toHaveTextContent(/^Library release GIFcommit00001$/);
+    expect(library.lastElementChild?.querySelector(".visually-hidden")).toHaveTextContent(/^Library release$/);
+    // Two serials on the cell, and not the same one twice.
+    expect(container.textContent?.match(/GIFcommit\d{5}/g)).toEqual(["GIFcommit00017", "GIFcommit00001"]);
+  });
+
   it("puts the version at the foot, first, and carries no instructions, link to a video or button for one", () => {
     const { container } = render(<Title />);
     const cell = container.querySelector(".title") as HTMLElement;
     const foot = cell.lastElementChild as HTMLElement;
     expect(foot).toHaveClass("title__foot");
-    expect(foot.firstElementChild).toHaveClass("title__version");
+    expect(foot.firstElementChild?.firstElementChild).toHaveClass("title__version");
     expect(screen.queryByText(/swipe|scroll|arrow keys/i)).toBeNull();
     expect(screen.queryByRole("button")).toBeNull();
     expect(screen.getAllByRole("link").map((a) => a.textContent)).toEqual(["npm", "GitHub"]);
@@ -815,15 +839,18 @@ describe("the statement, on a dial that mounts only the cells near the focus", (
 });
 
 describe("StudyCell", () => {
-  it("sets the parody name exactly, with the day it was published, its subject and a way to it", async () => {
+  it("sets the parody name exactly, with its serial among GIFcommit's releases, its subject and a way to it", async () => {
     const { container } = render(<StudyCell study={espn} />);
     expect(screen.getByRole("heading", { level: 2, name: "GIFspn" })).toBeInTheDocument();
-    // The date is the first thing in the cell, top left, where the number used to be.
-    const date = container.querySelector(".study")?.firstElementChild as HTMLElement;
-    expect(date).toHaveClass("study__date");
-    expect(date).toHaveTextContent("Published Oct 6, 2026");
-    expect(date.querySelector("time")).toHaveAttribute("datetime", "2026-10-06");
-    // The study's number is not shown anywhere.
+    // The serial is the first thing in the cell, top left, where the day it was published used to be.
+    const release = container.querySelector(".study")?.firstElementChild as HTMLElement;
+    expect(release).toHaveClass("study__release");
+    expect(release).toHaveTextContent(/^Release GIFcommit00005$/);
+    // Said as a release to a reader who cannot see where it is, and written bare for one who can.
+    expect(release.querySelector(".visually-hidden")).toHaveTextContent(/^Release$/);
+    // The day is not shown any more, nor the study's number in the series.
+    expect(container.querySelector("time")).toBeNull();
+    expect(container).not.toHaveTextContent(/Oct 6|2026/);
     expect(container).not.toHaveTextContent(/Study\s*0?6/);
     expect(container.querySelector(".study__subject")).toHaveTextContent(
       "A sports front page After ESPN; not affiliated with it.",
@@ -865,12 +892,17 @@ describe("StudyCell", () => {
     expect(plain.container.querySelector(".study__name tspan")).toBeNull();
   });
 
-  it("sets an upright face upright, a long name a word to a line, and any day as it is written", () => {
-    const records = { ...espn, published: "2027-01-31", brand: "GIFmilk Records", font: { ...espn.font, italic: false } };
-    const { container } = render(<StudyCell study={records} />);
+  it("sets an upright face upright, a long name a word to a line, and any release as its serial is written", () => {
+    const records = { ...espn, release: 4, brand: "GIFmilk Records", font: { ...espn.font, italic: false } };
+    const { container, rerender } = render(<StudyCell study={records} />);
     expect((container.querySelector(".study") as HTMLElement).style.getPropertyValue("--face-style")).toBe("normal");
     expect([...container.querySelectorAll(".study__name text")].map((t) => t.textContent)).toEqual(["GIFmilk", "Records"]);
-    expect(screen.getByText("Jan 31, 2027")).toBeInTheDocument();
+    expect(container.querySelector(".study__release")).toHaveTextContent(/^Release GIFcommit00004$/);
+    // To five places, whatever the number: the first, and the last GIFcommit has promised.
+    rerender(<StudyCell study={{ ...records, release: 1 }} />);
+    expect(container.querySelector(".study__release")).toHaveTextContent(/^Release GIFcommit00001$/);
+    rerender(<StudyCell study={{ ...records, release: 10_000 }} />);
+    expect(container.querySelector(".study__release")).toHaveTextContent(/^Release GIFcommit10000$/);
     expect(screen.getByRole("heading", { level: 2, name: "GIFmilk Records" })).toBeInTheDocument();
   });
 });
