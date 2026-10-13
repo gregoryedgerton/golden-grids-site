@@ -1,8 +1,10 @@
-import { contrast, isDate, latestFirst, parseStudy, readable, studies, writeDate } from "./index";
+import { serial, site } from "../site";
+import { contrast, isDate, latestFirst, parseStudy, readable, studies } from "./index";
 import type { Study } from "./index";
 
 const valid = {
   number: 7,
+  release: 6,
   published: "2026-10-07",
   brand: "GIFbase",
   reference: "Coinbase",
@@ -94,6 +96,11 @@ describe("parseStudy", () => {
     ["no number", without("number"), "number must be a whole number from 1"],
     ["a fractional number", { ...valid, number: 1.5 }, "number must be a whole number from 1"],
     ["number zero", { ...valid, number: 0 }, "number must be a whole number from 1"],
+    ["no release", without("release"), "release must be the study's number on GIFcommit's master list, a whole number from 1 to 10000"],
+    ["a release written as a serial", { ...valid, release: "GIFcommit00006" }, "release must be the study's number on GIFcommit's master list, a whole number from 1 to 10000"],
+    ["a part of a release", { ...valid, release: 6.5 }, "release must be the study's number on GIFcommit's master list, a whole number from 1 to 10000"],
+    ["release nought", { ...valid, release: 0 }, "release must be the study's number on GIFcommit's master list, a whole number from 1 to 10000"],
+    ["a release past the last GIFcommit has promised", { ...valid, release: 10_001 }, "release must be the study's number on GIFcommit's master list, a whole number from 1 to 10000"],
     ["no publish date", without("published"), "published must be a real date, as YYYY-MM-DD"],
     ["a date in words", { ...valid, published: "October 7, 2026" }, "published must be a real date, as YYYY-MM-DD"],
     ["a date that is a number", { ...valid, published: 20261007 }, "published must be a real date, as YYYY-MM-DD"],
@@ -142,7 +149,7 @@ describe("parseStudy", () => {
   });
 });
 
-describe("isDate and writeDate", () => {
+describe("isDate", () => {
   it("accepts a real day written YYYY-MM-DD, leap days included", () => {
     expect(isDate("2026-10-09")).toBe(true);
     expect(isDate("2028-02-29")).toBe(true);
@@ -153,17 +160,10 @@ describe("isDate and writeDate", () => {
       expect(isDate(value)).toBe(false);
     }
   });
-
-  it("writes a day the way a cell shows it, whatever the reader's time zone", () => {
-    expect(writeDate("2026-10-09")).toBe("Oct 9, 2026");
-    // The first and last days of a year stay in that year.
-    expect(writeDate("2026-01-01")).toBe("Jan 1, 2026");
-    expect(writeDate("2026-12-31")).toBe("Dec 31, 2026");
-  });
 });
 
 describe("latestFirst", () => {
-  const study = (number: number, brand: string) => ({ ...parseStudy(valid, "x"), number, brand }) as Study;
+  const study = (number: number, brand: string, release = number) => ({ ...parseStudy(valid, "x"), number, brand, release }) as Study;
 
   it("puts the highest number first, without changing the list it was given", () => {
     const given = [study(3, "GIFc"), study(1, "GIFa"), study(2, "GIFb")];
@@ -179,7 +179,41 @@ describe("latestFirst", () => {
   });
 });
 
+describe("latestFirst, and the releases the studies are", () => {
+  const study = (number: number, brand: string, release: number) => ({ ...parseStudy(valid, "x"), number, brand, release }) as Study;
+
+  it("refuses two studies that are one release, and names them", () => {
+    expect(() => latestFirst([study(1, "GIFa", 5), study(2, "GIFb", 6), study(3, "GIFc", 5)])).toThrow("Two studies are release 5: GIFc and GIFa");
+    // Next to each other in the gallery or far apart.
+    expect(() => latestFirst([study(1, "GIFa", 5), study(2, "GIFb", 5)])).toThrow("Two studies are release 5: GIFb and GIFa");
+  });
+
+  it("takes releases in any order: a study's number in the series is not its place among the releases", () => {
+    expect(latestFirst([study(1, "GIFa", 9), study(2, "GIFb", 4)]).map((s) => s.release)).toEqual([4, 9]);
+  });
+
+  it("keeps the first and the last release GIFcommit has promised", () => {
+    expect(parseStudy({ ...valid, release: 1 }, "x").release).toBe(1);
+    expect(parseStudy({ ...valid, release: 10_000 }, "x").release).toBe(10_000);
+  });
+});
+
 describe("the studies in this folder", () => {
+  it("are each a release of GIFcommit's: 03 to 17 are the second to the sixteenth, in the order they were made", () => {
+    const byNumber = [...studies].sort((a, b) => a.number - b.number);
+    expect(byNumber.map((s) => s.number)).toEqual(Array.from({ length: byNumber.length }, (_, i) => i + 3));
+    expect(byNumber.slice(0, 15).map((s) => s.release)).toEqual(Array.from({ length: 15 }, (_, i) => i + 2));
+    expect(serial(studies.find((s) => s.brand === "GIFflix")?.release as number)).toBe("GIFcommit00002");
+    expect(serial(studies.find((s) => s.brand === "GIF.org")?.release as number)).toBe("GIFcommit00016");
+  });
+
+  it("are none of them the release that the library is, or that this site is", () => {
+    const taken = studies.map((s) => s.release);
+    expect(new Set(taken).size).toBe(taken.length);
+    expect(taken).not.toContain(site.libraryRelease);
+    expect(taken).not.toContain(site.release);
+  });
+
   it("are all valid, latest first, and enough to fill a gallery", () => {
     expect(studies.length).toBeGreaterThanOrEqual(13);
     expect(studies.map((s) => s.number)).toEqual([...studies.map((s) => s.number)].sort((a, b) => b - a));

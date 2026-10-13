@@ -1,3 +1,5 @@
+GIFcommit00017
+
 # Golden Grids site
 
 **Live: <https://gregoryedgerton.github.io/golden-grids-site/>**
@@ -17,6 +19,7 @@ Add one file to `src/studies/`, named for its number and subject:
 ```json
 {
   "number": 14,
+  "release": 13,
   "published": "2026-10-09",
   "brand": "GIFdepot",
   "reference": "The Home Depot",
@@ -30,7 +33,9 @@ Add one file to `src/studies/`, named for its number and subject:
 
 Nothing else changes: the gallery comes from the folder and runs from the latest study to the oldest.
 
-- `number` orders the gallery, latest first, and is not shown. `published` is the day the study first went live, as `YYYY-MM-DD`; it is shown on the study's cell.
+- `number` orders the gallery, latest first, and is not shown.
+- `release` is the study's number among GIFcommit's releases. It is given on GIFcommit's master list, which is kept with the GIFcommit site, and is copied from there: a study that has no number on that list yet cannot be added. It is shown at the top left of the study's cell as a serial, `GIFcommit00013`.
+- `published` is the day the study first went live, as `YYYY-MM-DD`. It is kept and is no longer shown.
 - `brand` is the parody name, written exactly. It is never case-transformed.
 - `colors.ink` sets the name and `colors.accent` the icon and the rule; each needs 3:1 contrast with `ground`. Small text takes whichever of them reads at 4.5:1, or white or black.
 - `colors.letters` is optional: a list of colours for the name's first letters, one each and in order, for a name that opens in the colours of a mark (GIF.org's red G, black I and blue F). Each needs 3:1 with `ground`, and the rest of the name is in `ink`.
@@ -38,6 +43,12 @@ Nothing else changes: the gallery comes from the folder and runs from the latest
 - `icon` is one of the names in `src/ui/icons.tsx`. If none fits, the file can draw its own: `"icon": { "path": "M3 20 12 4l9 16z" }` is SVG path data on a 24-unit grid, drawn as a line. Left out, the study gets a golden rectangle.
 
 A file that breaks a rule fails the tests with the file's name and the reason.
+
+## Release serials
+
+GIFcommit numbers what it releases. The library, each study and this site are each a release, and the site shows the serials: its own at the top left of the title, the library's under the library's version, and each study's at the top left of its cell.
+
+The numbers are GIFcommit's, given on its master list. This site's and the library's are `release` and `libraryRelease` in `src/site.ts`, and a study's is `release` in its file. This README opens with the site's own serial, as every released repository's does.
 
 ## Icons and the share image
 

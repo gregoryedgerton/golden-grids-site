@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import html from "../index.html?raw";
-import { site } from "./site";
+import { serial, site } from "./site";
 
 /** The content of a meta tag in index.html, by its name or property. */
 function meta(key: string): string | undefined {
@@ -60,5 +60,24 @@ describe("the icons", () => {
 
   it("no longer links an SVG icon, which share sheets and iOS do not read", () => {
     expect(html).not.toMatch(/favicon\.svg/);
+  });
+});
+
+describe("the serials of GIFcommit's releases", () => {
+  it("are the name, exactly, and the release's number to five places", () => {
+    expect(serial(1)).toBe("GIFcommit00001");
+    expect(serial(17)).toBe("GIFcommit00017");
+    expect(serial(9999)).toBe("GIFcommit09999");
+    expect(serial(10_000)).toBe("GIFcommit10000");
+  });
+
+  it("give this site and the library one each, as GIFcommit's master list has them", () => {
+    expect(serial(site.libraryRelease)).toBe("GIFcommit00001");
+    expect(serial(site.release)).toBe("GIFcommit00017");
+  });
+
+  it("head the README: this site's own serial is its first line, alone, above its heading", () => {
+    const readme = readFileSync(resolve(process.cwd(), "README.md"), "utf8").split("\n");
+    expect(readme.slice(0, 3)).toEqual([serial(site.release), "", "# Golden Grids site"]);
   });
 });

@@ -11,6 +11,13 @@ export const site = {
     "Golden Grids is a responsive layout library driven by the Fibonacci Sequence. Instead of traditional rows and columns you get proportionally aligned boxes that follow the golden ratio. What you do with those boxes is your business, but at least you won't be boring.",
   /** The library's version, from the copy this site is built against. */
   version: __LIBRARY_VERSION__,
+  /**
+   * This site's place among GIFcommit's releases, and the library's. They are
+   * given on GIFcommit's master list, kept with the GIFcommit site, and are
+   * copied from it: a number is never made up here.
+   */
+  release: 17,
+  libraryRelease: 1,
   npm: "https://www.npmjs.com/package/@gifcommit/golden-grids",
   github: "https://github.com/gregoryedgerton/golden-grids",
   /**
@@ -20,3 +27,11 @@ export const site = {
    */
   subscribe: "",
 } as const;
+
+/**
+ * A release's serial, as GIFcommit writes it: the name, exactly, and the
+ * release's number to five places. GIFcommit00017.
+ */
+export function serial(release: number): string {
+  return `${site.presenter}${String(release).padStart(5, "0")}`;
+}
