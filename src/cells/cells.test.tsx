@@ -94,6 +94,7 @@ describe("Title", () => {
     expect(cell.querySelector(".title__foot .stamp")).toBeNull();
     expect(stamp).toHaveTextContent(/^Library release GIFcommit00001$/);
     expect(stamp.querySelector(".visually-hidden")).toHaveTextContent(/^Library release$/);
+    // No day here: only a study's cell shows one.
     expect(cell.querySelector("time")).toBeNull();
     // Nothing is put before the presenter's line: the title opens as it did.
     const said = [...cell.children].filter((child) => !child.classList.contains("backdrop"));
@@ -834,11 +835,17 @@ describe("the statement, on a dial that mounts only the cells near the focus", (
 });
 
 describe("StudyCell", () => {
-  it("sets the parody name exactly, with its subject, a way to it, and its stamp on the last line", async () => {
+  it("sets the parody name exactly, with the day it was published, its subject, a way to it, and its stamp on the last line", async () => {
     const { container } = render(<StudyCell study={espn} />);
     expect(screen.getByRole("heading", { level: 2, name: "GIFspn" })).toBeInTheDocument();
-    // The stamp is fine print with a line to itself: the last thing in the cell, after the foot and not in it.
     const cell = container.querySelector(".study") as HTMLElement;
+    // The day is the first thing in the cell, top left.
+    const date = cell.firstElementChild as HTMLElement;
+    expect(date).toHaveClass("study__date");
+    expect(date).toHaveTextContent(/^Published Oct 6, 2026$/);
+    expect(date.querySelector("time")).toHaveAttribute("datetime", "2026-10-06");
+    expect(cell.querySelectorAll("time")).toHaveLength(1);
+    // The stamp is fine print with a line to itself: the last thing in the cell, after the foot and not in it.
     const stamp = cell.lastElementChild as HTMLElement;
     expect(stamp).toHaveClass("stamp", "study__release");
     expect(stamp.previousElementSibling).toHaveClass("study__foot");
@@ -846,11 +853,8 @@ describe("StudyCell", () => {
     expect(stamp).toHaveTextContent(/^Release GIFcommit00005$/);
     // Said as a release to a reader who cannot see where it is, and written bare for one who can.
     expect(stamp.querySelector(".visually-hidden")).toHaveTextContent(/^Release$/);
-    // Nothing stands at the top left now: the icon is the first thing in the cell.
-    expect(cell.firstElementChild).toHaveClass("study__icon");
-    // No date: not the day it was published, and no cell shows one.
-    expect(container.querySelector("time")).toBeNull();
-    expect(container).not.toHaveTextContent(/Oct 6|2026/);
+    // The day is not part of the stamp, which is the serial alone.
+    expect(stamp.querySelector("time")).toBeNull();
     // The study's number in the series is not shown anywhere.
     expect(container).not.toHaveTextContent(/Study\s*0?6/);
     expect(container.querySelector(".study__subject")).toHaveTextContent(
@@ -893,11 +897,12 @@ describe("StudyCell", () => {
     expect(plain.container.querySelector(".study__name tspan")).toBeNull();
   });
 
-  it("sets an upright face upright, a long name a word to a line, and any release as its serial is written", () => {
-    const records = { ...espn, release: 4, brand: "GIFmilk Records", font: { ...espn.font, italic: false } };
+  it("sets an upright face upright, a long name a word to a line, and any day and any release as they are written", () => {
+    const records = { ...espn, published: "2027-01-31", release: 4, brand: "GIFmilk Records", font: { ...espn.font, italic: false } };
     const { container, rerender } = render(<StudyCell study={records} />);
     expect((container.querySelector(".study") as HTMLElement).style.getPropertyValue("--face-style")).toBe("normal");
     expect([...container.querySelectorAll(".study__name text")].map((t) => t.textContent)).toEqual(["GIFmilk", "Records"]);
+    expect(screen.getByText("Jan 31, 2027")).toBeInTheDocument();
     expect(container.querySelector(".study__release")).toHaveTextContent(/^Release GIFcommit00004$/);
     // To five places, whatever the number: the first, and the last GIFcommit has promised.
     rerender(<StudyCell study={{ ...records, release: 1 }} />);

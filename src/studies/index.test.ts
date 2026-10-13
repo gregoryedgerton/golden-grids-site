@@ -1,5 +1,5 @@
 import { serial, site } from "../site";
-import { contrast, isDate, latestFirst, parseStudy, readable, studies } from "./index";
+import { contrast, isDate, latestFirst, parseStudy, readable, studies, writeDate } from "./index";
 import type { Study } from "./index";
 
 const valid = {
@@ -149,7 +149,7 @@ describe("parseStudy", () => {
   });
 });
 
-describe("isDate", () => {
+describe("isDate and writeDate", () => {
   it("accepts a real day written YYYY-MM-DD, leap days included", () => {
     expect(isDate("2026-10-09")).toBe(true);
     expect(isDate("2028-02-29")).toBe(true);
@@ -159,6 +159,13 @@ describe("isDate", () => {
     for (const value of ["", "2026-10-9", "10/09/2026", "2026-02-30", "2027-02-29", "2026-00-10", "2026-10-09T00:00:00Z"]) {
       expect(isDate(value)).toBe(false);
     }
+  });
+
+  it("writes a day the way a cell shows it, whatever the reader's time zone", () => {
+    expect(writeDate("2026-10-09")).toBe("Oct 9, 2026");
+    // The first and last days of a year stay in that year.
+    expect(writeDate("2026-01-01")).toBe("Jan 1, 2026");
+    expect(writeDate("2026-12-31")).toBe("Dec 31, 2026");
   });
 });
 

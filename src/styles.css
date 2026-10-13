@@ -153,14 +153,14 @@ a {
 }
 
 /* Tall, light and white, as the artist's name is set on the sleeve. It is
-   centred over the name and set low enough that the two tallest letters of
-   "Golden", the l and the d, come up over the foot of it a little. The name
-   is drawn after this line, so it is the name that is on top. An em of
-   padding on the left sets the line half an em right of centre, by the
-   owner's direction: slightly off, and the d then rises through the space
-   between the two words and not under the p of the second. */
+   centred over the name, and stands a little above it: the owner lifted it
+   when the stamp's line at the foot made the name smaller, and the two
+   tallest letters of "Golden", the l and the d, now come up to it and not
+   over it. The name is drawn after this line, so if they meet it is the
+   name that is on top. An em of padding on the left sets the line half an
+   em right of centre, by the owner's direction: slightly off. */
 .title__presents {
-  top: 4cqw;
+  top: 1cqw;
   padding-left: 1em;
   font-family: var(--tall);
   font-size: 8cqw;
@@ -445,7 +445,15 @@ a {
   grid-column: 1 / -1;
 }
 
-/* The icon keeps the top right, now that nothing stands at the top left. */
+/* The day the study was published, at the top left. Only a study's cell
+   shows a day. */
+.study__date {
+  font-size: 3.4cqw;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+/* The icon has the top right. */
 .study > .study__icon {
   grid-column: 2;
   grid-row: 1;

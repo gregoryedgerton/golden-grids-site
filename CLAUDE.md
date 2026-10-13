@@ -69,7 +69,7 @@ domain is live.
   the GIFcommit site's repository). A cell that stands for a release
   wears its stamp as fine print on the cell's last line, a line of its own:
   the serial alone, small and light. Each study's cell, the title for the
-  library, the last cell for this site. No cell shows a date. Copy a number from the list; never make one up.
+  library, the last cell for this site. Only a study's cell shows a day, at its top left. Copy a number from the list; never make one up.
 - **Brand.** Parody names are written exactly and never case-transformed in
   CSS. GIFcommit is the presenter and the npm scope.
 - **Copy.** Plain and exact. No jokes at a reference's expense, no verdicts on
