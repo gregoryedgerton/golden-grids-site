@@ -14,10 +14,10 @@ export type Study = {
   number: number;
   /**
    * The study's place among GIFcommit's releases, from GIFcommit's master
-   * list. Shown on its cell as a serial: GIFcommit00012.
+   * list. Shown on its cell as a serial, after the day: GIFcommit00012.
    */
   release: number;
-  /** The day the study was first published, as YYYY-MM-DD. Kept, and no longer shown. */
+  /** The day the study was first published, as YYYY-MM-DD. Shown on its cell, before its serial. */
   published: string;
   /** The parody name, exactly as written: GIF, then the tail of the reference's name. */
   brand: string;
@@ -89,6 +89,13 @@ export function isDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const day = new Date(`${value}T00:00:00Z`);
   return !Number.isNaN(day.getTime()) && day.toISOString().slice(0, 10) === value;
+}
+
+const written = new Intl.DateTimeFormat("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
+
+/** A YYYY-MM-DD day as it is written on a cell: Oct 9, 2026. */
+export function writeDate(value: string): string {
+  return written.format(new Date(`${value}T00:00:00Z`));
 }
 
 function fail(file: string, problem: string): never {
