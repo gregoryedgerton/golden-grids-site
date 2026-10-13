@@ -21,9 +21,8 @@ const GOLD = ["#ffe23d", "#fff3a6", "#fbd128", "#eaa51b"];
  * version in a box at the foot.
  *
  * At its top left, where every study's cell has its own, is the library's
- * stamp, by the owner's direction: the day it was released and its serial
- * among GIFcommit's releases. The title is the library's. This site's own
- * stamp is on the last cell.
+ * stamp, by the owner's direction: its serial among GIFcommit's releases.
+ * The title is the library's. This site's own stamp is on the last cell.
  *
  * Behind it is a clip the owner supplied, five seconds of an old film: a car
  * passes at night and a shopfront goes up. It is shown through once each time
@@ -38,7 +37,7 @@ export function Title() {
     <div className="cell title">
       {/* With motion reduced, a still from the clip stands in for it. */}
       <Backdrop clip={clip} playing={current && !reduced} still={reduced ? still : undefined} />
-      <Stamp className="title__release" says="The library, released" released={site.library.released} release={site.library.number} />
+      <Stamp className="title__release" says="Library release" release={site.libraryRelease} />
       <p className="title__presents">{site.presenter} presents</p>
       <h1 className="visually-hidden">{site.name}</h1>
       <FitText

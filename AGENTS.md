@@ -128,18 +128,23 @@ second flick the reader made, or leaves the dial between two cells.
 **Every cell that is a release wears one stamp.** GIFcommit numbers its
 releases on a master list kept with the GIFcommit site. By the owner's
 direction a cell that stands for a release carries that release's stamp at
-its top left: the day it was released, and then its serial, in that order,
-the same on every such cell (`src/ui/Stamp.tsx`). There are three kinds: each
-study's on its own cell; the library's on the title, which is the library's;
-and the site's own on the last cell, with the sign-up. The library's version
-stays in its box at the foot of the title: a version is not a release.
+its top left: its serial, alone, the same on every such cell
+(`src/ui/Stamp.tsx`). There are three kinds: each study's on its own cell;
+the library's on the title, which is the library's; and the site's own on the
+last cell, with the sign-up. The library's version stays in its box at the
+foot of the title: a version is not a release.
 
-Numbers and days are GIFcommit's, and are copied from its list, never made up
-here. Flag a serial written any way but the name exactly and the number to
-five places, a stamp with the serial before the day or with either missing, a
-number that is not on that list, two studies with one release, and a cell
-that is a release and has no stamp. The README opens with this site's serial
-alone on its first line, above its heading: do not flag that line.
+The stamp is set light, by the owner's direction: release numbers are to be
+discreet. It carries no date, and no cell shows one: the owner tried the day
+beside the serial and took it out. A study's day stays in its file. Do not
+flag the light weight or the missing date; do flag a stamp set heavier than
+the text around it, and a date brought back to a cell.
+
+Numbers are GIFcommit's, and are copied from its list, never made up here.
+Flag a serial written any way but the name exactly and the number to five
+places, a number that is not on that list, two studies with one release, and
+a cell that is a release and has no stamp. The README opens with this site's
+serial alone on its first line, above its heading: do not flag that line.
 
 **A study is data.** Adding a study is one file in `src/studies/`. Flag a
 change that needs a second edit elsewhere to add one, and any study entry

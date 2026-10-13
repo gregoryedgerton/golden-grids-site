@@ -7,11 +7,12 @@ import { Stamp } from "../ui/Stamp";
 
 /**
  * One study's lockup: its parody name in its own colours and face, and the
- * way to it. At its top left is its stamp, by the owner's direction: the day
- * it was published, and then its serial among GIFcommit's releases.
+ * way to it. At its top left is its stamp, by the owner's direction: its
+ * serial among GIFcommit's releases, set light. The day it was published
+ * used to be there, and no cell shows a date now.
  */
 export function StudyCell({ study }: { study: Study }) {
-  const { brand, colors, font, published, release, reference, subject, url } = study;
+  const { brand, colors, font, release, reference, subject, url } = study;
   useFont(font, brand);
   const style = {
     "--ink": colors.ink,
@@ -25,7 +26,7 @@ export function StudyCell({ study }: { study: Study }) {
 
   return (
     <div className="cell study" style={style}>
-      <Stamp className="study__release" says="Released" released={published} release={release} />
+      <Stamp className="study__release" says="Release" release={release} />
       <Icon name={study.icon} className="study__icon" />
       {/* The name is written exactly; nothing here changes its case. */}
       <h2 className="visually-hidden">{brand}</h2>

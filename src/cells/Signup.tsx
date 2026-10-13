@@ -9,16 +9,16 @@ const HEADING = ["Next study,", "by email."];
  * The last cell: the mailing list. The form goes straight to the list's
  * provider; this site never holds an address.
  *
- * At its top left is this site's own stamp, by the owner's direction: the day
- * it was released and its serial among GIFcommit's releases. The site signs
- * off with its own, as the title opens with the library's.
+ * At its top left is this site's own stamp, by the owner's direction: its
+ * serial among GIFcommit's releases. The site signs off with its own, as the
+ * title opens with the library's.
  */
 export function Signup({ action }: { action: string }) {
   const id = useId();
   const open = action !== "";
   return (
     <div className="cell signup">
-      <Stamp className="signup__release" says="This site, released" released={site.release.released} release={site.release.number} />
+      <Stamp className="signup__release" says="This site is release" release={site.release} />
       <h2 className="visually-hidden">{HEADING.join(" ")}</h2>
       <FitText className="signup__heading" lines={HEADING} leading={0.66} extrude={5} />
       <form className="signup__form" action={open ? action : undefined} method="get" target="_blank" rel="noopener">
