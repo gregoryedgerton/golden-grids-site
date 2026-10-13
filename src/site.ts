@@ -12,13 +12,12 @@ export const site = {
   /** The library's version, from the copy this site is built against. */
   version: __LIBRARY_VERSION__,
   /**
-   * This site and the library, each as one of GIFcommit's releases: its
-   * number, and the day it was released. Both are given on GIFcommit's master
-   * list, kept with the GIFcommit site, and are copied from it: neither is
-   * ever made up here.
+   * This site's place among GIFcommit's releases, and the library's. They are
+   * given on GIFcommit's master list, kept with the GIFcommit site, and are
+   * copied from it: a number is never made up here.
    */
-  release: { number: 17, released: "2026-10-09" },
-  library: { number: 1, released: "2026-02-26" },
+  release: 17,
+  libraryRelease: 1,
   npm: "https://www.npmjs.com/package/@gifcommit/golden-grids",
   github: "https://github.com/gregoryedgerton/golden-grids",
   /**

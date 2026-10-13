@@ -201,7 +201,7 @@ a {
    the cell's column, so the lettering under it stands where it stood. */
 .title > .title__release {
   position: absolute;
-  top: 3cqw;
+  top: 3.6cqw;
   left: 7cqw;
 }
 
@@ -433,22 +433,14 @@ a {
   color: var(--text);
 }
 
-/* A release's stamp: the day, and under it the serial, written exactly. The
-   same on every cell that is a release. */
+/* A release's stamp: its serial, written exactly and set light, so that it
+   is there to be found and does not speak first. The same on every cell
+   that is a release. */
 .stamp {
-  display: grid;
-  gap: 1cqw;
   font-size: 3.4cqw;
+  font-weight: 300;
   line-height: 1;
   letter-spacing: 0.08em;
-}
-
-.stamp__day {
-  font-weight: 400;
-}
-
-.stamp__serial {
-  font-weight: 600;
 }
 
 .study__icon {
