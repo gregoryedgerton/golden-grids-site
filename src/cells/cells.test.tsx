@@ -85,13 +85,13 @@ describe("Title", () => {
     expect(shrink).toBeGreaterThan(0.8);
   });
 
-  it("carries the library's stamp as fine print at its foot, under the version: its serial, whose it is, and no date", () => {
+  it("carries the library's stamp on its last line, under the foot: its serial, whose it is, and no date", () => {
     const { container } = render(<Title />);
     const cell = container.querySelector(".title") as HTMLElement;
-    const library = cell.querySelector(".title__foot")?.firstElementChild as HTMLElement;
-    expect(library).toHaveClass("title__library");
-    expect([...library.children].map((line) => line.className)).toEqual(["title__version", "stamp title__release"]);
-    const stamp = library.lastElementChild as HTMLElement;
+    const stamp = cell.lastElementChild as HTMLElement;
+    expect(stamp).toHaveClass("stamp", "title__release");
+    expect(stamp.previousElementSibling).toHaveClass("title__foot");
+    expect(cell.querySelector(".title__foot .stamp")).toBeNull();
     expect(stamp).toHaveTextContent(/^Library release GIFcommit00001$/);
     expect(stamp.querySelector(".visually-hidden")).toHaveTextContent(/^Library release$/);
     expect(cell.querySelector("time")).toBeNull();
@@ -105,9 +105,10 @@ describe("Title", () => {
   it("puts the version at the foot, first, and carries no instructions, link to a video or button for one", () => {
     const { container } = render(<Title />);
     const cell = container.querySelector(".title") as HTMLElement;
-    const foot = cell.lastElementChild as HTMLElement;
-    expect(foot).toHaveClass("title__foot");
-    expect(foot.firstElementChild?.firstElementChild).toHaveClass("title__version");
+    const foot = cell.querySelector(".title__foot") as HTMLElement;
+    // The foot is the last thing in the cell but the stamp's own line.
+    expect(foot.nextElementSibling).toBe(cell.lastElementChild);
+    expect(foot.firstElementChild).toHaveClass("title__version");
     expect(screen.queryByText(/swipe|scroll|arrow keys/i)).toBeNull();
     expect(screen.queryByRole("button")).toBeNull();
     expect(screen.getAllByRole("link").map((a) => a.textContent)).toEqual(["npm", "GitHub"]);
@@ -833,19 +834,20 @@ describe("the statement, on a dial that mounts only the cells near the focus", (
 });
 
 describe("StudyCell", () => {
-  it("sets the parody name exactly, with its subject, its stamp and a way to it", async () => {
+  it("sets the parody name exactly, with its subject, a way to it, and its stamp on the last line", async () => {
     const { container } = render(<StudyCell study={espn} />);
     expect(screen.getByRole("heading", { level: 2, name: "GIFspn" })).toBeInTheDocument();
-    // The stamp is fine print: the last line at the bottom left, under the line that says the study is not affiliated.
-    const print = container.querySelector(".study__foot")?.firstElementChild as HTMLElement;
-    expect(print).toHaveClass("study__print");
-    expect([...print.children].map((line) => line.className)).toEqual(["study__subject", "stamp study__release"]);
-    const stamp = print.lastElementChild as HTMLElement;
+    // The stamp is fine print with a line to itself: the last thing in the cell, after the foot and not in it.
+    const cell = container.querySelector(".study") as HTMLElement;
+    const stamp = cell.lastElementChild as HTMLElement;
+    expect(stamp).toHaveClass("stamp", "study__release");
+    expect(stamp.previousElementSibling).toHaveClass("study__foot");
+    expect(cell.querySelector(".study__foot .stamp")).toBeNull();
     expect(stamp).toHaveTextContent(/^Release GIFcommit00005$/);
     // Said as a release to a reader who cannot see where it is, and written bare for one who can.
     expect(stamp.querySelector(".visually-hidden")).toHaveTextContent(/^Release$/);
     // Nothing stands at the top left now: the icon is the first thing in the cell.
-    expect(container.querySelector(".study")?.firstElementChild).toHaveClass("study__icon");
+    expect(cell.firstElementChild).toHaveClass("study__icon");
     // No date: not the day it was published, and no cell shows one.
     expect(container.querySelector("time")).toBeNull();
     expect(container).not.toHaveTextContent(/Oct 6|2026/);

@@ -34,7 +34,7 @@ Add one file to `src/studies/`, named for its number and subject:
 Nothing else changes: the gallery comes from the folder and runs from the latest study to the oldest.
 
 - `number` orders the gallery, latest first, and is not shown.
-- `release` is the study's number among GIFcommit's releases. It is given on GIFcommit's master list, which is kept with the GIFcommit site, and is copied from there: a study that has no number on that list yet cannot be added. It is the study's stamp, the last line of fine print at the bottom left of its cell, as a serial: `GIFcommit00013`.
+- `release` is the study's number among GIFcommit's releases. It is given on GIFcommit's master list, which is kept with the GIFcommit site, and is copied from there: a study that has no number on that list yet cannot be added. It is the study's stamp, the last line of its cell, as a serial: `GIFcommit00013`.
 - `published` is the day the study first went live, as `YYYY-MM-DD`. It is kept and is not shown: no cell shows a date.
 - `brand` is the parody name, written exactly. It is never case-transformed.
 - `colors.ink` sets the name and `colors.accent` the icon and the rule; each needs 3:1 contrast with `ground`. Small text takes whichever of them reads at 4.5:1, or white or black.
@@ -46,7 +46,7 @@ A file that breaks a rule fails the tests with the file's name and the reason.
 
 ## Release serials
 
-GIFcommit numbers what it releases. The library, each study and this site are each a release, and a cell that stands for a release wears that release's stamp: its serial, as small light print at the cell's bottom left, where a disclaimer would be. Each study's is on its own cell, the library's on the title under the version, and the site's own on the last cell, under the sign-up.
+GIFcommit numbers what it releases. The library, each study and this site are each a release, and a cell that stands for a release wears that release's stamp: its serial, as small light print where a disclaimer would be, on a line of its own at the foot of the cell with everything else above it. Each study's is on its own cell, the library's on the title, and the site's own on the last cell, with the sign-up.
 
 The numbers are GIFcommit's, given on its master list. This site's and the library's are `release` and `libraryRelease` in `src/site.ts`, and a study's is `release` in its file. This README opens with the site's own serial, as every released repository's does.
 

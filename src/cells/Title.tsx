@@ -20,9 +20,9 @@ const GOLD = ["#ffe23d", "#fff3a6", "#fbd128", "#eaa51b"];
  * to a point, its second word set under the first and a little along, a second line in red, and the
  * version in a box at the foot.
  *
- * At its bottom left, under the version, is the library's stamp, by the
- * owner's direction: its serial among GIFcommit's releases, as fine print.
- * The title is the library's. This site's own stamp is on the last cell.
+ * Its last line, under the foot, is the library's stamp, by the owner's
+ * direction: its serial among GIFcommit's releases, as fine print. The title
+ * is the library's. This site's own stamp is on the last cell.
  *
  * Behind it is a clip the owner supplied, five seconds of an old film: a car
  * passes at night and a shopfront goes up. It is shown through once each time
@@ -50,14 +50,11 @@ export function Title() {
         uniform
       />
       <div className="title__foot">
-        <div className="title__library">
-          <p className="title__version">
-            <span className="visually-hidden">Version </span>
-            <span aria-hidden="true">v</span>
-            {site.version}
-          </p>
-          <Stamp className="title__release" says="Library release" release={site.libraryRelease} />
-        </div>
+        <p className="title__version">
+          <span className="visually-hidden">Version </span>
+          <span aria-hidden="true">v</span>
+          {site.version}
+        </p>
         <ul className="title__links">
           <li>
             <a href={site.npm}>npm</a>
@@ -67,6 +64,7 @@ export function Title() {
           </li>
         </ul>
       </div>
+      <Stamp className="title__release" says="Library release" release={site.libraryRelease} />
     </div>
   );
 }

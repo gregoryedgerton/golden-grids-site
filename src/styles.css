@@ -196,20 +196,6 @@ a {
   filter: drop-shadow(0 0 2.4cqw rgb(20 16 12 / 0.7)) drop-shadow(0 0 0.8cqw rgb(20 16 12 / 0.5));
 }
 
-/* The site's own stamp closes the last cell, close under the form's note:
-   the last line of its fine print. */
-.signup__release {
-  margin-top: -1.4cqw;
-}
-
-/* The library's stamp, under its version at the foot. */
-.title__library {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1.2cqw;
-}
-
 .title__foot {
   display: flex;
   align-items: flex-end;
@@ -433,25 +419,30 @@ a {
 /* A study's lockup, in the study's own colours and face. */
 .study {
   display: grid;
-  grid-template: auto minmax(0, 1fr) auto / 1fr auto;
+  grid-template: auto minmax(0, 1fr) auto auto / 1fr auto;
   align-items: start;
   color: var(--text);
 }
 
-/* A release's stamp: its serial, written exactly, as fine print at the
-   bottom left of its cell: small and light, so that it is there to be found
-   and does not speak first. The same on every cell that is a release. */
+/* A release's stamp: its serial, written exactly, as fine print where a
+   disclaimer would be. It is the cell's last line and has the line to
+   itself, the whole width of the cell, with everything else above it and a
+   little room over it. Small and light, so that it is there to be found and
+   does not speak first. The same on every cell that is a release. */
 .stamp {
+  flex: none;
+  width: 100%;
+  padding-top: 1.6cqw;
   font-size: 2.6cqw;
   font-weight: 300;
   line-height: 1.2;
   letter-spacing: 0.08em;
 }
 
-/* The study's fine print: what was studied, that it is not affiliated, and
-   its stamp. */
-.study__print {
-  min-width: 0;
+/* In a study's cell, which is a grid, the stamp's line runs across both
+   columns under the foot. */
+.study > .study__release {
+  grid-column: 1 / -1;
 }
 
 /* The icon keeps the top right, now that nothing stands at the top left. */
