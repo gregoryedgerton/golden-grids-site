@@ -85,18 +85,19 @@ describe("Title", () => {
     expect(shrink).toBeGreaterThan(0.8);
   });
 
-  it("carries the library's stamp, ahead of everything else it says: its serial, whose it is, and no date", () => {
+  it("carries the library's stamp as fine print at its foot, under the version: its serial, whose it is, and no date", () => {
     const { container } = render(<Title />);
     const cell = container.querySelector(".title") as HTMLElement;
-    const stamp = cell.querySelector(".title__release") as HTMLElement;
-    expect(stamp).toHaveClass("stamp");
+    const library = cell.querySelector(".title__foot")?.firstElementChild as HTMLElement;
+    expect(library).toHaveClass("title__library");
+    expect([...library.children].map((line) => line.className)).toEqual(["title__version", "stamp title__release"]);
+    const stamp = library.lastElementChild as HTMLElement;
     expect(stamp).toHaveTextContent(/^Library release GIFcommit00001$/);
     expect(stamp.querySelector(".visually-hidden")).toHaveTextContent(/^Library release$/);
     expect(cell.querySelector("time")).toBeNull();
-    // First of what is read: only the picture is before it.
+    // Nothing is put before the presenter's line: the title opens as it did.
     const said = [...cell.children].filter((child) => !child.classList.contains("backdrop"));
-    expect(said[0]).toBe(stamp);
-    expect(said[1]).toHaveClass("title__presents");
+    expect(said[0]).toHaveClass("title__presents");
     // The library's and no other: this site's own stamp is on the last cell.
     expect(container.textContent?.match(/GIFcommit\d{5}/g)).toEqual(["GIFcommit00001"]);
   });
@@ -106,7 +107,7 @@ describe("Title", () => {
     const cell = container.querySelector(".title") as HTMLElement;
     const foot = cell.lastElementChild as HTMLElement;
     expect(foot).toHaveClass("title__foot");
-    expect(foot.firstElementChild).toHaveClass("title__version");
+    expect(foot.firstElementChild?.firstElementChild).toHaveClass("title__version");
     expect(screen.queryByText(/swipe|scroll|arrow keys/i)).toBeNull();
     expect(screen.queryByRole("button")).toBeNull();
     expect(screen.getAllByRole("link").map((a) => a.textContent)).toEqual(["npm", "GitHub"]);
@@ -832,15 +833,19 @@ describe("the statement, on a dial that mounts only the cells near the focus", (
 });
 
 describe("StudyCell", () => {
-  it("sets the parody name exactly, with its stamp, its subject and a way to it", async () => {
+  it("sets the parody name exactly, with its subject, its stamp and a way to it", async () => {
     const { container } = render(<StudyCell study={espn} />);
     expect(screen.getByRole("heading", { level: 2, name: "GIFspn" })).toBeInTheDocument();
-    // The stamp is the first thing in the cell, top left: the study's serial, and nothing else.
-    const stamp = container.querySelector(".study")?.firstElementChild as HTMLElement;
-    expect(stamp).toHaveClass("stamp", "study__release");
+    // The stamp is fine print: the last line at the bottom left, under the line that says the study is not affiliated.
+    const print = container.querySelector(".study__foot")?.firstElementChild as HTMLElement;
+    expect(print).toHaveClass("study__print");
+    expect([...print.children].map((line) => line.className)).toEqual(["study__subject", "stamp study__release"]);
+    const stamp = print.lastElementChild as HTMLElement;
     expect(stamp).toHaveTextContent(/^Release GIFcommit00005$/);
     // Said as a release to a reader who cannot see where it is, and written bare for one who can.
     expect(stamp.querySelector(".visually-hidden")).toHaveTextContent(/^Release$/);
+    // Nothing stands at the top left now: the icon is the first thing in the cell.
+    expect(container.querySelector(".study")?.firstElementChild).toHaveClass("study__icon");
     // No date: not the day it was published, and no cell shows one.
     expect(container.querySelector("time")).toBeNull();
     expect(container).not.toHaveTextContent(/Oct 6|2026/);
@@ -920,10 +925,12 @@ describe("Signup", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
-  it("carries this site's own stamp, first in the cell: its serial, that it is the site's, and no date", async () => {
+  it("carries this site's own stamp as the cell's last line, under the form: its serial, that it is the site's, and no date", async () => {
     const { container } = render(<Signup action="" />);
-    const stamp = container.querySelector(".signup")?.firstElementChild as HTMLElement;
+    const cell = container.querySelector(".signup") as HTMLElement;
+    const stamp = cell.lastElementChild as HTMLElement;
     expect(stamp).toHaveClass("stamp", "signup__release");
+    expect(stamp.previousElementSibling?.tagName).toBe("FORM");
     expect(stamp).toHaveTextContent(/^This site is release GIFcommit00017$/);
     expect(stamp.querySelector(".visually-hidden")).toHaveTextContent(/^This site is release$/);
     expect(container.querySelector("time")).toBeNull();

@@ -20,8 +20,8 @@ const GOLD = ["#ffe23d", "#fff3a6", "#fbd128", "#eaa51b"];
  * to a point, its second word set under the first and a little along, a second line in red, and the
  * version in a box at the foot.
  *
- * At its top left, where every study's cell has its own, is the library's
- * stamp, by the owner's direction: its serial among GIFcommit's releases.
+ * At its bottom left, under the version, is the library's stamp, by the
+ * owner's direction: its serial among GIFcommit's releases, as fine print.
  * The title is the library's. This site's own stamp is on the last cell.
  *
  * Behind it is a clip the owner supplied, five seconds of an old film: a car
@@ -37,7 +37,6 @@ export function Title() {
     <div className="cell title">
       {/* With motion reduced, a still from the clip stands in for it. */}
       <Backdrop clip={clip} playing={current && !reduced} still={reduced ? still : undefined} />
-      <Stamp className="title__release" says="Library release" release={site.libraryRelease} />
       <p className="title__presents">{site.presenter} presents</p>
       <h1 className="visually-hidden">{site.name}</h1>
       <FitText
@@ -51,11 +50,14 @@ export function Title() {
         uniform
       />
       <div className="title__foot">
-        <p className="title__version">
-          <span className="visually-hidden">Version </span>
-          <span aria-hidden="true">v</span>
-          {site.version}
-        </p>
+        <div className="title__library">
+          <p className="title__version">
+            <span className="visually-hidden">Version </span>
+            <span aria-hidden="true">v</span>
+            {site.version}
+          </p>
+          <Stamp className="title__release" says="Library release" release={site.libraryRelease} />
+        </div>
         <ul className="title__links">
           <li>
             <a href={site.npm}>npm</a>

@@ -127,18 +127,20 @@ second flick the reader made, or leaves the dial between two cells.
 
 **Every cell that is a release wears one stamp.** GIFcommit numbers its
 releases on a master list kept with the GIFcommit site. By the owner's
-direction a cell that stands for a release carries that release's stamp at
-its top left: its serial, alone, the same on every such cell
-(`src/ui/Stamp.tsx`). There are three kinds: each study's on its own cell;
-the library's on the title, which is the library's; and the site's own on the
-last cell, with the sign-up. The library's version stays in its box at the
-foot of the title: a version is not a release.
+direction a cell that stands for a release carries that release's stamp: its
+serial, alone, as the last line of fine print at the cell's bottom left,
+where a disclaimer would be (`src/ui/Stamp.tsx`). There are three kinds: each
+study's, under the line that says the study is not affiliated with what it
+studies; the library's on the title, which is the library's, under its
+version; and the site's own on the last cell, under the sign-up's note.
 
-The stamp is set light, by the owner's direction: release numbers are to be
-discreet. It carries no date, and no cell shows one: the owner tried the day
-beside the serial and took it out. A study's day stays in its file. Do not
-flag the light weight or the missing date; do flag a stamp set heavier than
-the text around it, and a date brought back to a cell.
+The stamp is small and light, by the owner's direction: release numbers are
+to be discreet. It carries no date, and no cell shows one. The owner tried
+the serial at the top left, tried the day beside it, and settled on this. A
+study's day stays in its file. Do not flag the size, the light weight, the
+missing date or the empty top left of a study's cell; do flag a stamp set
+larger or heavier than the fine print beside it, one moved up out of the
+foot, and a date brought back to a cell.
 
 Numbers are GIFcommit's, and are copied from its list, never made up here.
 Flag a serial written any way but the name exactly and the number to five
