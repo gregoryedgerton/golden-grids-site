@@ -196,13 +196,18 @@ a {
   filter: drop-shadow(0 0 2.4cqw rgb(20 16 12 / 0.7)) drop-shadow(0 0 0.8cqw rgb(20 16 12 / 0.5));
 }
 
-/* The library's stamp, at the top left as every study's is, over the
-   picture and clear of the line that is centred below it. It is taken out of
-   the cell's column, so the lettering under it stands where it stood. */
-.title > .title__release {
-  position: absolute;
-  top: 3.6cqw;
-  left: 7cqw;
+/* The site's own stamp closes the last cell, close under the form's note:
+   the last line of its fine print. */
+.signup__release {
+  margin-top: -1.4cqw;
+}
+
+/* The library's stamp, under its version at the foot. */
+.title__library {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.2cqw;
 }
 
 .title__foot {
@@ -433,14 +438,26 @@ a {
   color: var(--text);
 }
 
-/* A release's stamp: its serial, written exactly and set light, so that it
-   is there to be found and does not speak first. The same on every cell
-   that is a release. */
+/* A release's stamp: its serial, written exactly, as fine print at the
+   bottom left of its cell: small and light, so that it is there to be found
+   and does not speak first. The same on every cell that is a release. */
 .stamp {
-  font-size: 3.4cqw;
+  font-size: 2.6cqw;
   font-weight: 300;
-  line-height: 1;
+  line-height: 1.2;
   letter-spacing: 0.08em;
+}
+
+/* The study's fine print: what was studied, that it is not affiliated, and
+   its stamp. */
+.study__print {
+  min-width: 0;
+}
+
+/* The icon keeps the top right, now that nothing stands at the top left. */
+.study > .study__icon {
+  grid-column: 2;
+  grid-row: 1;
 }
 
 .study__icon {

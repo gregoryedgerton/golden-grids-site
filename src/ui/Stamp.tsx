@@ -1,11 +1,12 @@
 import { serial } from "../site";
 
 /**
- * A release's stamp, at the top left of the cell that stands for it: its
- * serial among GIFcommit's releases, and nothing else. It is set light, by
- * the owner's direction: it is there to be found, not to be read first.
- * Every cell that is a release wears the same one in the same place: each
- * study's, the library's on the title and this site's on the last cell.
+ * A release's stamp: its serial among GIFcommit's releases, and nothing
+ * else. By the owner's direction it is fine print, at the bottom left of the
+ * cell that stands for the release, where a disclaimer would be, and set
+ * small and light: it is there to be found, not to be read first. Every cell
+ * that is a release wears the same one in the same place: each study's, the
+ * library's on the title and this site's on the last cell.
  */
 export function Stamp({
   className,

@@ -7,9 +7,10 @@ import { Stamp } from "../ui/Stamp";
 
 /**
  * One study's lockup: its parody name in its own colours and face, and the
- * way to it. At its top left is its stamp, by the owner's direction: its
- * serial among GIFcommit's releases, set light. The day it was published
- * used to be there, and no cell shows a date now.
+ * way to it. Its stamp, the study's serial among GIFcommit's releases, is the
+ * last line of the fine print at its foot, under the line that says the
+ * study is not affiliated with what it studies. The day it was published
+ * used to be at the top left, and no cell shows a date now.
  */
 export function StudyCell({ study }: { study: Study }) {
   const { brand, colors, font, release, reference, subject, url } = study;
@@ -26,16 +27,18 @@ export function StudyCell({ study }: { study: Study }) {
 
   return (
     <div className="cell study" style={style}>
-      <Stamp className="study__release" says="Release" release={release} />
       <Icon name={study.icon} className="study__icon" />
       {/* The name is written exactly; nothing here changes its case. */}
       <h2 className="visually-hidden">{brand}</h2>
       <FitText className="study__name" lines={brand.split(" ")} leading={0.9} tints={colors.letters} />
       <div className="study__foot">
-        <p className="study__subject">
-          {subject}
-          <span className="study__after"> After {reference}; not affiliated with it.</span>
-        </p>
+        <div className="study__print">
+          <p className="study__subject">
+            {subject}
+            <span className="study__after"> After {reference}; not affiliated with it.</span>
+          </p>
+          <Stamp className="study__release" says="Release" release={release} />
+        </div>
         <a className="study__link" href={url}>
           Open the study<span className="visually-hidden">: {brand}</span>
         </a>

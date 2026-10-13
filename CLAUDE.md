@@ -67,9 +67,9 @@ domain is live.
 - **Serials.** The library, each study and this site are each one of
   GIFcommit's releases, numbered on GIFcommit's master list (`RELEASES.md` in
   the GIFcommit site's repository). A cell that stands for a release
-  wears its stamp at the top left, the serial alone and set light: each
-  study's cell, the title for the library, the last cell for this site. No
-  cell shows a date. Copy a number from the list; never make one up.
+  wears its stamp as fine print at its bottom left, the serial alone, small
+  and light: each study's cell, the title for the library, the last cell for
+  this site. No cell shows a date. Copy a number from the list; never make one up.
 - **Brand.** Parody names are written exactly and never case-transformed in
   CSS. GIFcommit is the presenter and the npm scope.
 - **Copy.** Plain and exact. No jokes at a reference's expense, no verdicts on
