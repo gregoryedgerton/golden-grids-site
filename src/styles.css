@@ -157,11 +157,11 @@ a {
    when the stamp's line at the foot made the name smaller, and the two
    tallest letters of "Golden", the l and the d, now come up to it and not
    over it. The name is drawn after this line, so if they meet it is the
-   name that is on top. An em of padding on the left sets the line half an
-   em right of centre, by the owner's direction: slightly off. */
+   name that is on top. It is centred exactly: while it stood lower the owner
+   had it half an em right of centre, to let the d rise beside a word, and
+   lifted clear of the name it has no letter to make way for. */
 .title__presents {
   top: 1cqw;
-  padding-left: 1em;
   font-family: var(--tall);
   font-size: 8cqw;
   font-weight: 300;
