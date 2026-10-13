@@ -46,7 +46,7 @@ A file that breaks a rule fails the tests with the file's name and the reason.
 
 ## Release serials
 
-GIFcommit numbers what it releases. The library, each study and this site are each a release, and the site shows the serials: its own at the top left of the title, the library's under the library's version, and each study's at the top left of its cell.
+GIFcommit numbers what it releases. The library, each study and this site are each a release, and the site shows the serials, each at the top left of a cell: the library's on the title, each study's on its own cell, and the site's own on the last cell, with the sign-up.
 
 The numbers are GIFcommit's, given on its master list. This site's and the library's are `release` and `libraryRelease` in `src/site.ts`, and a study's is `release` in its file. This README opens with the site's own serial, as every released repository's does.
 

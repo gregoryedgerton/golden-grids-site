@@ -85,27 +85,18 @@ describe("Title", () => {
     expect(shrink).toBeGreaterThan(0.8);
   });
 
-  it("carries this site's serial among GIFcommit's releases, ahead of everything else it says", () => {
+  it("carries the library's serial among GIFcommit's releases, ahead of everything else it says, and says whose it is", () => {
     const { container } = render(<Title />);
     const cell = container.querySelector(".title") as HTMLElement;
     const release = cell.querySelector(".title__release") as HTMLElement;
-    expect(release).toHaveTextContent(/^Release GIFcommit00017$/);
-    expect(release.querySelector(".visually-hidden")).toHaveTextContent(/^Release$/);
+    expect(release).toHaveTextContent(/^Library release GIFcommit00001$/);
+    expect(release.querySelector(".visually-hidden")).toHaveTextContent(/^Library release$/);
     // First of what is read: only the picture is before it.
     const said = [...cell.children].filter((child) => !child.classList.contains("backdrop"));
     expect(said[0]).toBe(release);
     expect(said[1]).toHaveClass("title__presents");
-  });
-
-  it("carries the library's serial under the library's version, and says whose it is", () => {
-    const { container } = render(<Title />);
-    const library = container.querySelector(".title__foot")?.firstElementChild as HTMLElement;
-    expect(library).toHaveClass("title__library");
-    expect([...library.children].map((child) => child.className)).toEqual(["title__version", "title__library-release"]);
-    expect(library.lastElementChild).toHaveTextContent(/^Library release GIFcommit00001$/);
-    expect(library.lastElementChild?.querySelector(".visually-hidden")).toHaveTextContent(/^Library release$/);
-    // Two serials on the cell, and not the same one twice.
-    expect(container.textContent?.match(/GIFcommit\d{5}/g)).toEqual(["GIFcommit00017", "GIFcommit00001"]);
+    // The library's and no other: this site's own serial is on the last cell.
+    expect(container.textContent?.match(/GIFcommit\d{5}/g)).toEqual(["GIFcommit00001"]);
   });
 
   it("puts the version at the foot, first, and carries no instructions, link to a video or button for one", () => {
@@ -113,7 +104,7 @@ describe("Title", () => {
     const cell = container.querySelector(".title") as HTMLElement;
     const foot = cell.lastElementChild as HTMLElement;
     expect(foot).toHaveClass("title__foot");
-    expect(foot.firstElementChild?.firstElementChild).toHaveClass("title__version");
+    expect(foot.firstElementChild).toHaveClass("title__version");
     expect(screen.queryByText(/swipe|scroll|arrow keys/i)).toBeNull();
     expect(screen.queryByRole("button")).toBeNull();
     expect(screen.getAllByRole("link").map((a) => a.textContent)).toEqual(["npm", "GitHub"]);
@@ -924,6 +915,15 @@ describe("Signup", () => {
     expect(field).toHaveAccessibleDescription(/sent with Beehiiv\. Subscribing opens Beehiiv in a new tab\./);
     expect(screen.getByRole("button", { name: "Subscribe" })).toBeEnabled();
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("carries this site's own serial among GIFcommit's releases, first in the cell, and says it is the site's", () => {
+    const { container } = render(<Signup action="" />);
+    const release = container.querySelector(".signup")?.firstElementChild as HTMLElement;
+    expect(release).toHaveClass("signup__release");
+    expect(release).toHaveTextContent(/^This site is release GIFcommit00017$/);
+    expect(release.querySelector(".visually-hidden")).toHaveTextContent(/^This site is release$/);
+    expect(container.textContent?.match(/GIFcommit\d{5}/g)).toEqual(["GIFcommit00017"]);
   });
 
   it("cannot be sent, and says so, while the list is not open", async () => {

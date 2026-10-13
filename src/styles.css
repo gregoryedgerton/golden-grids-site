@@ -196,7 +196,7 @@ a {
   filter: drop-shadow(0 0 2.4cqw rgb(20 16 12 / 0.7)) drop-shadow(0 0 0.8cqw rgb(20 16 12 / 0.5));
 }
 
-/* This site's own serial, at the top left as every study's is, over the
+/* The library's serial, at the top left as every study's is, over the
    picture and clear of the line that is centred below it. It is taken out of
    the cell's column, so the lettering under it stands where it stood. */
 .title > .title__release {
@@ -221,21 +221,6 @@ a {
   border: 0.4cqw solid currentColor;
   font-size: 3.4cqw;
   font-weight: 600;
-  letter-spacing: 0.08em;
-}
-
-/* The library's own serial, under its version. */
-.title__library {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1.4cqw;
-}
-
-.title__library-release {
-  font-size: 3.4cqw;
-  font-weight: 600;
-  line-height: 1;
   letter-spacing: 0.08em;
 }
 
@@ -507,6 +492,13 @@ a {
 /* The sign-up. */
 .signup {
   color: var(--paper);
+}
+
+/* This site's own serial, at the top left as every study's is. */
+.signup__release {
+  font-size: 3.4cqw;
+  font-weight: 600;
+  letter-spacing: 0.08em;
 }
 
 .signup__heading {
