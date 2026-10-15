@@ -5,7 +5,7 @@ Guidance for agents working on the Golden Grids marketing site.
 ## What this repo is
 
 One page: a spiral dial. A reader swipes, scrolls or keys through an
-introduction to Golden Grids (title, vision, parameters), then a gallery of
+introduction to Golden Grids (title, what it is, parameters), then a gallery of
 the layout studies, one lockup per study, and reaches an email sign-up in the
 last cell. The library is consumed from npm at its published version; never
 link a local checkout.

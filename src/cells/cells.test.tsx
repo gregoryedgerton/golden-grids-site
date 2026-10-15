@@ -18,7 +18,7 @@ import { SAID_MS, createStatement } from "./statement";
 import type { Statement } from "./statement";
 import { StudyCell } from "./StudyCell";
 import { Title } from "./Title";
-import { LENS, PLATFORMS, Vision } from "./Vision";
+import { Vision } from "./Vision";
 
 const espn = parseStudy(
   {
@@ -197,66 +197,34 @@ describe("Title, and the clip behind it", () => {
 });
 
 describe("Vision", () => {
-  it("is headed SUPPORTS, one word in capitals set large, which the platforms under it finish", async () => {
+  it("asks WHAT IS THIS?, in capitals set large, two words and then one, as the gallery's statement is set", async () => {
     const { container } = render(<Vision />);
-    expect(screen.getByRole("heading", { level: 2, name: "SUPPORTS" })).toBeInTheDocument();
-    // One line, so it is as wide as the cell.
-    expect([...container.querySelectorAll(".vision__heading .fit__line")].map((g) => g.textContent)).toEqual(["SUPPORTS"]);
-    // The heading it had, a count of platforms, is gone: the marks are no longer four.
-    expect(container).not.toHaveTextContent(/4platforms|one layout model/i);
-    // The heading is read straight into the list: supports these.
-    expect(container.querySelector(".vision__heading")?.nextElementSibling).toHaveClass("vision__platforms");
+    expect(screen.getByRole("heading", { level: 2, name: "WHAT IS THIS?" })).toBeInTheDocument();
+    const lines = [...container.querySelectorAll(".vision__heading .fit__line text:last-child")].map((line) => line.textContent);
+    // Written in capitals, not made so by a style.
+    expect(lines).toEqual(["WHAT IS", "THIS?"]);
+    const heading = container.querySelector(".vision__heading") as SVGSVGElement;
+    // Nothing in the heading is marked out from the rest, and nothing colours it over time: it is not the statement.
+    expect(heading.querySelector("tspan")).toBeNull();
+    expect(heading.querySelector("linearGradient")).toBeNull();
     expect(await axe(container)).toHaveNoViolations();
   });
 
-  it("makes room beside rows and columns, says what Golden Grids is, and ends on not being boring", () => {
+  it("answers with the page's own description, word for word, and nothing more", () => {
     const { container } = render(<Vision />);
     const body = container.querySelector(".vision__body") as HTMLElement;
-    expect(body).toHaveTextContent(/^Rows and columns have had a good run, but let’s make room for new ideas\./);
-    expect(body).toHaveTextContent(/You still need them, but let’s push the envelope\./);
-    // The owner's own punctuation: commas.
-    expect(body).not.toHaveTextContent(";");
-    expect(body).toHaveTextContent(LENS);
-    expect(LENS).toMatch(/^Golden Grids is a new lens to view layouts through that leverages the golden ratio/);
-    expect(LENS).toMatch(/instinctually know through nature\.$/);
-    expect(body).toHaveTextContent(/What you put on them is your business, at least you won’t be boring\.$/);
-    expect(body).toHaveTextContent(/at least you won’t be boring\.$/);
-    expect(body).not.toHaveTextContent(/same boxes|all four/);
+    expect(body.textContent).toBe(site.description);
+    expect([...container.querySelectorAll("p")]).toEqual([body]);
+    // The question is read straight into its answer.
+    expect(container.querySelector(".vision__heading")?.nextElementSibling).toBe(body);
   });
 
-  it("sets the heading in one weight, and ends its box at the baseline its capitals sit on", () => {
+  it("calls out no platforms: no marks, no list of them", () => {
     const { container } = render(<Vision />);
-    const heading = container.querySelector(".vision__heading") as SVGSVGElement;
-    // Nothing in the heading is marked out from the rest.
-    expect(heading.querySelector("tspan")).toBeNull();
-    expect(heading.querySelector(".fit__line text")).toHaveTextContent("SUPPORTS");
-    // Written in capitals, not made so by a style.
-    expect(heading.querySelector(".fit__line text")?.textContent).toBe("SUPPORTS");
-    // Eight glyphs at 50 wide scale by 2.5; the baseline is 80 down the line, so 200, not the full 250.
-    expect(heading).toHaveAttribute("viewBox", "0 0 1000 200");
+    expect(container.querySelector("ul, li, svg:not(.vision__heading)")).toBeNull();
+    expect(container).not.toHaveTextContent(/SwiftUI|Jetpack|React/);
   });
 
-  it("names each platform beside its mark, drawn in one colour and hidden as decoration", () => {
-    render(<Vision />);
-    const items = screen.getAllByRole("listitem");
-    // React and React Native are one entry under one mark. The space in "React Native" does not break,
-    // so the name turns after the ampersand; read aloud, or searched for, it is an ordinary space.
-    expect(items.map((li) => li.textContent)).toEqual(["React & React\u00a0Native", "SwiftUI", "Jetpack Compose"]);
-    expect(items.map((li) => li.textContent?.replace(/\u00a0/g, " "))).toEqual(["React & React Native", "SwiftUI", "Jetpack Compose"]);
-    expect(PLATFORMS.map((p) => p.logo)).toEqual(["react", "apple", "android"]);
-    for (const item of items) {
-      const mark = item.querySelector("svg") as SVGSVGElement;
-      expect(mark).toHaveAttribute("aria-hidden", "true");
-      expect(mark).toHaveAttribute("fill", "currentColor");
-      expect(mark.querySelectorAll("path")).toHaveLength(1);
-      expect(mark.querySelector("[fill], [stroke]")).toBeNull();
-    }
-    // Three marks, each drawn once: React's is not repeated for React Native.
-    const drawn = items.map((li) => li.querySelector("path")?.getAttribute("d"));
-    expect(drawn).toHaveLength(3);
-    expect(new Set(drawn).size).toBe(3);
-    expect(document.querySelectorAll(".vision__platforms svg")).toHaveLength(3);
-  });
 });
 
 describe("Parameters", () => {
@@ -982,7 +950,7 @@ describe("buildCells", () => {
 
   it("names the introduction's cells for what a reader finds in them", () => {
     // What is announced as each takes the focus, and what its section is called.
-    expect(cells.slice(0, 4).map((cell) => cell.label)).toEqual(["Golden Grids", "Supports", "Parameters", "Case Studies"]);
+    expect(cells.slice(0, 4).map((cell) => cell.label)).toEqual(["Golden Grids", "What is this?", "Parameters", "Case Studies"]);
   });
 
   it("labels each study by its name, and draws it on its own ground", () => {
