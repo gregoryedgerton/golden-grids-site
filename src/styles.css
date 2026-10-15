@@ -225,57 +225,27 @@ a {
   color: var(--red);
 }
 
-/* Vision. */
+/* What is this? Set as the gallery's statement is: the question in bold
+   capitals as wide as the cell, and the answer under it, held close
+   together and centred in the cell's height. On the cell's blue. */
 .vision {
+  justify-content: center;
+  gap: 4.5cqw;
   color: var(--ground);
 }
 
-/* The heading, the strip and the paragraph share the cell's height, with the
-   room left over split evenly above and below the strip. */
-.vision {
-  justify-content: space-between;
-}
-
-/* One word across the whole cell, as tall as that makes it. It is set in
-   capitals, so its box ends at the baseline with nothing hanging below. */
+/* As wide as the cell and as tall as that makes it, ending at its baseline. */
 .vision__heading {
   flex: none;
   height: auto;
-  font-weight: 400;
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 
-
-/* The platforms in a row, each under its mark. */
-.vision__platforms {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 3cqw;
-  margin: 0;
-  padding: 2.5cqw 0;
-  border-block: 0.6cqw solid currentColor;
-  list-style: none;
-  font-size: 2.9cqw;
-  font-weight: 600;
-  line-height: 1.1;
-  text-align: center;
-}
-
-.vision__platforms li {
-  display: grid;
-  justify-items: center;
-  align-content: start;
-  gap: 1.6cqw;
-}
-
-.vision__logo {
-  width: 11cqw;
-  height: 11cqw;
-}
-
 .vision__body {
-  font-size: 3.3cqw;
+  font-size: 3cqw;
   font-weight: 400;
+  line-height: 1.25;
 }
 
 /* Parameters: a reference. Four rows that share the square evenly. */

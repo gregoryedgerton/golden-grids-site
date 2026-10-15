@@ -21,7 +21,7 @@ export function buildCells(studies: Study[], subscribe: string): Cell[] {
   const statement = createStatement({ reduced: prefersReducedMotion, clock });
   return [
     { id: "title", label: "Golden Grids", ground: "#14100c", content: <Title /> },
-    { id: "vision", label: "Supports", ground: "#7fa6d9", content: <Vision /> },
+    { id: "vision", label: "What is this?", ground: "#7fa6d9", content: <Vision /> },
     { id: "parameters", label: "Parameters", ground: "#f7f2e8", content: <Parameters /> },
     { id: "gallery", label: "Case Studies", ground: "#f0562e", content: <Gallery statement={statement} /> },
     ...studies.map(
