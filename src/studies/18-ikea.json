@@ -1,0 +1,22 @@
+{
+  "number": 18,
+  "release": 19,
+  "published": "2026-10-15",
+  "brand": "GIFea",
+  "reference": "IKEA",
+  "subject": "Home, products, rooms and a style guide",
+  "url": "https://gregoryedgerton.github.io/golden-grids-study-18-ikea/",
+  "colors": {
+    "ground": "#0058a3",
+    "ink": "#ffdb00",
+    "accent": "#ffffff"
+  },
+  "font": {
+    "family": "Noto Sans",
+    "weight": 700,
+    "italic": false
+  },
+  "icon": {
+    "path": "M8 13V7a4 4 0 0 1 8 0v6M5.5 13h13M7 13l-1.5 8M17 13l1.5 8M7.2 17h9.6"
+  }
+}
