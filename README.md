@@ -14,7 +14,7 @@ The repository and the site are both public. `main` is published to GitHub Pages
 
 A study asks for its place here. When one is first published, `captures/site-issue.cjs` in the study's own repository opens an issue on this repository's board, "Gallery: add ⟨Brand⟩ (Study NN)", with the study's live address, the day it was first published and what its file needs. The repository is public so that the board can take those issues. Work from the issue, and close it from the pull request that adds the study.
 
-Add one file to `src/studies/`, named for its number and subject:
+Add one file to `src/studies/`, named for its number and parody name (`14-gifdepot.json`):
 
 ```json
 {
@@ -24,7 +24,7 @@ Add one file to `src/studies/`, named for its number and subject:
   "brand": "GIFdepot",
   "reference": "The Home Depot",
   "subject": "A product page",
-  "url": "https://gregoryedgerton.github.io/golden-grids-study-14-homedepot/",
+  "url": "https://gregoryedgerton.github.io/golden-grids-study-14-gifdepot/",
   "colors": { "ground": "#f96302", "ink": "#ffffff", "accent": "#000000" },
   "font": { "family": "Archivo", "weight": 800, "italic": false },
   "icon": "house"
