@@ -1,0 +1,22 @@
+{
+  "number": 20,
+  "release": 21,
+  "published": "2026-10-16",
+  "brand": "GIFin",
+  "reference": "LinkedIn",
+  "subject": "Feed, profile, settings and skill assessments",
+  "url": "https://gregoryedgerton.github.io/golden-grids-study-20-linkedin/",
+  "colors": {
+    "ground": "#0a66c2",
+    "ink": "#ffffff",
+    "accent": "#ffffff"
+  },
+  "font": {
+    "family": "Source Sans 3",
+    "weight": 700,
+    "italic": false
+  },
+  "icon": {
+    "path": "M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 19a5 5 0 0 1 10 0M16 10a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM14.5 13.5A4.5 4.5 0 0 1 21 17.5"
+  }
+}

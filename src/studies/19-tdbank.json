@@ -1,0 +1,22 @@
+{
+  "number": 19,
+  "release": 20,
+  "published": "2026-10-16",
+  "brand": "GIFbank",
+  "reference": "TD Bank",
+  "subject": "Home, accounts, activity, statements and settings",
+  "url": "https://gregoryedgerton.github.io/golden-grids-study-19-tdbank/",
+  "colors": {
+    "ground": "#008a00",
+    "ink": "#ffffff",
+    "accent": "#ffffff"
+  },
+  "font": {
+    "family": "Figtree",
+    "weight": 700,
+    "italic": false
+  },
+  "icon": {
+    "path": "M3 10l9-6 9 6zM5.5 10v8M9.8 10v8M14.2 10v8M18.5 10v8M3 20.5h18"
+  }
+}
