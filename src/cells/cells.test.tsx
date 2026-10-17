@@ -927,6 +927,16 @@ describe("StudyNotice", () => {
     expect(notice()).toHaveAttribute("open");
   });
 
+  it("asks for a middle click too, which would open the study in a new tab, and leaves a right click to its menu", () => {
+    render(<StudyCell study={espn} />);
+    const link = screen.getByRole("link", { name: "Open the study: GIFspn" });
+    const aux = (button: number) => fireEvent(link, new MouseEvent("auxclick", { bubbles: true, cancelable: true, button }));
+    expect(aux(2)).toBe(true);
+    expect(notice()).not.toHaveAttribute("open");
+    expect(aux(1)).toBe(false);
+    expect(notice()).toHaveAttribute("open");
+  });
+
   it("follows the study for Yes, and closes on the way, so a reader who comes back finds the dial", () => {
     render(<StudyCell study={espn} />);
     open();
