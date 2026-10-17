@@ -114,8 +114,11 @@ function DialOf({ cells }: { cells: Cell[] }) {
   }, [paint]);
 
   useEffect(() => {
+    const root = rootRef.current as HTMLDivElement;
     const stage = stageRef.current as HTMLDivElement;
     const onKey = (event: KeyboardEvent) => {
+      // A key is not the end of a swipe: whatever it presses is pressed.
+      swipedRef.current = false;
       if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return;
       if (ownsKey(event.target, event.key)) return;
       const move = keyMove(event.key);
@@ -126,6 +129,8 @@ function DialOf({ cells }: { cells: Cell[] }) {
     };
 
     // Not passive: the page must not scroll or swipe back while the dial turns.
+    // Heard over the whole dial, the buttons included: the page does not
+    // scroll, so a scroll made anywhere on it is the dial's.
     const onWheel = (event: WheelEvent) => {
       if (event.ctrlKey) return;
       event.preventDefault();
@@ -168,6 +173,8 @@ function DialOf({ cells }: { cells: Cell[] }) {
       const swipe = swipeRef.current;
       if (!swipe || event.pointerId !== swipe.id) return;
       swipeRef.current = null;
+      // A cancelled swipe ends in no click, so there is none to keep from a link.
+      if (event.type === "pointercancel") swipedRef.current = false;
       // Whether it swiped or only touched: a swipe settles, and a touch lets the dial go on as it was.
       dial().release();
     };
@@ -180,7 +187,7 @@ function DialOf({ cells }: { cells: Cell[] }) {
     };
 
     window.addEventListener("keydown", onKey);
-    stage.addEventListener("wheel", onWheel, { passive: false });
+    root.addEventListener("wheel", onWheel, { passive: false });
     stage.addEventListener("pointerdown", onDown);
     stage.addEventListener("click", onClick, true);
     window.addEventListener("pointermove", onMove);
@@ -188,7 +195,7 @@ function DialOf({ cells }: { cells: Cell[] }) {
     window.addEventListener("pointercancel", onUp);
     return () => {
       window.removeEventListener("keydown", onKey);
-      stage.removeEventListener("wheel", onWheel);
+      root.removeEventListener("wheel", onWheel);
       stage.removeEventListener("pointerdown", onDown);
       stage.removeEventListener("click", onClick, true);
       window.removeEventListener("pointermove", onMove);

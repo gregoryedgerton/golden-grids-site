@@ -434,6 +434,34 @@ describe("Dial", () => {
     }
   });
 
+  it("turns for a scroll made anywhere on the dial: over the buttons as over the cells", () => {
+    vi.useFakeTimers();
+    try {
+      render(<Dial cells={makeCells(6)} />);
+      const wheel = (over: Element) => {
+        const prevented = !fireEvent.wheel(over, { deltaY: 300 });
+        act(() => void vi.advanceTimersByTime(WHEEL_IDLE_MS + 20));
+        return prevented;
+      };
+      // The page does not scroll under any of them, and each turns the dial one cell.
+      expect(wheel(screen.getByRole("navigation", { name: "Dial" }))).toBe(true);
+      expect(announced()).toBe("Cell 2, 2 of 6");
+      expect(wheel(screen.getByRole("button", { name: "Next" }))).toBe(true);
+      expect(announced()).toBe("Cell 3, 3 of 6");
+      // The way the wheel turns, not the button it is over.
+      expect(wheel(screen.getByRole("button", { name: "Previous" }))).toBe(true);
+      expect(announced()).toBe("Cell 4, 4 of 6");
+      expect(wheel(document.querySelector(".dial__count") as Element)).toBe(true);
+      expect(announced()).toBe("Cell 5, 5 of 6");
+      expect(wheel(stage())).toBe(true);
+      expect(announced()).toBe("Cell 6, 6 of 6");
+      // Off the dial, a scroll is not the dial's to stop.
+      expect(wheel(document.body)).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("leaves a pinch on a trackpad to the browser", () => {
     vi.useFakeTimers();
     try {
@@ -593,6 +621,63 @@ describe("Dial", () => {
     fireEvent.pointerUp(window, init);
     fireEvent.click(link);
     expect(followed).toHaveBeenCalledTimes(2);
+    expect(announced()).toBe("Cell 2, 2 of 6");
+  });
+
+  it("does not keep a press from the keyboard off a link because a swipe went before it", () => {
+    render(<Dial cells={makeCells(6)} />);
+    fireEvent.keyDown(document.body, { key: "ArrowDown" });
+    const link = screen.getByRole("link", { name: "A link" });
+    const init = { pointerId: 7, isPrimary: true, pointerType: "touch" };
+    // A swipe that ends in no click of its own, as most do.
+    fireEvent.pointerDown(link, { ...init, clientX: 200, clientY: 200 });
+    fireEvent.pointerMove(window, { ...init, clientX: 200, clientY: 188 });
+    fireEvent.pointerUp(window, init);
+    // Enter on the link: the key, and then the click a browser makes of it.
+    link.focus();
+    fireEvent.keyDown(link, { key: "Enter" });
+    expect(fireEvent.click(link)).toBe(true);
+    expect(followed).toHaveBeenCalledTimes(1);
+    expect(announced()).toBe("Cell 2, 2 of 6");
+  });
+
+  it("forgets a swipe at any key, whether or not the key is the dial's", () => {
+    render(<Dial cells={makeCells(6)} />);
+    fireEvent.keyDown(document.body, { key: "ArrowDown" });
+    const link = screen.getByRole("link", { name: "A link" });
+    const next = screen.getByRole("button", { name: "Next" });
+    const init = { pointerId: 7, isPrimary: true, pointerType: "touch" };
+    const keys: [Element, KeyboardEventInit][] = [
+      // With a modifier held, which the dial leaves alone.
+      [link, { key: "Enter", ctrlKey: true }],
+      // Keys the dial does not use.
+      [link, { key: "a" }],
+      [link, { key: "Tab" }],
+      // Space on a button, which is the button's.
+      [next, { key: " " }],
+    ];
+    for (const [target, key] of keys) {
+      fireEvent.pointerDown(link, { ...init, clientX: 200, clientY: 200 });
+      fireEvent.pointerMove(window, { ...init, clientX: 200, clientY: 188 });
+      fireEvent.pointerUp(window, init);
+      fireEvent.keyDown(target, key);
+      expect(fireEvent.click(link)).toBe(true);
+    }
+    expect(followed).toHaveBeenCalledTimes(keys.length);
+    expect(announced()).toBe("Cell 2, 2 of 6");
+  });
+
+  it("does not keep the next click off a link when a swipe was cancelled, since a cancelled swipe ends in no click", () => {
+    render(<Dial cells={makeCells(6)} />);
+    fireEvent.keyDown(document.body, { key: "ArrowDown" });
+    const link = screen.getByRole("link", { name: "A link" });
+    const init = { pointerId: 7, isPrimary: true, pointerType: "touch" };
+    fireEvent.pointerDown(link, { ...init, clientX: 200, clientY: 200 });
+    fireEvent.pointerMove(window, { ...init, clientX: 200, clientY: 188 });
+    fireEvent.pointerCancel(window, init);
+    // A click with nothing before it: assistive technology pressing the link.
+    expect(fireEvent.click(link)).toBe(true);
+    expect(followed).toHaveBeenCalledTimes(1);
     expect(announced()).toBe("Cell 2, 2 of 6");
   });
 

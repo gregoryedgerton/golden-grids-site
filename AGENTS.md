@@ -109,6 +109,16 @@ Flag any other frame or clip of film in the repository or the build.
 Down, Right, Page Down and Space keys go deeper; the opposites go back. Keys
 typed into a form field never move the dial.
 
+**A scroll anywhere on the dial is the dial's.** The page does not scroll, so
+a wheel turned over the buttons turns the dial as one turned over the cells
+does. Flag a part of the page where a scroll does nothing.
+
+**A swipe keeps one click off a link, its own.** A swipe that ends over a
+link must not follow it, so the click that swipe makes is stopped. Most
+swipes make none, and a cancelled one never does: the next key, the next
+pointer down or the cancellation forgets the swipe, so that a press from the
+keyboard is never the click that is stopped.
+
 **A scroll turns the dial one cell.** The smallest notch a wheel reports is a
 scroll (three pixels of travel make one), and a scroll is one cell and no
 more, the tail of a flick and a wheel held spinning included. Within an
