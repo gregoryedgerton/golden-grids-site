@@ -145,7 +145,7 @@ describe("parseStudy", () => {
     ["a drawing that does not start with a move", { ...valid, icon: { path: "L3 4" } }, "icon.path must be SVG path data, starting with M"],
     ["a drawing that carries markup", { ...valid, icon: { path: 'M0 0"/><script>' } }, "icon.path must be SVG path data, starting with M"],
   ])("refuses %s, and says why", (_, raw, problem) => {
-    expect(() => parseStudy(raw, "./07-coinbase.json")).toThrow(`Study ./07-coinbase.json: ${problem}`);
+    expect(() => parseStudy(raw, "./07-gifbase.json")).toThrow(`Study ./07-gifbase.json: ${problem}`);
   });
 });
 
