@@ -593,6 +593,43 @@ describe("createDial, with motion", () => {
     expect(dial.depth()).toBe(1);
   });
 
+  it("comes to rest on the nearest cell at once when asked, wherever it was going", () => {
+    const { dial, advance, frames, focuses, headings } = setup();
+    dial.goTo(5);
+    // Part way: past the first cell, nearest the second.
+    while (Math.round(dial.depth()) < 1) advance(16);
+    expect(dial.depth()).not.toBe(1);
+    dial.rest();
+    expect(dial.depth()).toBe(1);
+    expect(frames.size).toBe(0);
+    expect(headings).toEqual([5, 1]);
+    // Nothing more happens: it was going to the sixth cell, and is not.
+    advance(3000);
+    expect(dial.depth()).toBe(1);
+    expect(focuses).toEqual([1]);
+    // A step from rest is from the cell it rests on.
+    dial.step(1);
+    advance(3000);
+    expect(dial.depth()).toBe(2);
+  });
+
+  it("is already at rest when asked at rest, and leaves a finger alone", () => {
+    const { dial, advance, depths, headings } = setup();
+    dial.rest();
+    expect(dial.depth()).toBe(0);
+    expect(headings).toEqual([]);
+    // Under a finger the finger decides where the dial goes.
+    dial.hold();
+    dial.nudge(0.4);
+    depths.length = 0;
+    dial.rest();
+    expect(dial.depth()).toBe(0.4);
+    expect(depths).toEqual([]);
+    dial.release();
+    advance(3000);
+    expect(dial.depth()).toBe(1);
+  });
+
   it("stops everything pending when destroyed", () => {
     // A journey under way.
     const a = setup();

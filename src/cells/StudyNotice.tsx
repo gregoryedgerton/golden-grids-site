@@ -47,8 +47,15 @@ export function StudyNotice({ study, style, ref }: { study: Study; style: CSSPro
         I want you to use the library, not your personal info.
       </p>
       <div className="notice__answers">
-        {/* Closed on the way out, so a reader who comes back finds the dial as they left it. */}
-        <a className="notice__yes" href={url} onClick={close}>
+        {/* Closed on the way out, so a reader who comes back finds the dial as they left it. A middle click opens the study in a new tab and is heard as an auxclick, and the notice closes for it too. */}
+        <a
+          className="notice__yes"
+          href={url}
+          onClick={close}
+          onAuxClick={(event) => {
+            if (event.button === 1) close(event);
+          }}
+        >
           Yes, continue
         </a>
         <button type="button" className="notice__no" onClick={close}>

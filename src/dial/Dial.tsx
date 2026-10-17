@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { clock } from "./clock";
 import { createDial } from "./controller";
 import type { DialController } from "./controller";
-import { CellCurrent, CellLanding } from "./current";
+import { CellCurrent, CellLanding, DialRest } from "./current";
 import { TEXTURE_PX, mountedAround, navFits, paintTile } from "./geometry";
 import { dragSteps, keyMove, ownsDrag, ownsKey, pastSlop, swipeAxis, wheelPixels } from "./input";
 import type { Axis } from "./input";
@@ -205,6 +205,7 @@ function DialOf({ cells }: { cells: Cell[] }) {
   }, [count, dial]);
 
   const focused = cells[focus] as Cell;
+  const rest = useCallback(() => dial().rest(), [dial]);
 
   return (
     <div className="dial" ref={rootRef} data-nav={barred ? "bar" : "corner"}>
@@ -231,9 +232,11 @@ function DialOf({ cells }: { cells: Cell[] }) {
               onClick={current ? undefined : () => dial().goTo(index)}
             >
               <div className="dial__content" inert={!current}>
-                <CellCurrent value={current}>
-                  <CellLanding value={current && heading === index}>{cell.content}</CellLanding>
-                </CellCurrent>
+                <DialRest value={rest}>
+                  <CellCurrent value={current}>
+                    <CellLanding value={current && heading === index}>{cell.content}</CellLanding>
+                  </CellCurrent>
+                </DialRest>
               </div>
             </section>
           );

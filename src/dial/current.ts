@@ -21,3 +21,15 @@ export const CellLanding = createContext(false);
 export function useCellLanding(): boolean {
   return useContext(CellLanding);
 }
+
+/**
+ * A way for a cell's content to bring the dial to rest on its cell at once,
+ * before it opens something modal over the page, so nothing goes on moving
+ * behind it. Outside a dial there is nothing to stop, and it does nothing.
+ */
+export const DialRest = createContext<() => void>(() => {});
+
+/** For content that is about to open something modal. */
+export function useDialRest(): () => void {
+  return useContext(DialRest);
+}

@@ -5,6 +5,7 @@ import { setReducedMotion } from "../../test/media";
 import { clock } from "../dial/clock";
 import { CellCurrent, CellLanding } from "../dial/current";
 import { Dial } from "../dial/Dial";
+import { paintTile } from "../dial/geometry";
 import { prefersReducedMotion } from "../dial/motion";
 import { site } from "../site";
 import { contrast, parseStudy, studies } from "../studies";
@@ -952,6 +953,48 @@ describe("StudyNotice", () => {
     document.removeEventListener("click", watch);
     expect(followed).toBe(true);
     expect(notice()).not.toHaveAttribute("open");
+  });
+
+  it("closes for a middle click on Yes too, which opens the study in a new tab and leaves this one on the dial", () => {
+    render(<StudyCell study={espn} />);
+    open();
+    const yes = within(notice()).getByRole("link", { name: "Yes, continue" });
+    const aux = (button: number) => fireEvent(yes, new MouseEvent("auxclick", { bubbles: true, cancelable: true, button }));
+    // A right click is its menu's, and the notice stays.
+    aux(2);
+    expect(notice()).toHaveAttribute("open");
+    aux(1);
+    expect(notice()).not.toHaveAttribute("open");
+  });
+
+  it("brings the dial to rest on its cell as it opens, so nothing goes on moving behind it", () => {
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(1440);
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(900);
+    setReducedMotion(false);
+    vi.useFakeTimers();
+    try {
+      const ground = espn.colors.ground;
+      const cells = [
+        { id: "first", label: "First cell", ground, content: <p>First</p> },
+        { id: "study", label: "GIFspn", ground, content: <StudyCell study={espn} /> },
+        { id: "third", label: "Third cell", ground, content: <p>Third</p> },
+        { id: "last", label: "Last cell", ground, content: <p>Last</p> },
+      ];
+      render(<Dial cells={cells} />);
+      const announced = () => screen.getByTestId("dial-announce").textContent;
+      const tile = () => document.querySelector('.dial__tile[data-current="true"]') as HTMLElement;
+      fireEvent.keyDown(document.body, { key: "End" });
+      while (announced() !== "GIFspn, 2 of 4") act(() => void vi.advanceTimersByTime(16));
+      expect(tile().style.transform).not.toBe(paintTile(1, 1, 1440, 900).transform);
+      open();
+      expect(notice()).toHaveAttribute("open");
+      expect(tile().style.transform).toBe(paintTile(1, 1, 1440, 900).transform);
+      for (let i = 0; i < 300; i++) act(() => void vi.advanceTimersByTime(16));
+      expect(announced()).toBe("GIFspn, 2 of 4");
+      expect(tile().style.transform).toBe(paintTile(1, 1, 1440, 900).transform);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("holds the dial still while it is open: its keys are its own, and the dial's wheel and swipes do not reach it", () => {

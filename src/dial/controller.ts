@@ -86,6 +86,12 @@ export type DialController = {
   step: (by: number) => void;
   /** Go to a cell. */
   goTo: (index: number) => void;
+  /**
+   * Come to rest on the nearest cell at once, wherever the dial was going:
+   * for something modal about to open over the page, so nothing goes on
+   * moving behind it. Under a finger nothing is done: the finger decides.
+   */
+  rest: () => void;
   /** Where the dial is. */
   depth: () => number;
   /** Stop everything pending. */
@@ -330,6 +336,13 @@ export function createDial({ count, reduced, onDepth, onFocus, onHeading, clock 
       travel(Math.round(target) + by);
     },
     goTo: travel,
+    rest() {
+      if (held) return;
+      stop();
+      target = clamp(Math.round(depth));
+      head(target);
+      arrive();
+    },
     depth: () => depth,
     destroy() {
       stop();
