@@ -903,7 +903,7 @@ describe("StudyNotice", () => {
     expect(dialog).toBe(notice());
     expect(dialog).toHaveAttribute("open");
     expect(dialog).toHaveAccessibleDescription(
-      "This isn't actually ESPN, it's a layout study for Golden Grids made for wonder and awe.",
+      "This isn't actually ESPN, it's a layout study for Golden Grids made for wonder and awe. I want you to use the library, not your personal info.",
     );
     expect(within(dialog).getByRole("heading", { level: 2, name: "Are you sure?" })).toBeInTheDocument();
     expect(dialog.querySelector(".notice__brand")).toHaveTextContent(/^GIFspn$/);
@@ -912,7 +912,7 @@ describe("StudyNotice", () => {
     expect(dialog.style.getPropertyValue("--ink")).toBe("#ffffff");
     expect(dialog.style.getPropertyValue("--accent")).toBe("#000000");
     expect(dialog.style.getPropertyValue("--face")).toBe('"Barlow Condensed"');
-    expect(within(dialog).getByRole("link", { name: "Yes, open the study" })).toHaveAttribute("href", espn.url);
+    expect(within(dialog).getByRole("link", { name: "Yes, continue" })).toHaveAttribute("href", espn.url);
     expect(await axe(dialog)).toHaveNoViolations();
   });
 
@@ -930,7 +930,7 @@ describe("StudyNotice", () => {
   it("follows the study for Yes, and closes on the way, so a reader who comes back finds the dial", () => {
     render(<StudyCell study={espn} />);
     open();
-    const yes = within(notice()).getByRole("link", { name: "Yes, open the study" });
+    const yes = within(notice()).getByRole("link", { name: "Yes, continue" });
     // Heard last, after the page has had the click. jsdom goes nowhere, so the test stops it there.
     let followed = false;
     const watch = (event: Event) => {
@@ -959,7 +959,7 @@ describe("StudyNotice", () => {
     );
     const announced = () => screen.getByTestId("dial-announce").textContent;
     open();
-    const yes = within(notice()).getByRole("link", { name: "Yes, open the study" });
+    const yes = within(notice()).getByRole("link", { name: "Yes, continue" });
     for (const target of [notice(), yes]) {
       for (const key of ["ArrowDown", "End", "PageDown", " "]) expect(fireEvent.keyDown(target, { key })).toBe(true);
     }
