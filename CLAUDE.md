@@ -59,6 +59,14 @@ domain is live.
   steps with no travel. The gallery's statement still changes colour, a word
   at a time on its beat, and nothing travels across a word: the owner asked
   for the colour to stay and the slide to go.
+- **A study asks first.** By the owner's direction, a click on a study's link
+  opens its notice, a modal dialog in the study's colours and face: "You
+  Good? This isn't actually ⟨reference⟩, it's a layout study for Golden Grids
+  made for wonder and awe. I want you to use the library, not your personal
+  info." The words are the owner's. The link keeps the study's address; the
+  notice's Yes follows it. Its two answers sit side by side at every width.
+  The notice is placed outside the dial, the dial comes to rest on the cell
+  as it opens, and it does not turn while it is open.
 - **Directions.** Up or left goes deeper, down or right goes back. No
   calibration.
 - **Studies are data.** One file per study in `src/studies/`; the gallery

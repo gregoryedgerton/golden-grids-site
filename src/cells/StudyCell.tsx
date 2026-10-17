@@ -1,20 +1,36 @@
-import type { CSSProperties } from "react";
+import { useRef } from "react";
+import type { CSSProperties, MouseEvent } from "react";
+import { useDialRest } from "../dial/current";
 import { writeDate } from "../studies";
 import type { Study } from "../studies";
 import { FitText } from "../ui/FitText";
 import { useFont } from "../ui/fonts";
 import { Icon } from "../ui/icons";
 import { Stamp } from "../ui/Stamp";
+import { ASK, StudyNotice } from "./StudyNotice";
 
 /**
  * One study's lockup: its parody name in its own colours and face, and the
  * way to it. The day it was published is at its top left. Its stamp, the
  * study's serial among GIFcommit's releases, is the cell's last line, a line
  * of its own under the foot.
+ *
+ * Its link keeps the study's address, but a click on it asks first, a middle
+ * click too: the study's notice says, in the same colours and face, that it
+ * is a study.
  */
 export function StudyCell({ study }: { study: Study }) {
   const { brand, colors, font, published, release, reference, subject, url } = study;
-  useFont(font, brand);
+  useFont(font, brand + ASK);
+  const notice = useRef<HTMLDialogElement>(null);
+  const rest = useDialRest();
+  const ask = (event: MouseEvent) => {
+    event.preventDefault();
+    // The cell is the focused one, so the dial may still be on its way: it
+    // comes to rest on this cell, and nothing moves behind the notice.
+    rest();
+    (notice.current as HTMLDialogElement).showModal();
+  };
   const style = {
     "--ink": colors.ink,
     "--accent": colors.accent,
@@ -40,11 +56,20 @@ export function StudyCell({ study }: { study: Study }) {
           {subject}
           <span className="study__after"> After {reference}; not affiliated with it.</span>
         </p>
-        <a className="study__link" href={url}>
+        <a
+          className="study__link"
+          href={url}
+          onClick={ask}
+          // A middle click opens a link in a new tab, and is heard as an auxclick, not a click.
+          onAuxClick={(event) => {
+            if (event.button === 1) ask(event);
+          }}
+        >
           Open the study<span className="visually-hidden">: {brand}</span>
         </a>
       </div>
       <Stamp className="study__release" says="Release" release={release} />
+      <StudyNotice study={study} style={style} ref={notice} />
     </div>
   );
 }

@@ -475,6 +475,142 @@ a {
   text-decoration: none;
 }
 
+/* A study's notice, asked before the study opens, in the study's colours and
+   face. It is in the page's top layer, not in a cell, so it is sized to the
+   window, never in cqw. The accent is an edge, as it is on the cell's foot. */
+.notice {
+  width: min(40rem, calc(100% - 32px));
+  max-width: none;
+  max-height: calc(100% - 32px);
+  margin: auto;
+  padding: clamp(20px, 5vmin, 44px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 0;
+  border-bottom: clamp(8px, 2vmin, 14px) solid var(--accent);
+  border-radius: 0;
+  background: var(--ground);
+  color: var(--text);
+  font-family: var(--sans);
+  font-weight: 300;
+  line-height: 1.3;
+}
+
+.notice::backdrop {
+  background: rgb(0 0 0 / 0.72);
+}
+
+.notice:focus {
+  outline: none;
+}
+
+.notice__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.notice__brand,
+.notice__ask {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--face), var(--sans);
+  font-weight: var(--face-weight);
+  font-style: var(--face-style);
+}
+
+.notice__brand {
+  font-size: clamp(1.5rem, 5vmin, 2.25rem);
+  line-height: 1;
+}
+
+.notice__icon {
+  flex: none;
+  width: clamp(44px, 11vmin, 76px);
+  height: clamp(44px, 11vmin, 76px);
+  color: var(--accent);
+}
+
+.notice__ask {
+  margin-top: clamp(14px, 4vmin, 32px);
+  font-size: clamp(3rem, min(16vw, 13vh), 7.5rem);
+  line-height: 0.88;
+  overflow-wrap: break-word;
+}
+
+.notice__tell {
+  margin: clamp(16px, 4vmin, 28px) 0 0;
+  font-size: clamp(1.1rem, 3.2vmin, 1.5rem);
+  font-weight: 400;
+}
+
+.notice__keep {
+  margin: 0.6em 0 0;
+  font-size: clamp(1.1rem, 3.2vmin, 1.5rem);
+  font-weight: 600;
+}
+
+/* The two answers side by side at any width: on a phone they share the
+   line equally. */
+.notice__answers {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 12px;
+  margin-top: clamp(20px, 5vmin, 36px);
+}
+
+@media (max-width: 30rem) {
+  .notice__answers {
+    grid-auto-columns: 1fr;
+  }
+}
+
+/* On the smallest phones each answer still keeps to one line. */
+@media (max-width: 22.5rem) {
+  .notice {
+    padding-inline: 16px;
+  }
+
+  .notice__answers {
+    gap: 8px;
+  }
+
+  .notice .notice__yes,
+  .notice .notice__no {
+    padding-inline: 4px;
+    font-size: 0.95rem;
+  }
+}
+
+.notice__yes,
+.notice__no {
+  padding: 12px 14px 9px;
+  text-align: center;
+  border: 2px solid var(--text);
+  border-radius: 0;
+  font: 600 clamp(1rem, 2.8vmin, 1.2rem) / 1.2 var(--sans);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.notice__yes {
+  background: var(--text);
+  color: var(--ground);
+}
+
+.notice__no {
+  background: transparent;
+  color: var(--text);
+}
+
+.notice__yes:focus-visible,
+.notice__no:focus-visible {
+  outline: 3px solid var(--text);
+  outline-offset: 3px;
+}
+
 /* The sign-up. */
 .signup {
   color: var(--paper);

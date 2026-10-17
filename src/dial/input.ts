@@ -36,7 +36,8 @@ export function keyMove(key: string): KeyMove | null {
 /** Whether a key pressed on this element belongs to the element rather than to the dial. */
 export function ownsKey(target: EventTarget | null, key: string): boolean {
   if (!(target instanceof Element)) return false;
-  if (target.closest("input, textarea, select, [contenteditable]")) return true;
+  // A dialog has the keys while it is open: the dial must not turn behind it.
+  if (target.closest("input, textarea, select, [contenteditable], dialog")) return true;
   // Space presses a button, and must go on pressing it. It does nothing on a
   // link, which Enter follows, so on a link it is the dial's.
   return key === " " && target.closest("button, summary, [role='button']") !== null;

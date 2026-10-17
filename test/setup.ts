@@ -60,6 +60,26 @@ Object.defineProperty(URL, "createObjectURL", {
 });
 Object.defineProperty(URL, "revokeObjectURL", { writable: true, configurable: true, value: () => {} });
 
+// jsdom has dialogs but cannot show one as a modal. Here showing one opens
+// it, and closing an open one says so, as a browser does; the top layer, the
+// inert page behind it and Escape are the browser's own and are not tested.
+Object.defineProperty(HTMLDialogElement.prototype, "showModal", {
+  writable: true,
+  configurable: true,
+  value(this: HTMLDialogElement) {
+    this.open = true;
+  },
+});
+Object.defineProperty(HTMLDialogElement.prototype, "close", {
+  writable: true,
+  configurable: true,
+  value(this: HTMLDialogElement) {
+    if (!this.open) return;
+    this.open = false;
+    this.dispatchEvent(new Event("close"));
+  },
+});
+
 beforeEach(() => {
   showings = 0;
   vi.spyOn(globalThis, "fetch").mockImplementation(async () => answer());
