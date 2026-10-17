@@ -41,6 +41,15 @@ describe("ownsKey and ownsDrag", () => {
     }
   });
 
+  it("leaves every key to a dialog, wherever in it the key is pressed", () => {
+    for (const html of ["<dialog open tabindex='-1' data-t><p>Text</p></dialog>", "<dialog open><p><a href='#x' data-t>Go</a></p></dialog>"]) {
+      const element = make(html);
+      expect(ownsKey(element, "ArrowDown")).toBe(true);
+      expect(ownsKey(element, "End")).toBe(true);
+      expect(ownsKey(element, " ")).toBe(true);
+    }
+  });
+
   it("leaves Space, and only Space, to whatever Space presses", () => {
     for (const html of ["<button data-t>Go</button>", "<div role='button' tabindex='0'><span data-t>Go</span></div>", "<summary data-t>More</summary>"]) {
       const element = make(html);

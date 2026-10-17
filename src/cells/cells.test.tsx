@@ -845,7 +845,8 @@ describe("StudyCell", () => {
     expect(style.getPropertyValue("--face")).toBe('"Barlow Condensed"');
     expect(style.getPropertyValue("--face-weight")).toBe("800");
     expect(style.getPropertyValue("--face-style")).toBe("italic");
-    expect(document.head.querySelector("link[data-face]")).toHaveAttribute("href", fontHref(espn.font, "GIFspn"));
+    // The name's letters, and the notice's question, which is set in the face too.
+    expect(document.head.querySelector("link[data-face]")).toHaveAttribute("href", fontHref(espn.font, "GIFspnAre you sure?"));
   });
 
   it("sets a name's first letters in colours of their own when the study gives them, and all in its ink when it does not", () => {
@@ -878,6 +879,99 @@ describe("StudyCell", () => {
     rerender(<StudyCell study={{ ...records, release: 10_000 }} />);
     expect(container.querySelector(".study__release")).toHaveTextContent(/^Release GIFcommit10000$/);
     expect(screen.getByRole("heading", { level: 2, name: "GIFmilk Records" })).toBeInTheDocument();
+  });
+});
+
+describe("StudyNotice", () => {
+  const notice = () => document.querySelector("dialog.notice") as HTMLDialogElement;
+  const open = () => fireEvent.click(screen.getByRole("link", { name: "Open the study: GIFspn" }));
+
+  it("is there but closed until the study's link is clicked, and is not in the cell", () => {
+    const { container } = render(<StudyCell study={espn} />);
+    expect(notice()).not.toHaveAttribute("open");
+    expect(screen.queryByRole("dialog")).toBeNull();
+    // Outside the cell, and so outside the dial.
+    expect(container.querySelector("dialog")).toBeNull();
+    expect(notice().parentElement).toBe(document.body);
+  });
+
+  it("asks before a study opens, in the study's own colours and face, with the owner's words", async () => {
+    render(<StudyCell study={espn} />);
+    // The link keeps its address, but a click on it does not follow it.
+    expect(open()).toBe(false);
+    const dialog = screen.getByRole("dialog", { name: "Are you sure?" });
+    expect(dialog).toBe(notice());
+    expect(dialog).toHaveAttribute("open");
+    expect(dialog).toHaveAccessibleDescription(
+      "This isn't actually ESPN, it's a layout study for Golden Grids made for wonder and awe.",
+    );
+    expect(within(dialog).getByRole("heading", { level: 2, name: "Are you sure?" })).toBeInTheDocument();
+    expect(dialog.querySelector(".notice__brand")).toHaveTextContent(/^GIFspn$/);
+    expect(dialog.querySelector("svg.notice__icon")).toBeInTheDocument();
+    expect(dialog.style.getPropertyValue("--ground")).toBe("#cc0000");
+    expect(dialog.style.getPropertyValue("--ink")).toBe("#ffffff");
+    expect(dialog.style.getPropertyValue("--accent")).toBe("#000000");
+    expect(dialog.style.getPropertyValue("--face")).toBe('"Barlow Condensed"');
+    expect(within(dialog).getByRole("link", { name: "Yes, open the study" })).toHaveAttribute("href", espn.url);
+    expect(await axe(dialog)).toHaveNoViolations();
+  });
+
+  it("closes for No and stays closed, and opens again for the link", () => {
+    render(<StudyCell study={espn} />);
+    open();
+    const no = within(notice()).getByRole("button", { name: "No, stay here" });
+    expect(fireEvent.click(no)).toBe(true);
+    expect(notice()).not.toHaveAttribute("open");
+    expect(screen.queryByRole("dialog")).toBeNull();
+    open();
+    expect(notice()).toHaveAttribute("open");
+  });
+
+  it("follows the study for Yes, and closes on the way, so a reader who comes back finds the dial", () => {
+    render(<StudyCell study={espn} />);
+    open();
+    const yes = within(notice()).getByRole("link", { name: "Yes, open the study" });
+    // Heard last, after the page has had the click. jsdom goes nowhere, so the test stops it there.
+    let followed = false;
+    const watch = (event: Event) => {
+      followed = !event.defaultPrevented;
+      event.preventDefault();
+    };
+    document.addEventListener("click", watch);
+    fireEvent.click(yes);
+    document.removeEventListener("click", watch);
+    expect(followed).toBe(true);
+    expect(notice()).not.toHaveAttribute("open");
+  });
+
+  it("holds the dial still while it is open: its keys are its own, and the dial's wheel and swipes do not reach it", () => {
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(1440);
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(900);
+    setReducedMotion(true);
+    const ground = espn.colors.ground;
+    render(
+      <Dial
+        cells={[
+          { id: "study", label: "GIFspn", ground, content: <StudyCell study={espn} /> },
+          { id: "next", label: "Next cell", ground, content: <p>Next</p> },
+        ]}
+      />,
+    );
+    const announced = () => screen.getByTestId("dial-announce").textContent;
+    open();
+    const yes = within(notice()).getByRole("link", { name: "Yes, open the study" });
+    for (const target of [notice(), yes]) {
+      for (const key of ["ArrowDown", "End", "PageDown", " "]) expect(fireEvent.keyDown(target, { key })).toBe(true);
+    }
+    expect(fireEvent.wheel(notice(), { deltaY: 300 })).toBe(true);
+    fireEvent.pointerDown(notice(), { pointerId: 7, isPrimary: true, pointerType: "touch", clientX: 200, clientY: 200 });
+    fireEvent.pointerMove(window, { pointerId: 7, isPrimary: true, pointerType: "touch", clientX: 200, clientY: -400 });
+    fireEvent.pointerUp(window, { pointerId: 7, isPrimary: true, pointerType: "touch", clientX: 200, clientY: -400 });
+    expect(announced()).toBe("GIFspn, 1 of 2");
+    // Closed, the dial is the reader's again.
+    fireEvent.click(within(notice()).getByRole("button", { name: "No, stay here" }));
+    fireEvent.keyDown(document.body, { key: "ArrowDown" });
+    expect(announced()).toBe("Next cell, 2 of 2");
   });
 });
 
