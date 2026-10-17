@@ -62,9 +62,11 @@ domain is live.
 - **A study asks first.** By the owner's direction, a click on a study's link
   opens its notice, a modal dialog in the study's colours and face: "Are you
   sure? This isn't actually ⟨reference⟩, it's a layout study for Golden Grids
-  made for wonder and awe." The words are the owner's. The link keeps the
-  study's address; the notice's Yes follows it. The notice is placed outside
-  the dial, and the dial does not turn while it is open.
+  made for wonder and awe. I want you to use the library, not your personal
+  info." The words are the owner's. The link keeps the study's address; the
+  notice's Yes follows it. Its two answers sit side by side at every width.
+  The notice is placed outside the dial, and the dial does not turn while it
+  is open.
 - **Directions.** Up or left goes deeper, down or right goes back. No
   calibration.
 - **Studies are data.** One file per study in `src/studies/`; the gallery

@@ -27,10 +27,11 @@ function close(event: MouseEvent<HTMLElement>) {
 export function StudyNotice({ study, style, ref }: { study: Study; style: CSSProperties; ref: Ref<HTMLDialogElement> }) {
   const ask = useId();
   const tell = useId();
+  const keep = useId();
   const { brand, reference, url } = study;
 
   return createPortal(
-    <dialog className="notice" style={style} ref={ref} aria-labelledby={ask} aria-describedby={tell} tabIndex={-1}>
+    <dialog className="notice" style={style} ref={ref} aria-labelledby={ask} aria-describedby={`${tell} ${keep}`} tabIndex={-1}>
       <div className="notice__top">
         <p className="notice__brand">{brand}</p>
         <Icon name={study.icon} className="notice__icon" />
@@ -42,10 +43,13 @@ export function StudyNotice({ study, style, ref }: { study: Study; style: CSSPro
       <p id={tell} className="notice__tell">
         This isn&apos;t actually {reference}, it&apos;s a layout study for Golden Grids made for wonder and awe.
       </p>
+      <p id={keep} className="notice__keep">
+        I want you to use the library, not your personal info.
+      </p>
       <div className="notice__answers">
         {/* Closed on the way out, so a reader who comes back finds the dial as they left it. */}
         <a className="notice__yes" href={url} onClick={close}>
-          Yes, open the study
+          Yes, continue
         </a>
         <button type="button" className="notice__no" onClick={close}>
           No, stay here
