@@ -5,7 +5,7 @@ import type { Study } from "../studies";
 import { Icon } from "../ui/icons";
 
 /** What the notice asks. Set in the study's face, so the face is asked for these letters too. */
-export const ASK = "Are you sure?";
+export const ASK = "You Good?";
 
 /** Closes the notice an answer is in. */
 function close(event: MouseEvent<HTMLElement>) {

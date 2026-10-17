@@ -846,7 +846,7 @@ describe("StudyCell", () => {
     expect(style.getPropertyValue("--face-weight")).toBe("800");
     expect(style.getPropertyValue("--face-style")).toBe("italic");
     // The name's letters, and the notice's question, which is set in the face too.
-    expect(document.head.querySelector("link[data-face]")).toHaveAttribute("href", fontHref(espn.font, "GIFspnAre you sure?"));
+    expect(document.head.querySelector("link[data-face]")).toHaveAttribute("href", fontHref(espn.font, "GIFspnYou Good?"));
   });
 
   it("sets a name's first letters in colours of their own when the study gives them, and all in its ink when it does not", () => {
@@ -899,13 +899,13 @@ describe("StudyNotice", () => {
     render(<StudyCell study={espn} />);
     // The link keeps its address, but a click on it does not follow it.
     expect(open()).toBe(false);
-    const dialog = screen.getByRole("dialog", { name: "Are you sure?" });
+    const dialog = screen.getByRole("dialog", { name: "You Good?" });
     expect(dialog).toBe(notice());
     expect(dialog).toHaveAttribute("open");
     expect(dialog).toHaveAccessibleDescription(
       "This isn't actually ESPN, it's a layout study for Golden Grids made for wonder and awe. I want you to use the library, not your personal info.",
     );
-    expect(within(dialog).getByRole("heading", { level: 2, name: "Are you sure?" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("heading", { level: 2, name: "You Good?" })).toBeInTheDocument();
     expect(dialog.querySelector(".notice__brand")).toHaveTextContent(/^GIFspn$/);
     expect(dialog.querySelector("svg.notice__icon")).toBeInTheDocument();
     expect(dialog.style.getPropertyValue("--ground")).toBe("#cc0000");
