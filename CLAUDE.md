@@ -65,8 +65,8 @@ domain is live.
   made for wonder and awe. I want you to use the library, not your personal
   info." The words are the owner's. The link keeps the study's address; the
   notice's Yes follows it. Its two answers sit side by side at every width.
-  The notice is placed outside the dial, and the dial does not turn while it
-  is open.
+  The notice is placed outside the dial, the dial comes to rest on the cell
+  as it opens, and it does not turn while it is open.
 - **Directions.** Up or left goes deeper, down or right goes back. No
   calibration.
 - **Studies are data.** One file per study in `src/studies/`; the gallery

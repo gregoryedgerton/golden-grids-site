@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import type { CSSProperties, MouseEvent } from "react";
+import { useDialRest } from "../dial/current";
 import { writeDate } from "../studies";
 import type { Study } from "../studies";
 import { FitText } from "../ui/FitText";
@@ -22,8 +23,12 @@ export function StudyCell({ study }: { study: Study }) {
   const { brand, colors, font, published, release, reference, subject, url } = study;
   useFont(font, brand + ASK);
   const notice = useRef<HTMLDialogElement>(null);
+  const rest = useDialRest();
   const ask = (event: MouseEvent) => {
     event.preventDefault();
+    // The cell is the focused one, so the dial may still be on its way: it
+    // comes to rest on this cell, and nothing moves behind the notice.
+    rest();
     (notice.current as HTMLDialogElement).showModal();
   };
   const style = {

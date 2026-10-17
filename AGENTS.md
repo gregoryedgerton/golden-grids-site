@@ -16,10 +16,12 @@ only the focused cell may hold focusable content: every other cell is inert.
 
 **A study opens through its notice.** By the owner's direction a click on a
 study's link asks first, in a modal dialog in the study's colours and face,
-whose words are the owner's. Flag a click that reaches a study without it, a
-notice the dial can turn behind, or an open notice anywhere but outside the
-dial. A closed notice is not shown and not read, so it is not focusable
-content in a cell.
+whose words are the owner's. The dial comes to rest on the cell before the
+notice opens (`DialController.rest`, reached through `useDialRest`), so
+travel under way does not go on behind it. Flag a click that reaches a study
+without it, a notice the dial can turn or go on moving behind, or an open
+notice anywhere but outside the dial. A closed notice is not shown and not
+read, so it is not focusable content in a cell.
 
 **Motion is opt-out.** Under `prefers-reduced-motion` the dial moves in whole
 steps with no travel between them. Flag any animation, transition or

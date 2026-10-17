@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { axe } from "vitest-axe";
 import { mediaListeners, setReducedMotion } from "../../test/media";
 import { WHEEL_IDLE_MS } from "./controller";
-import { useCellCurrent, useCellLanding } from "./current";
+import { useCellCurrent, useCellLanding, useDialRest } from "./current";
 import { Dial } from "./Dial";
 import type { Cell } from "./Dial";
 import { AHEAD, BEHIND, TEXTURE_PX, paintTile } from "./geometry";
@@ -65,6 +65,16 @@ function Says() {
 function Lands({ name }: { name: number }) {
   const [current, landing] = [useCellCurrent(), useCellLanding()];
   return <span data-lands={name}>{landing ? "landing" : current ? "focused" : "waiting"}</span>;
+}
+
+/** A button that brings the dial to rest on its cell. */
+function Rests() {
+  const rest = useDialRest();
+  return (
+    <button type="button" onClick={rest}>
+      Rest
+    </button>
+  );
 }
 
 /** A dial whose cells each say how the dial stands to them. */
@@ -206,6 +216,39 @@ describe("Dial", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it("comes to rest on the focused cell when its content asks, with travel under way, and goes on from there", () => {
+    setReducedMotion(false);
+    vi.useFakeTimers();
+    try {
+      const cells = landable(8).map((cell, i) => (i === 1 ? { ...cell, content: <Rests /> } : cell));
+      render(<Dial cells={cells} />);
+      fireEvent.keyDown(document.body, { key: "End" });
+      // Until the second cell is the nearest, and only just.
+      while (announced() !== "Cell 2, 2 of 8") act(() => void vi.advanceTimersByTime(16));
+      expect(current().style.transform).not.toBe(paintTile(1, 1, 1440, 900).transform);
+      fireEvent.click(screen.getByRole("button", { name: "Rest" }));
+      // On the cell exactly, and landed there.
+      expect(current().style.transform).toBe(paintTile(1, 1, 1440, 900).transform);
+      expect(lands()).toEqual(["waiting", "waiting", "waiting", "waiting", "waiting", "waiting", "waiting"]);
+      for (let i = 0; i < 300; i++) act(() => void vi.advanceTimersByTime(16));
+      expect(announced()).toBe("Cell 2, 2 of 8");
+      expect(current().style.transform).toBe(paintTile(1, 1, 1440, 900).transform);
+      // A step from rest goes one cell on, not to where the dial had been going.
+      fireEvent.keyDown(document.body, { key: "ArrowDown" });
+      for (let i = 0; i < 300; i++) act(() => void vi.advanceTimersByTime(16));
+      expect(announced()).toBe("Cell 3, 3 of 8");
+      // The third cell is the second to say, the resting cell having nothing to say.
+      expect(lands()).toEqual(["waiting", "landing", "waiting", "waiting", "waiting", "waiting", "waiting"]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("gives content outside any dial nothing to rest", () => {
+    render(<Rests />);
+    expect(() => fireEvent.click(screen.getByRole("button", { name: "Rest" }))).not.toThrow();
   });
 
   it("is landing on each cell at once when motion is reduced, and tells content outside any dial that nothing is", () => {
