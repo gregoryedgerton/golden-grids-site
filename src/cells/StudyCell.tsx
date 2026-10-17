@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, MouseEvent } from "react";
 import { writeDate } from "../studies";
 import type { Study } from "../studies";
 import { FitText } from "../ui/FitText";
@@ -14,13 +14,18 @@ import { ASK, StudyNotice } from "./StudyNotice";
  * study's serial among GIFcommit's releases, is the cell's last line, a line
  * of its own under the foot.
  *
- * Its link keeps the study's address, but a click on it asks first: the
- * study's notice says, in the same colours and face, that it is a study.
+ * Its link keeps the study's address, but a click on it asks first, a middle
+ * click too: the study's notice says, in the same colours and face, that it
+ * is a study.
  */
 export function StudyCell({ study }: { study: Study }) {
   const { brand, colors, font, published, release, reference, subject, url } = study;
   useFont(font, brand + ASK);
   const notice = useRef<HTMLDialogElement>(null);
+  const ask = (event: MouseEvent) => {
+    event.preventDefault();
+    (notice.current as HTMLDialogElement).showModal();
+  };
   const style = {
     "--ink": colors.ink,
     "--accent": colors.accent,
@@ -49,9 +54,10 @@ export function StudyCell({ study }: { study: Study }) {
         <a
           className="study__link"
           href={url}
-          onClick={(event) => {
-            event.preventDefault();
-            (notice.current as HTMLDialogElement).showModal();
+          onClick={ask}
+          // A middle click opens a link in a new tab, and is heard as an auxclick, not a click.
+          onAuxClick={(event) => {
+            if (event.button === 1) ask(event);
           }}
         >
           Open the study<span className="visually-hidden">: {brand}</span>
