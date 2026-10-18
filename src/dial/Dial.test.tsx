@@ -246,6 +246,62 @@ describe("Dial", () => {
     }
   });
 
+  it("lets a finger go when its cell asks the dial to rest: the finger's later moves and lifting turn nothing", () => {
+    const cells = makeCells(6).map((cell, i) => (i === 0 ? { ...cell, content: <Rests /> } : cell));
+    render(<Dial cells={cells} />);
+    const finger = { pointerId: 7, isPrimary: true, pointerType: "touch" };
+    fireEvent.pointerDown(stage(), { ...finger, clientX: 200, clientY: 200 });
+    fireEvent.pointerMove(window, { ...finger, clientX: 200, clientY: 190 });
+    // A second finger taps the button: a click from it is the button's.
+    fireEvent.pointerDown(stage(), { pointerId: 8, isPrimary: false, pointerType: "touch", clientX: 300, clientY: 300 });
+    fireEvent.click(screen.getByRole("button", { name: "Rest" }));
+    // The first finger swipes on, a long way, and lifts. Nothing turns.
+    fireEvent.pointerMove(window, { ...finger, clientX: 200, clientY: -700 });
+    fireEvent.pointerUp(window, { ...finger, clientX: 200, clientY: -700 });
+    expect(announced()).toBe("Cell 1, 1 of 6");
+    // A new swipe is the dial's again.
+    swipe(0, -DRAG_SHARE * 900);
+    expect(announced()).toBe("Cell 2, 2 of 6");
+  });
+
+  it("rests on the cell that asks, which is still the focused one on the page when the dial has just passed its middle", () => {
+    setReducedMotion(false);
+    vi.useFakeTimers();
+    try {
+      const cells = landable(8).map((cell, i) => (i === 1 ? { ...cell, content: <Rests /> } : cell));
+      render(<Dial cells={cells} />);
+      fireEvent.keyDown(document.body, { key: "End" });
+      while (announced() !== "Cell 2, 2 of 8") act(() => void vi.advanceTimersByTime(16));
+      // One frame more, and the dial has passed the second cell's middle; the page shows the third as current.
+      act(() => void vi.advanceTimersByTime(16));
+      expect(announced()).toBe("Cell 3, 3 of 8");
+      // The second cell's button is still there to be pressed, as it is in a browser for the frame before it draws.
+      fireEvent.click(screen.getByRole("button", { name: "Rest", hidden: true }));
+      expect(announced()).toBe("Cell 2, 2 of 8");
+      expect(current().style.transform).toBe(paintTile(1, 1, 1440, 900).transform);
+      for (let i = 0; i < 300; i++) act(() => void vi.advanceTimersByTime(16));
+      expect(announced()).toBe("Cell 2, 2 of 8");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("hands each cell the same way to rest every time the dial turns", () => {
+    const seen: (() => void)[] = [];
+    function Keeps() {
+      // Drawn again whenever its cell's standing changes, and handed the same way each time.
+      useCellCurrent();
+      seen.push(useDialRest());
+      return null;
+    }
+    render(<Dial cells={makeCells(6).map((cell, i) => (i === 2 ? { ...cell, content: <Keeps /> } : cell))} />);
+    fireEvent.keyDown(document.body, { key: "ArrowDown" });
+    fireEvent.keyDown(document.body, { key: "ArrowDown" });
+    fireEvent.keyDown(document.body, { key: "ArrowDown" });
+    expect(seen.length).toBeGreaterThan(1);
+    expect(new Set(seen).size).toBe(1);
+  });
+
   it("gives content outside any dial nothing to rest", () => {
     render(<Rests />);
     expect(() => fireEvent.click(screen.getByRole("button", { name: "Rest" }))).not.toThrow();

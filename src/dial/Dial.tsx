@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { clock } from "./clock";
 import { createDial } from "./controller";
@@ -205,7 +205,17 @@ function DialOf({ cells }: { cells: Cell[] }) {
   }, [count, dial]);
 
   const focused = cells[focus] as Cell;
-  const rest = useCallback(() => dial().rest(), [dial]);
+  // One for each cell, made once, so a cell is not drawn again for a new
+  // one every time the dial turns. A finger on the dial as it comes to rest
+  // has let go of it: its moves from here are not heard, and nor is its lifting.
+  const rests = useMemo(
+    () =>
+      Array.from({ length: count }, (_, index) => () => {
+        swipeRef.current = null;
+        dial().rest(index);
+      }),
+    [count, dial],
+  );
 
   return (
     <div className="dial" ref={rootRef} data-nav={barred ? "bar" : "corner"}>
@@ -232,7 +242,7 @@ function DialOf({ cells }: { cells: Cell[] }) {
               onClick={current ? undefined : () => dial().goTo(index)}
             >
               <div className="dial__content" inert={!current}>
-                <DialRest value={rest}>
+                <DialRest value={rests[index] as () => void}>
                   <CellCurrent value={current}>
                     <CellLanding value={current && heading === index}>{cell.content}</CellLanding>
                   </CellCurrent>

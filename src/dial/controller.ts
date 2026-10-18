@@ -87,11 +87,15 @@ export type DialController = {
   /** Go to a cell. */
   goTo: (index: number) => void;
   /**
-   * Come to rest on the nearest cell at once, wherever the dial was going:
-   * for something modal about to open over the page, so nothing goes on
-   * moving behind it. Under a finger nothing is done: the finger decides.
+   * Come to rest on a cell at once, whatever has the dial: for something
+   * modal about to open over the page from that cell, so nothing goes on
+   * moving behind it. Travel under way is cut short, and a finger's hold
+   * ends: what it does from here is not the dial's. The cell is the one that
+   * asks, which the page still shows as the focused one though the dial may
+   * have passed its middle since the page last drew; with no cell named, the
+   * nearest.
    */
-  rest: () => void;
+  rest: (on?: number) => void;
   /** Where the dial is. */
   depth: () => number;
   /** Stop everything pending. */
@@ -336,10 +340,12 @@ export function createDial({ count, reduced, onDepth, onFocus, onHeading, clock 
       travel(Math.round(target) + by);
     },
     goTo: travel,
-    rest() {
-      if (held) return;
+    rest(on = Math.round(depth)) {
       stop();
-      target = clamp(Math.round(depth));
+      held = false;
+      dragged = false;
+      pending = 0;
+      target = clamp(on);
       head(target);
       arrive();
     },

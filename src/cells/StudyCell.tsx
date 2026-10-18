@@ -7,7 +7,7 @@ import { FitText } from "../ui/FitText";
 import { useFont } from "../ui/fonts";
 import { Icon } from "../ui/icons";
 import { Stamp } from "../ui/Stamp";
-import { ASK, StudyNotice } from "./StudyNotice";
+import { ASK, StudyNotice, showNotice } from "./StudyNotice";
 
 /**
  * One study's lockup: its parody name in its own colours and face, and the
@@ -26,10 +26,11 @@ export function StudyCell({ study }: { study: Study }) {
   const rest = useDialRest();
   const ask = (event: MouseEvent) => {
     event.preventDefault();
-    // The cell is the focused one, so the dial may still be on its way: it
-    // comes to rest on this cell, and nothing moves behind the notice.
+    // The cell is the focused one, so the dial may still be on its way, or
+    // under a finger: it comes to rest on this cell, and nothing moves
+    // behind the notice.
     rest();
-    (notice.current as HTMLDialogElement).showModal();
+    showNotice(notice.current as HTMLDialogElement);
   };
   const style = {
     "--ink": colors.ink,

@@ -13,6 +13,17 @@ function close(event: MouseEvent<HTMLElement>) {
 }
 
 /**
+ * Shows a study's notice as a modal, with the focus on No. A browser would
+ * put it on the first thing in the dialog, which is Yes, and an Enter held
+ * down on the cell's link, or pressed twice, would follow the study before
+ * the notice was read. On No, the same Enter closes the notice instead.
+ */
+export function showNotice(dialog: HTMLDialogElement) {
+  dialog.showModal();
+  (dialog.querySelector(".notice__no") as HTMLButtonElement).focus();
+}
+
+/**
  * Asked before a study opens, by the owner's direction: in the study's own
  * colours and face, that the site it looks like is not the one it is. Shown
  * by its cell as a modal dialog, so the dial behind it is inert and focus is
