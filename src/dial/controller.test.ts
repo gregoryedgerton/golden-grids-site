@@ -613,21 +613,74 @@ describe("createDial, with motion", () => {
     expect(dial.depth()).toBe(2);
   });
 
-  it("is already at rest when asked at rest, and leaves a finger alone", () => {
-    const { dial, advance, depths, headings } = setup();
+  it("comes to rest on the cell named, which the page may still show as the focused one though the dial has passed its middle", () => {
+    const { dial, advance, frames, focuses, headings } = setup();
+    dial.goTo(5);
+    // Just past the middle between the second cell and the third: the third is nearest, and the page is a frame behind.
+    while (dial.depth() < 1.5) advance(16);
+    expect(Math.round(dial.depth())).toBe(2);
+    dial.rest(1);
+    expect(dial.depth()).toBe(1);
+    expect(frames.size).toBe(0);
+    expect(focuses).toEqual([1, 2, 1]);
+    expect(headings).toEqual([5, 1]);
+    advance(3000);
+    expect(dial.depth()).toBe(1);
+    // Never past either end.
+    dial.rest(-3);
+    expect(dial.depth()).toBe(0);
+    dial.rest(99);
+    expect(dial.depth()).toBe(9);
+  });
+
+  it("is already at rest when asked at rest", () => {
+    const { dial, headings } = setup();
     dial.rest();
     expect(dial.depth()).toBe(0);
     expect(headings).toEqual([]);
-    // Under a finger the finger decides where the dial goes.
+  });
+
+  it("takes the dial from a finger when asked under one: it rests on the nearest cell, and the finger's lifting settles nothing", () => {
+    const { dial, advance, frames, headings } = setup();
     dial.hold();
-    dial.nudge(0.4);
-    depths.length = 0;
+    dial.nudge(0.6);
+    expect(dial.depth()).toBe(0.6);
     dial.rest();
-    expect(dial.depth()).toBe(0.4);
-    expect(depths).toEqual([]);
+    expect(dial.depth()).toBe(1);
+    expect(headings).toEqual([null, 1]);
+    // The finger lifts, as it will. It had let go already: nothing travels.
+    dial.release();
+    expect(frames.size).toBe(0);
+    advance(3000);
+    expect(dial.depth()).toBe(1);
+    expect(headings).toEqual([null, 1]);
+  });
+
+  it("stops travel under way when asked with a finger down that has not moved the dial", () => {
+    const { dial, advance, frames, headings } = setup();
+    dial.goTo(5);
+    while (Math.round(dial.depth()) < 1) advance(16);
+    // A finger comes down before the dial is there; the travel goes on beneath it.
+    dial.hold();
+    expect(frames.size).toBe(1);
+    dial.rest();
+    expect(frames.size).toBe(0);
+    expect(dial.depth()).toBe(1);
+    expect(headings).toEqual([5, null, 1]);
     dial.release();
     advance(3000);
     expect(dial.depth()).toBe(1);
+  });
+
+  it("forgets a drag counted under reduced motion when asked to rest", () => {
+    const { dial, advance } = setup(10, true);
+    dial.hold();
+    dial.nudge(0.9);
+    expect(dial.depth()).toBe(0);
+    dial.rest();
+    dial.release();
+    advance(100);
+    expect(dial.depth()).toBe(0);
   });
 
   it("stops everything pending when destroyed", () => {

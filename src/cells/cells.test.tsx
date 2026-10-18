@@ -914,6 +914,8 @@ describe("StudyNotice", () => {
     expect(dialog.style.getPropertyValue("--accent")).toBe("#000000");
     expect(dialog.style.getPropertyValue("--face")).toBe('"Barlow Condensed"');
     expect(within(dialog).getByRole("link", { name: "Yes, continue" })).toHaveAttribute("href", espn.url);
+    // The focus is on No, not on Yes, which is first: an Enter held down on the cell's link closes the notice rather than following the study unread.
+    expect(within(dialog).getByRole("button", { name: "No, stay here" })).toHaveFocus();
     expect(await axe(dialog)).toHaveNoViolations();
   });
 

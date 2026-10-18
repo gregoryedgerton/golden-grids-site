@@ -25,7 +25,10 @@ export function useCellLanding(): boolean {
 /**
  * A way for a cell's content to bring the dial to rest on its cell at once,
  * before it opens something modal over the page, so nothing goes on moving
- * behind it. Outside a dial there is nothing to stop, and it does nothing.
+ * behind it: travel under way stops there, and a finger on the dial has let
+ * go of it. On its own cell, which the page shows as the focused one, though
+ * the dial may have passed its middle since the page last drew. Outside a
+ * dial there is nothing to stop, and it does nothing.
  */
 export const DialRest = createContext<() => void>(() => {});
 
