@@ -162,26 +162,31 @@ second flick the reader made, or leaves the dial between two cells.
 releases on a master list kept with the GIFcommit site. By the owner's
 direction a cell that stands for a release carries that release's stamp: its
 serial, alone, as fine print where a disclaimer would be
-(`src/ui/Stamp.tsx`). It is the cell's last line and has that line to itself,
-across the cell's whole width, with everything else in the cell above it and
-a little room over it. There are three kinds: each study's on its own cell;
-the library's on the title, which is the library's; and the site's own on the
-last cell, the closing, where it keeps the bottom left and the day the site
-was last updated (the build's day, `__UPDATED__`) has the right of the same
-line. That day is not part of the stamp.
+(`src/ui/Stamp.tsx`). It is the cell's last line, starting at the cell's
+left, with everything else in the cell above it and a little room over it.
+There are three kinds: each study's on its own cell, with the line to itself
+across the cell's whole width; the library's on the title, the same; and the
+site's own on the last cell, the closing, where by the owner's direction
+(2026-10-19) it keeps the bottom left and shares its line with one thing
+only, the day the site was last updated, at the right. That day is not part
+of the stamp.
 
 The stamp is small and light, by the owner's direction: release numbers are
 to be discreet. The stamp carries no date. The owner tried the serial at the
 top left, tried the day beside it, and settled on this. Do not flag the size
 or the light weight; do flag a stamp set larger or heavier than the cell's
-other fine print, one that shares its line with anything or is not the
-cell's last, and a date put into a stamp.
+other fine print, one that is not the cell's last line, one that shares its
+line with anything but the closing's last-updated day, and a date put into a
+stamp.
 
-**Only a study's cell shows a day.** The day a study was published is at the
-top left of its cell, where it always was, by the owner's direction. The
-title, which is the library's, and the last cell show none: the owner asked
-for the day on the case studies and nowhere else. Flag a day on any other
-cell, and a study's cell without one.
+**Two kinds of day, and no others.** The day a study was published is at the
+top left of its cell, where it always was, by the owner's direction: on the
+case studies and on no other cell. The closing, the last cell, shows the day
+the site was last updated, at the right of its last line: the build's day
+(`__UPDATED__` in `vite.config.ts`, `site.updated`), never typed by hand,
+and never the day of any study. The title shows none. Flag a published day
+anywhere but a study's cell, a study's cell without one, a last-updated day
+anywhere but the closing, and one that is not the build's.
 
 Numbers are GIFcommit's, and are copied from its list, never made up here.
 Flag a serial written any way but the name exactly and the number to five
