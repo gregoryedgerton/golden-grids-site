@@ -28,7 +28,7 @@ const espn = parseStudy(
     published: "2026-10-06",
     brand: "GIFspn",
     reference: "ESPN",
-    subject: "A sports front page",
+    subject: "Sports front",
     url: "https://example.com/study-06/",
     colors: { ground: "#cc0000", ink: "#ffffff", accent: "#000000" },
     font: { family: "Barlow Condensed", weight: 800, italic: true },
@@ -826,9 +826,9 @@ describe("StudyCell", () => {
     expect(stamp.querySelector("time")).toBeNull();
     // The study's number in the series is not shown anywhere.
     expect(container).not.toHaveTextContent(/Study\s*0?6/);
-    // One line, one size: the reference named first, then the subject as an exploration, in the owner's pattern.
+    // One line, one size, in the owner's words: the reference named first, then the pages the study explored.
     expect(container.querySelector(".study__subject")).toHaveTextContent(
-      "Inspired by ESPN. A sports front page layout exploration using Golden Grids.",
+      "Inspired by ESPN. Sports front pages were explored in this Golden Grids case study.",
     );
     expect(container.querySelector(".study__after")).toBeNull();
     const link = screen.getByRole("link", { name: "Open the study: GIFspn" });

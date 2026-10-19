@@ -23,7 +23,7 @@ Add one file to `src/studies/`, named for its number and parody name (`14-gifdep
   "published": "2026-10-09",
   "brand": "GIFdepot",
   "reference": "The Home Depot",
-  "subject": "A product page",
+  "subject": "Home, category, list and product",
   "url": "https://gregoryedgerton.github.io/golden-grids-study-14-gifdepot/",
   "colors": { "ground": "#f96302", "ink": "#ffffff", "accent": "#000000" },
   "font": { "family": "Archivo", "weight": 800, "italic": false },
@@ -37,6 +37,7 @@ Nothing else changes: the gallery comes from the folder and runs from the latest
 - `release` is the study's number among GIFcommit's releases. It is given on GIFcommit's master list, which is kept with the GIFcommit site, and is copied from there: a study that has no number on that list yet cannot be added. It is the study's stamp, the last line of its cell, as a serial: `GIFcommit00013`.
 - `published` is the day the study first went live, as `YYYY-MM-DD`. It is shown at the top left of the study's cell. Only a study's cell shows the day it was published; the closing, the last cell, shows a different day, the day the site was last updated (below).
 - `brand` is the parody name, written exactly. It is never case-transformed.
+- `reference` is the site the study is inspired by, and `subject` the pages it explored, written to sit before "pages": the cell reads "Inspired by ⟨reference⟩. ⟨subject⟩ pages were explored in this Golden Grids case study." (`Home, category, list and product`).
 - `colors.ink` sets the name and `colors.accent` the icon and the rule; each needs 3:1 contrast with `ground`. Small text takes whichever of them reads at 4.5:1, or white or black.
 - `colors.letters` is optional: a list of colours for the name's first letters, one each and in order, for a name that opens in the colours of a mark (GIF.org's red G, black I and blue F). Each needs 3:1 with `ground`, and the rest of the name is in `ink`.
 - `font.family` is a Google Fonts family under an open licence. Only the letters of the name are requested.
