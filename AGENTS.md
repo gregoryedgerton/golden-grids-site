@@ -206,6 +206,12 @@ two words and then one, and the page's description under them, word for
 word. Flag a different answer from the description, and the statement's
 animation brought here.
 
+**One analytics script: the owner's Google tag.** By the owner's direction
+(2026-10-19) `index.html` carries Google's gtag.js for measurement ID
+`G-G0REMGKSWQ`, as Google gives it, at the top of the head. Flag a second
+analytics or tracking script, a changed ID, and the tag moved into the
+studies or the root page, which get tags of their own.
+
 **Email addresses are not handled here.** The form posts straight to the
 mailing-list provider. Flag any code that stores, logs or sends an address
 anywhere else.

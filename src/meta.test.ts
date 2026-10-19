@@ -63,6 +63,16 @@ describe("the icons", () => {
   });
 });
 
+describe("the analytics", () => {
+  it("is the owner's Google tag, once, in the head, and nothing else", () => {
+    const head = /<head>([\s\S]*)<\/head>/.exec(html)?.[1] as string;
+    expect(head).toContain('<script async src="https://www.googletagmanager.com/gtag/js?id=G-G0REMGKSWQ"></script>');
+    expect(head).toContain("gtag('config', 'G-G0REMGKSWQ');");
+    expect(html.match(/googletagmanager\.com\/gtag\/js/g)).toHaveLength(1);
+    expect(html.match(/G-[A-Z0-9]+/g)).toEqual(["G-G0REMGKSWQ", "G-G0REMGKSWQ"]);
+  });
+});
+
 describe("the serials of GIFcommit's releases", () => {
   it("are the name, exactly, and the release's number to five places", () => {
     expect(serial(1)).toBe("GIFcommit00001");
