@@ -51,12 +51,14 @@ export function StudyCell({ study }: { study: Study }) {
       <Icon name={study.icon} className="study__icon" />
       {/* The name is written exactly; nothing here changes its case. */}
       <h2 className="visually-hidden">{brand}</h2>
-      <FitText className="study__name" lines={brand.split(" ")} leading={0.9} tints={colors.letters} />
+      {/* The name, and right under it the site it is inspired by, as one lockup in the middle of the cell. */}
+      <div className="study__lockup">
+        <FitText className="study__name" lines={brand.split(" ")} leading={0.9} tints={colors.letters} start />
+        <p className="study__inspired">Inspired by {reference}</p>
+      </div>
       <div className="study__foot">
-        {/* The owner's words, one size throughout: the reference named first, then the pages the study explored. */}
-        <p className="study__subject">
-          Inspired by {reference}. {subject} pages were explored in this Golden Grids case study.
-        </p>
+        {/* The owner's words, one size throughout: the pages the study explored. The reference is under the name. */}
+        <p className="study__subject">{subject} pages were explored in this Golden Grids case study.</p>
         <a
           className="study__link"
           href={url}

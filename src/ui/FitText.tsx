@@ -166,6 +166,10 @@ export type Vanish = { x: number; y: number };
  * `toBaseline` ends the drawing's box at the last line's baseline rather than
  * under its descenders, which then hang below it: what follows can be spaced
  * from where the letters sit, not from the tail of a p.
+ *
+ * `start` keeps the letters at the box's left when the box is too short for
+ * them to fill its width, so they line up with type set under them; by
+ * default they are centred.
  */
 export function FitText({
   lines,
@@ -179,6 +183,7 @@ export function FitText({
   tints = NO_TINTS,
   wipe,
   toBaseline = false,
+  start = false,
 }: {
   lines: string[];
   className?: string;
@@ -191,6 +196,7 @@ export function FitText({
   tints?: string[];
   wipe?: Wipe;
   toBaseline?: boolean;
+  start?: boolean;
 }) {
   const refs = useRef<(SVGTextElement | null)[]>([]);
   const [fitted, setFitted] = useState<{ key: string; boxes: Box[]; spans?: Span[][] } | null>(null);
@@ -285,7 +291,7 @@ export function FitText({
     <svg
       className={className ? `fit ${className}` : "fit"}
       viewBox={`${lean < 0 ? -depth : 0} 0 ${WIDTH + depth} ${height + depth}`}
-      preserveAspectRatio="xMidYMid meet"
+      preserveAspectRatio={start ? "xMinYMid meet" : "xMidYMid meet"}
       aria-hidden="true"
       focusable="false"
     >
