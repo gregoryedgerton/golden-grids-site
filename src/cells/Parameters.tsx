@@ -1,8 +1,7 @@
 /**
  * What there is to set, in the order a reader meets it: the range, where the
- * spiral starts and which way it turns. Skipping is not a parameter. It is
- * what a range does when it starts above 1, so the range's own description
- * says it.
+ * spiral starts and which way it turns. Skipping is not a parameter: it is
+ * what a range does when it starts above 1.
  *
  * The names are set in capitals, by the owner's direction: they are headings
  * here. In code the props are `from`, `to`, `placement` and `clockwise`, and
@@ -21,8 +20,8 @@ export const PARAMETERS = [
     // range points at the note under it.
     values: ["0 – 91*"],
     note: "* 0 – 78 in React and React Native.",
-    // The owner's words, but for "an inner" where they had "a inner".
-    says: "Determines number of boxes a grid contains using Fibonacci indexes for box count and values for box proportions. Grid cells are always squares except when the sequence is skipped resulting in an inner rectangular grid cell.",
+    // The owner's words (2026-10-19), with two doubled spaces made single.
+    says: "Range that sets the number of boxes on a grid using the corresponding Fibonacci values for cell size proportions.",
   },
   {
     term: "PLACEMENT",
