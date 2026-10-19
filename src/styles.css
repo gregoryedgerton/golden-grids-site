@@ -460,11 +460,6 @@ a {
   font-weight: 400;
 }
 
-.study__after {
-  display: block;
-  font-size: 2.6cqw;
-}
-
 .study .study__link {
   flex: none;
   padding: 1.8cqw 3cqw 1.3cqw;

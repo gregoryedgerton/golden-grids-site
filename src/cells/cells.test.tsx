@@ -826,9 +826,11 @@ describe("StudyCell", () => {
     expect(stamp.querySelector("time")).toBeNull();
     // The study's number in the series is not shown anywhere.
     expect(container).not.toHaveTextContent(/Study\s*0?6/);
+    // One line, one size: the reference named first, then the subject as an exploration, in the owner's pattern.
     expect(container.querySelector(".study__subject")).toHaveTextContent(
-      "A sports front page After ESPN; not affiliated with it.",
+      "Inspired by ESPN. A sports front page layout exploration using Golden Grids.",
     );
+    expect(container.querySelector(".study__after")).toBeNull();
     const link = screen.getByRole("link", { name: "Open the study: GIFspn" });
     expect(link).toHaveAttribute("href", espn.url);
     expect(container.querySelector(".study__name")).toHaveTextContent("GIFspn");
