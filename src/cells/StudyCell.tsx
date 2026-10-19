@@ -53,9 +53,9 @@ export function StudyCell({ study }: { study: Study }) {
       <h2 className="visually-hidden">{brand}</h2>
       <FitText className="study__name" lines={brand.split(" ")} leading={0.9} tints={colors.letters} />
       <div className="study__foot">
+        {/* The owner's pattern, one size throughout: the reference named first, then the subject as an exploration. */}
         <p className="study__subject">
-          {subject}
-          <span className="study__after"> After {reference}; not affiliated with it.</span>
+          Inspired by {reference}. {subject} layout exploration using Golden Grids.
         </p>
         <a
           className="study__link"
