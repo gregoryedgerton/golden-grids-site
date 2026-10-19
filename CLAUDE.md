@@ -37,14 +37,14 @@ goes into any of them.
 
 ## Where it is served
 
-GitHub Pages, from `/golden-grids-site/` on github.io and, once its domain is
-set, from the root of `golden-grids.gifcommit.com`. One build goes to both, so
+GitHub Pages, from the root of `golden-grids.gifcommit.com` since 2026-10-19;
+`/golden-grids-site/` on github.io redirects there. One build serves either, so
 the build is relative (`base: "./"` in `vite.config.ts`) and
 `src/build.test.ts` builds the site to check it. Do not address one of the
 site's own files from the server's root, and do not read the path the page is
 served from.
 
-Moving to the domain is a sequence with an order (README, "The address"). The
+A move of address is a sequence with an order (README, "The address"). A
 custom domain is never set before its DNS name resolves: GitHub redirects the
 github.io address at once, and until the name resolves the site is down. The
 address in `src/site.ts`, `index.html` and the README changes only once the

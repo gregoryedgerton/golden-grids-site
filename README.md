@@ -2,7 +2,7 @@ GIFcommit00017
 
 # Golden Grids site
 
-**Live: <https://gregoryedgerton.github.io/golden-grids-site/>**
+**Live: <https://golden-grids.gifcommit.com/>**
 
 The marketing site for [Golden Grids](https://github.com/gregoryedgerton/golden-grids), the Fibonacci layout library published as [`@gifcommit/golden-grids`](https://www.npmjs.com/package/@gifcommit/golden-grids).
 
@@ -74,9 +74,9 @@ node scripts/brand/once.mjs <the new clip> src/assets/title.gif
 
 ## The address
 
-GitHub Pages publishes the site, today at <https://gregoryedgerton.github.io/golden-grids-site/>. It is to have a domain of its own as well, `golden-grids.gifcommit.com`, and the build is ready for it: every address it writes for its own files is relative, so one build works from `/golden-grids-site/` and from the root of a domain.
+GitHub Pages publishes the site at <https://golden-grids.gifcommit.com/>, its own domain, since 2026-10-19; the old address, <https://gregoryedgerton.github.io/golden-grids-site/>, redirects there. The build is relative: every address it writes for its own files is relative to the file that names it, so one build works from `/golden-grids-site/` and from the root of a domain, and a fork needs no edit.
 
-Moving to the domain is these steps, in this order:
+The move was these steps, in this order, and the order is what keeps the site up through a move:
 
 1. Verify `gifcommit.com` for GitHub Pages: in the account's settings, under Pages, "Add a domain", which asks for a TXT record at the domain's DNS host. A verified domain's names can be attached only to its owner's sites.
 2. At the DNS host, add a CNAME record for `golden-grids` that points to `gregoryedgerton.github.io`.
@@ -84,7 +84,7 @@ Moving to the domain is these steps, in this order:
 4. Change the address in `src/site.ts`, in the three places in `index.html` that repeat it (the tests hold them together) and at the top of this file. Until the domain is live they stay as they are: a share card or a crawler sent to a name that does not resolve finds nothing.
 5. When GitHub has issued the certificate, turn on "Enforce HTTPS" in the same settings.
 
-The github.io address keeps working afterwards, as a redirect. No `CNAME` file is needed: a deploy from GitHub Actions ignores one.
+The github.io address keeps working afterwards, as a redirect. No `CNAME` file is needed: a deploy from GitHub Actions ignores one. The domain is verified for the GitHub account (step 1), so no other account can attach a `gifcommit.com` name to a Pages site.
 
 ## Running it
 

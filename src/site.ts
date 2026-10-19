@@ -3,7 +3,7 @@ export const site = {
   name: "Golden Grids",
   presenter: "GIFcommit",
   /** Where the site is published. */
-  url: "https://gregoryedgerton.github.io/golden-grids-site/",
+  url: "https://golden-grids.gifcommit.com/",
   /** The page's title, in a browser tab and on a share card. */
   title: "GIFcommit presents Golden Grids",
   /** The page's description: the introduction of the library's README on npm, as written there. */
