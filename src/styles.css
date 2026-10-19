@@ -435,14 +435,36 @@ a {
   color: var(--accent);
 }
 
-.study__name {
+/* The name and the line under it, kept together and set in the middle of
+   the room the name has. The name is as wide as the cell and gives way in
+   height when the room is short; the line under it never does. */
+.study__lockup {
   grid-column: 1 / -1;
   align-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1.6cqw;
+  min-height: 0;
   max-height: 100%;
+}
+
+.study__name {
+  flex: 0 1 auto;
+  min-height: 0;
+  height: auto;
   color: var(--ink);
   font-family: var(--face), var(--sans);
   font-weight: var(--face-weight);
   font-style: var(--face-style);
+}
+
+/* A secondary line, in the site's own type, not the study's: the study is
+   GIFcommit's, and says so in GIFcommit's voice. */
+.study__inspired {
+  flex: none;
+  font-size: 4.2cqw;
+  font-weight: 600;
+  line-height: 1.15;
 }
 
 .study__foot {

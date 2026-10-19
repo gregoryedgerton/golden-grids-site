@@ -826,9 +826,17 @@ describe("StudyCell", () => {
     expect(stamp.querySelector("time")).toBeNull();
     // The study's number in the series is not shown anywhere.
     expect(container).not.toHaveTextContent(/Study\s*0?6/);
-    // One line, one size, in the owner's words: the reference named first, then the pages the study explored.
-    expect(container.querySelector(".study__subject")).toHaveTextContent(
-      "Inspired by ESPN. Sports front pages were explored in this Golden Grids case study.",
+    // The reference is a line of its own right under the name, and the foot says only what the study explored.
+    const lockup = container.querySelector(".study__lockup") as HTMLElement;
+    expect([...lockup.children].map((child) => child.getAttribute("class"))).toEqual([
+      expect.stringContaining("study__name"),
+      "study__inspired",
+    ]);
+    expect(lockup.querySelector(".study__inspired")).toHaveTextContent(/^Inspired by ESPN$/);
+    // A name too tall for its room stays at the left, over the line under it.
+    expect(lockup.querySelector(".study__name")).toHaveAttribute("preserveAspectRatio", "xMinYMid meet");
+    expect(container.querySelector(".study__subject")?.textContent).toBe(
+      "Sports front pages were explored in this Golden Grids case study.",
     );
     expect(container.querySelector(".study__after")).toBeNull();
     const link = screen.getByRole("link", { name: "Open the study: GIFspn" });

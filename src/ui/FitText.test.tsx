@@ -41,6 +41,13 @@ describe("FitText", () => {
     expect(svg(container)).toHaveAttribute("preserveAspectRatio", "xMidYMid meet");
   });
 
+  it("keeps the letters at the left of a box too short for them when asked to start there, and centres them otherwise", () => {
+    const { container, rerender } = render(<FitText lines={["ab"]} start />);
+    expect(svg(container)).toHaveAttribute("preserveAspectRatio", "xMinYMid meet");
+    rerender(<FitText lines={["ab"]} />);
+    expect(svg(container)).toHaveAttribute("preserveAspectRatio", "xMidYMid meet");
+  });
+
   it("moves each line so its measured box, not its origin, starts at the left edge", () => {
     measureAs(50, 100, 12, -70);
     const { container } = render(<FitText lines={["ab"]} />);
