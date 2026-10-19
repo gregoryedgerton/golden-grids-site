@@ -1,9 +1,8 @@
 import { buildCells } from "./cells";
 import { Dial } from "./dial/Dial";
-import { site } from "./site";
 import { studies } from "./studies";
 
-const cells = buildCells(studies, site.subscribe);
+const cells = buildCells(studies);
 
 export function App() {
   return (

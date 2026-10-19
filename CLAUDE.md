@@ -6,9 +6,10 @@ Guidance for agents working on the Golden Grids marketing site.
 
 One page: a spiral dial. A reader swipes, scrolls or keys through an
 introduction to Golden Grids (title, what it is, parameters), then a gallery of
-the layout studies, one lockup per study, and reaches an email sign-up in the
-last cell. The library is consumed from npm at its published version; never
-link a local checkout.
+the layout studies, one lockup per study, and ends on a closing disclaimer
+with the day the site was last updated. Nothing on the page asks for anything:
+no form, no field. The library is consumed from npm at its published version;
+never link a local checkout.
 
 ## The working loop
 
@@ -62,9 +63,9 @@ domain is live.
 - **A study asks first.** By the owner's direction, a click on a study's link
   opens its notice, a modal dialog in the study's colours and face: "You
   Good? This isn't actually ⟨reference⟩, it's a layout study for Golden Grids
-  made for wonder and awe. I want you to use the library, not your personal
-  info." The words are the owner's. The link keeps the study's address; the
-  notice's Yes follows it. Its two answers sit side by side at every width.
+  made for wonder and awe." The words are the owner's. The link keeps the
+  study's address; the notice's Yes follows it. Its two answers sit side by
+  side at every width.
   The notice is placed outside the dial, the dial comes to rest on the cell
   as it opens, and it does not turn while it is open.
 - **Directions.** Up or left goes deeper, down or right goes back. No
@@ -75,9 +76,12 @@ domain is live.
 - **Serials.** The library, each study and this site are each one of
   GIFcommit's releases, numbered on GIFcommit's master list (`RELEASES.md` in
   the GIFcommit site's repository). A cell that stands for a release
-  wears its stamp as fine print on the cell's last line, a line of its own:
-  the serial alone, small and light. Each study's cell, the title for the
-  library, the last cell for this site. Only a study's cell shows a day, at its top left. Copy a number from the list; never make one up.
+  wears its stamp as fine print on the cell's last line: the serial alone,
+  small and light. Each study's cell, the title for the library, the last
+  cell for this site, where it keeps the bottom left and shares the line with
+  the day the site was last updated (`site.updated`, the build's day from
+  `__UPDATED__` in `vite.config.ts`). A study's cell shows its day at its top
+  left. Copy a number from the list; never make one up.
 - **Brand.** Parody names are written exactly and never case-transformed in
   CSS. GIFcommit is the presenter and the npm scope.
 - **Copy.** Plain and exact. No jokes at a reference's expense, no verdicts on
@@ -88,7 +92,7 @@ domain is live.
 - `src/dial/` is the dial: `geometry.ts` (where each cell sits at a depth),
   `input.ts` (what each gesture means), `controller.ts` (depth over time, with
   an injected clock), `Dial.tsx` (the page wiring).
-- `src/cells/` is what is on it. `index.tsx` sets the order; the sign-up is
+- `src/cells/` is what is on it. `index.tsx` sets the order; the closing is
   always last. `statement.ts` is THESE ARE FAKE over time: the pace of the
   three words, and a controller on an injected clock, as the dial's is. It is
   said once a visit, white and then black. There is one statement for the

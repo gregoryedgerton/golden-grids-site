@@ -18,6 +18,9 @@ export default defineConfig({
   plugins: [react()],
   define: {
     __LIBRARY_VERSION__: JSON.stringify(library.version),
+    // The day of the build, which is the day of the deploy: the last cell
+    // says when the site was last updated, and the day is never a guess.
+    __UPDATED__: JSON.stringify(new Date().toISOString().slice(0, 10)),
   },
   test: {
     globals: true,

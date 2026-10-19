@@ -37,16 +37,16 @@ describe("App", () => {
     }
   });
 
-  it("offers the sign-up only in the last cell", () => {
+  it("asks for nothing on any cell, and ends on the closing, where the site was last updated", () => {
     setReducedMotion(true);
     render(<App />);
     for (let i = 1; i < total; i++) {
-      expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
-      expect(document.querySelectorAll('.dial__content:not([inert]) input')).toHaveLength(0);
+      expect(document.querySelectorAll("form, input, textarea")).toHaveLength(0);
       fireEvent.keyDown(document.body, { key: "ArrowDown" });
     }
-    expect(announced()).toBe(`The mailing list, ${total} of ${total}`);
-    expect(screen.getByRole("textbox", { name: "Email address" })).toBeInTheDocument();
+    expect(announced()).toBe(`For the record, ${total} of ${total}`);
+    expect(screen.getByRole("heading", { level: 2, name: "FOR THE RECORD." })).toBeInTheDocument();
+    expect(screen.getByText(/^Last updated/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
   });
 
