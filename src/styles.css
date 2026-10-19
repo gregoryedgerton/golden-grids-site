@@ -443,7 +443,7 @@ a {
   align-self: center;
   display: flex;
   flex-direction: column;
-  gap: 1.6cqw;
+  gap: 3.6cqw;
   min-height: 0;
   max-height: 100%;
 }

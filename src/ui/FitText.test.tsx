@@ -256,6 +256,36 @@ describe("FitText", () => {
     expect(groups(trimmed.container)).toEqual(groups(whole.container));
   });
 
+  it("ends its box where the last line's letters end when asked: their own descent, in the face they are drawn in", () => {
+    const fonts: string[] = [];
+    let descent = 12;
+    const context = {
+      font: "",
+      measureText(line: string) {
+        fonts.push(`${this.font} ${line}`);
+        return { actualBoundingBoxDescent: descent } as TextMetrics;
+      },
+    };
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(context as unknown as CanvasRenderingContext2D);
+    // "ab" scales by 10, "abcd" by 5; the last line's baseline is 1400 down, and its letters reach 12 below it, 60 drawn.
+    const { container, rerender } = render(<FitText lines={["ab", "abcd"]} toInk />);
+    expect(svg(container)).toHaveAttribute("viewBox", "0 0 1000 1460");
+    // Measured at the size the lines are measured at, in the line's own face, and only the last line.
+    expect(fonts.at(-1)).toMatch(/ 100px .* abcd$/);
+    expect(fonts.every((font) => font.endsWith(" abcd"))).toBe(true);
+    // A word with nothing below its baseline ends there; a mark that rises above it is not a descent.
+    descent = -3;
+    rerender(<FitText lines={["ab", "abcd"]} toInk className="again" />);
+    resized();
+    expect(svg(container)).toHaveAttribute("viewBox", "0 0 1000 1400");
+  });
+
+  it("keeps the whole descent under the letters when there is nothing to measure them with", () => {
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    const { container } = render(<FitText lines={["ab", "abcd"]} toInk />);
+    expect(svg(container)).toHaveAttribute("viewBox", "0 0 1000 1500");
+  });
+
   it("keeps a guess while a line cannot be measured", () => {
     for (const [per, height] of [
       [0, 100],
