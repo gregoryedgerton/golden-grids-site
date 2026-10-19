@@ -53,9 +53,9 @@ export function StudyCell({ study }: { study: Study }) {
       <h2 className="visually-hidden">{brand}</h2>
       <FitText className="study__name" lines={brand.split(" ")} leading={0.9} tints={colors.letters} />
       <div className="study__foot">
-        {/* The owner's pattern, one size throughout: the reference named first, then the subject as an exploration. */}
+        {/* The owner's words, one size throughout: the reference named first, then the pages the study explored. */}
         <p className="study__subject">
-          Inspired by {reference}. {subject} layout exploration using Golden Grids.
+          Inspired by {reference}. {subject} pages were explored in this Golden Grids case study.
         </p>
         <a
           className="study__link"
