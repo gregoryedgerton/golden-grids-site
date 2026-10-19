@@ -2,19 +2,19 @@ import { clock } from "../dial/clock";
 import type { Cell } from "../dial/Dial";
 import { prefersReducedMotion } from "../dial/motion";
 import type { Study } from "../studies";
+import { Closing } from "./Closing";
 import { Gallery } from "./Gallery";
 import { Parameters } from "./Parameters";
-import { Signup } from "./Signup";
 import { createStatement } from "./statement";
 import { StudyCell } from "./StudyCell";
 import { Title } from "./Title";
 import { Vision } from "./Vision";
 
 /**
- * Everything on the dial, in order: the introduction, the gallery, and the
- * sign-up, which is always last and appears nowhere else.
+ * Everything on the dial, in order: the introduction, the gallery, the
+ * studies, and the closing disclaimer, which is always last.
  */
-export function buildCells(studies: Study[], subscribe: string): Cell[] {
+export function buildCells(studies: Study[]): Cell[] {
   // One statement for as long as these cells are the dial's. The cell that
   // shows it is mounted only while it is near the focus, and what the
   // statement has said must not go when the cell does.
@@ -32,6 +32,6 @@ export function buildCells(studies: Study[], subscribe: string): Cell[] {
         content: <StudyCell study={study} />,
       }),
     ),
-    { id: "signup", label: "The mailing list", ground: "#14100c", content: <Signup action={subscribe} /> },
+    { id: "closing", label: "For the record", ground: "#14100c", content: <Closing /> },
   ];
 }

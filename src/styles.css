@@ -545,11 +545,6 @@ a {
   font-weight: 400;
 }
 
-.notice__keep {
-  margin: 0.6em 0 0;
-  font-size: clamp(1.1rem, 3.2vmin, 1.5rem);
-  font-weight: 600;
-}
 
 /* The two answers side by side at any width: on a phone they share the
    line equally. */
@@ -611,62 +606,46 @@ a {
   outline-offset: 3px;
 }
 
-/* The sign-up. */
-.signup {
+/* The closing: a disclaimer on the title's warm black, its heading in the
+   gold and the proportions of the second cell's question. */
+.closing {
+  justify-content: flex-end;
+  gap: 4cqw;
   color: var(--paper);
 }
 
-.signup__heading {
-  flex: 1 1 0;
-  min-height: 0;
-  font-family: var(--script);
+/* As wide as the cell and as tall as that makes it, ending at its baseline. */
+.closing__heading {
+  flex: none;
+  height: auto;
   color: var(--gold);
-  --fit-shadow: var(--gold-deep);
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
-.signup__form {
+.closing__body {
   display: grid;
-  gap: 1.5cqw;
-}
-
-.signup__form label {
-  font-size: 3.2cqw;
-  font-weight: 400;
-}
-
-.signup__row {
-  display: flex;
   gap: 2cqw;
+  font-size: 3cqw;
+  font-weight: 400;
+  line-height: 1.25;
 }
 
-.signup__row input {
-  flex: 1 1 0;
-  min-width: 0;
-  padding: 2cqw 2.4cqw 1.5cqw;
-  border: 0.4cqw solid var(--paper);
-  border-radius: 0;
-  background: var(--paper);
-  color: var(--ground);
-  font: 400 4cqw var(--sans);
+/* The foot: the stamp at the bottom left, the day at the right, on one line. */
+.closing__foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4cqw;
+  margin-top: auto;
 }
 
-.signup__row button {
-  padding: 2cqw 3.2cqw 1.5cqw;
-  border: 0.4cqw solid var(--gold);
-  border-radius: 0;
-  background: var(--gold);
-  color: var(--ground);
-  font: 600 4cqw var(--sans);
-  cursor: pointer;
+.closing .closing__release {
+  width: auto;
 }
 
-.signup__row button:disabled {
-  border-color: var(--paper);
-  background: none;
-  color: var(--paper);
-  cursor: not-allowed;
-}
-
-.signup__note {
+.closing__updated {
+  flex: none;
   font-size: 2.6cqw;
+  font-weight: 400;
 }

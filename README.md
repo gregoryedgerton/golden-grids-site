@@ -6,7 +6,7 @@ GIFcommit00017
 
 The marketing site for [Golden Grids](https://github.com/gregoryedgerton/golden-grids), the Fibonacci layout library published as [`@gifcommit/golden-grids`](https://www.npmjs.com/package/@gifcommit/golden-grids).
 
-It is one page: a spiral dial. Swipe up or left, scroll, or use the arrow keys to go deeper; the opposites go back. The dial runs through a title, a statement of what the library is, its parameters, a gallery of the layout studies, and ends at a mailing-list sign-up.
+It is one page: a spiral dial. Swipe up or left, scroll, or use the arrow keys to go deeper; the opposites go back. The dial runs through a title, a statement of what the library is, its parameters, a gallery of the layout studies, and ends on a closing disclaimer with the day the site was last updated.
 
 The repository and the site are both public. `main` is published to GitHub Pages while the repository variable `PUBLISH_SITE` is `true` (with Pages enabled, source GitHub Actions). Unset it and nothing is deployed.
 
@@ -46,7 +46,7 @@ A file that breaks a rule fails the tests with the file's name and the reason.
 
 ## Release serials
 
-GIFcommit numbers what it releases. The library, each study and this site are each a release, and a cell that stands for a release wears that release's stamp: its serial, as small light print where a disclaimer would be, on a line of its own at the foot of the cell with everything else above it. Each study's is on its own cell, the library's on the title, and the site's own on the last cell, with the sign-up.
+GIFcommit numbers what it releases. The library, each study and this site are each a release, and a cell that stands for a release wears that release's stamp: its serial, as small light print where a disclaimer would be, on a line of its own at the foot of the cell with everything else above it. Each study's is on its own cell, the library's on the title, and the site's own at the bottom left of the last cell, beside the day the site was last updated.
 
 The numbers are GIFcommit's, given on its master list. This site's and the library's are `release` and `libraryRelease` in `src/site.ts`, and a study's is `release` in its file. This README opens with the site's own serial, as every released repository's does.
 
@@ -68,9 +68,9 @@ A GIF cannot be paused, so it must not repeat and must not run past five seconds
 node scripts/brand/once.mjs <the new clip> src/assets/title.gif
 ```
 
-## The mailing list
+## The day it was last updated
 
-`subscribe` in `src/site.ts` is the address the sign-up form sends to: the Beehiiv publication's subscribe page. While it is empty the form is shown closed.
+The last cell says when the site was last updated. The day is the build's, set in `vite.config.ts` as `__UPDATED__`, and the build is the deploy, so it is never typed by hand.
 
 ## The address
 

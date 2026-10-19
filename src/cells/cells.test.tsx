@@ -8,16 +8,16 @@ import { Dial } from "../dial/Dial";
 import { paintTile } from "../dial/geometry";
 import { prefersReducedMotion } from "../dial/motion";
 import { site } from "../site";
-import { contrast, parseStudy, studies } from "../studies";
+import { contrast, parseStudy, studies, writeDate } from "../studies";
 import { FitText } from "../ui/FitText";
 import { fontHref } from "../ui/fonts";
 import { Gallery, INKS } from "./Gallery";
 import { buildCells } from "./index";
 import { PARAMETERS, Parameters } from "./Parameters";
-import { Signup } from "./Signup";
 import { SAID_MS, createStatement } from "./statement";
 import type { Statement } from "./statement";
 import { StudyCell } from "./StudyCell";
+import { Closing } from "./Closing";
 import { Title } from "./Title";
 import { Vision } from "./Vision";
 
@@ -321,7 +321,7 @@ describe("Gallery", () => {
   it("then says what a study is, and that none is the site it looks like", () => {
     const { container } = render(<Gallery statement={newStatement()} />);
     const body = container.querySelector(".gallery__body") as HTMLElement;
-    // The owner's words, whole. It says what studies are, not what the cells after it are: the last of those is the sign-up.
+    // The owner's words, whole. It says what studies are, not what the cells after it are: the last of those is the closing.
     expect(body.textContent?.replace(/\s+/g, " ").trim()).toBe(
       "Layout studies look at an existing website, brand or general concept and reimagine it with Golden Grids under a parody name. None of these studies are affiliated with the brands mentioned, and nothing in them can be bought, booked or signed up for.",
     );
@@ -607,7 +607,7 @@ describe("Gallery, and the statement being said", () => {
 
   it("heeds the reader's motion preference in the statement the page's own cells are built with", () => {
     setReducedMotion(true);
-    const gallery = buildCells([], "").find((cell) => cell.id === "gallery");
+    const gallery = buildCells([]).find((cell) => cell.id === "gallery");
     const { container } = render(
       <CellCurrent value>
         <CellLanding value>{gallery?.content}</CellLanding>
@@ -623,7 +623,7 @@ describe("Gallery, and the statement being said", () => {
   });
 
   it("shows two cells one statement the same, and each set of cells has a statement of its own", () => {
-    const cells = buildCells([], "");
+    const cells = buildCells([]);
     const gallery = cells.find((cell) => cell.id === "gallery");
     const shown = render(
       <CellCurrent value>
@@ -637,16 +637,16 @@ describe("Gallery, and the statement being said", () => {
     const again = render(<>{gallery?.content}</>);
     expect(fills(again.container)).toEqual([WHITE, WHITE]);
     // Other cells have never said theirs.
-    const others = render(<>{buildCells([], "").find((cell) => cell.id === "gallery")?.content}</>);
+    const others = render(<>{buildCells([]).find((cell) => cell.id === "gallery")?.content}</>);
     expect(fills(others.container)).toEqual([BLACK, BLACK]);
   });
 
   it("keeps large type's contrast against the cell's red in white as it does in black", () => {
-    const gallery = buildCells([], "").find((cell) => cell.id === "gallery");
+    const gallery = buildCells([]).find((cell) => cell.id === "gallery");
     expect(INKS.white).toBe("#ffffff");
     expect(contrast(INKS.white, gallery?.ground as string)).toBeGreaterThanOrEqual(3);
     // The cell's ink is the site's ground colour, which the first cell is set on.
-    const ground = buildCells([], "").find((cell) => cell.id === "title")?.ground as string;
+    const ground = buildCells([]).find((cell) => cell.id === "title")?.ground as string;
     expect(contrast(ground, gallery?.ground as string)).toBeGreaterThanOrEqual(3);
   });
 
@@ -700,7 +700,7 @@ describe("the statement, on a dial that mounts only the cells near the focus", (
 
   it("begins as the dial lands on the cell, well before the dial has come to rest, and is said once", () => {
     setReducedMotion(false);
-    render(<Dial cells={buildCells(studies, "")} />);
+    render(<Dial cells={buildCells(studies)} />);
     key("ArrowDown");
     frames(1000);
     key("ArrowDown");
@@ -727,7 +727,7 @@ describe("the statement, on a dial that mounts only the cells near the focus", (
 
   it("does not begin under a finger resting on the dial as the cell arrives, and begins when the finger lifts", () => {
     setReducedMotion(false);
-    render(<Dial cells={buildCells(studies, "")} />);
+    render(<Dial cells={buildCells(studies)} />);
     key("ArrowDown");
     frames(1000);
     key("ArrowDown");
@@ -744,11 +744,11 @@ describe("the statement, on a dial that mounts only the cells near the focus", (
 
   it("does not begin for a cell the dial only passes on its way to the far end, or on its way back", () => {
     setReducedMotion(false);
-    render(<Dial cells={buildCells(studies, "")} />);
+    render(<Dial cells={buildCells(studies)} />);
     key("End");
     // The gallery's cell is the focused one for a moment on the way, and is never crossed.
     expect(through(4000)).toEqual([`${BLACK},${BLACK}`]);
-    expect(announced()).toMatch(/^The mailing list/);
+    expect(announced()).toMatch(/^For the record/);
     expect(gallery()).toBeNull();
     key("Home");
     expect(through(4000)).toEqual([`${BLACK},${BLACK}`]);
@@ -761,7 +761,7 @@ describe("the statement, on a dial that mounts only the cells near the focus", (
     ["jumping there, with motion reduced", true],
   ])("finishes and keeps its colour while the reader is at the far end of the dial, %s", (_, reduced) => {
     setReducedMotion(reduced);
-    render(<Dial cells={buildCells(studies, "")} />);
+    render(<Dial cells={buildCells(studies)} />);
     key("ArrowDown");
     frames(1000);
     key("ArrowDown");
@@ -776,7 +776,7 @@ describe("the statement, on a dial that mounts only the cells near the focus", (
     // To the last cell. The gallery's is far behind and is taken off the dial with the crossing unfinished.
     key("End");
     frames(4000);
-    expect(announced()).toMatch(/^The mailing list/);
+    expect(announced()).toMatch(/^For the record/);
     expect(gallery()).toBeNull();
     pass(20_000);
 
@@ -904,7 +904,7 @@ describe("StudyNotice", () => {
     expect(dialog).toBe(notice());
     expect(dialog).toHaveAttribute("open");
     expect(dialog).toHaveAccessibleDescription(
-      "This isn't actually ESPN, it's a layout study for Golden Grids made for wonder and awe. I want you to use the library, not your personal info.",
+      "This isn't actually ESPN, it's a layout study for Golden Grids made for wonder and awe.",
     );
     expect(within(dialog).getByRole("heading", { level: 2, name: "You Good?" })).toBeInTheDocument();
     expect(dialog.querySelector(".notice__brand")).toHaveTextContent(/^GIFspn$/);
@@ -1030,69 +1030,53 @@ describe("StudyNotice", () => {
   });
 });
 
-describe("Signup", () => {
-  it("sends an address straight to the list when the list is open", async () => {
-    const { container } = render(<Signup action="https://example.beehiiv.com/subscribe" />);
-    expect(screen.getByRole("heading", { level: 2, name: "Next study, by email." })).toBeInTheDocument();
-    const form = container.querySelector("form") as HTMLFormElement;
-    expect(form).toHaveAttribute("action", "https://example.beehiiv.com/subscribe");
-    expect(form).toHaveAttribute("method", "get");
-    expect(form).toHaveAttribute("target", "_blank");
-    expect(form).toHaveAttribute("rel", "noopener");
-    const field = screen.getByLabelText("Email address");
-    expect(field).toHaveAttribute("type", "email");
-    expect(field).toHaveAttribute("name", "email");
-    expect(field).toHaveAttribute("autocomplete", "email");
-    expect(field).toBeRequired();
-    expect(field).toHaveAccessibleDescription(/sent with Beehiiv\. Subscribing opens Beehiiv in a new tab\./);
-    expect(screen.getByRole("button", { name: "Subscribe" })).toBeEnabled();
-    expect(await axe(container)).toHaveNoViolations();
-  });
-
-  it("carries this site's own stamp as the cell's last line, under the form: its serial, that it is the site's, and no date", async () => {
-    const { container } = render(<Signup action="" />);
-    const cell = container.querySelector(".signup") as HTMLElement;
-    const stamp = cell.lastElementChild as HTMLElement;
-    expect(stamp).toHaveClass("stamp", "signup__release");
-    expect(stamp.previousElementSibling?.tagName).toBe("FORM");
-    expect(stamp).toHaveTextContent(/^This site is release GIFcommit00017$/);
-    expect(stamp.querySelector(".visually-hidden")).toHaveTextContent(/^This site is release$/);
-    expect(container.querySelector("time")).toBeNull();
-    expect(container.textContent?.match(/GIFcommit\d{5}/g)).toEqual(["GIFcommit00017"]);
-    expect(await axe(container)).toHaveNoViolations();
-  });
-
-  it("cannot be sent, and says so, while the list is not open", async () => {
-    const { container } = render(<Signup action="" />);
-    expect(container.querySelector("form")).not.toHaveAttribute("action");
-    expect(screen.getByRole("button", { name: "Subscribe" })).toBeDisabled();
-    expect(screen.getByLabelText("Email address")).toHaveAccessibleDescription("The list is not open yet.");
-    expect(await axe(container)).toHaveNoViolations();
-  });
-
-  it("gives two forms on one page fields of their own", () => {
-    render(
-      <>
-        <Signup action="" />
-        <Signup action="" />
-      </>,
+describe("Closing", () => {
+  it("says, in plain words, what the studies are and are not, under a heading set as the gallery's statement is", async () => {
+    const { container } = render(<Closing />);
+    expect(screen.getByRole("heading", { level: 2, name: "FOR THE RECORD." })).toBeInTheDocument();
+    expect([...container.querySelectorAll(".closing__heading text")].map((t) => t.textContent)).toEqual(["FOR THE", "RECORD."]);
+    const body = container.querySelector(".closing__body") as HTMLElement;
+    expect(body).toHaveTextContent(
+      "Every study on this dial is a layout study for Golden Grids, made for wonder and awe. Each takes the shape of a familiar site under a parody name. None is that site, and none is affiliated with it.",
     );
-    const [a, b] = screen.getAllByLabelText("Email address");
-    expect(a?.id).not.toBe(b?.id);
+    expect(body).toHaveTextContent(
+      "No study asks you to sign in, and none collects personal information. Anything on them that looks like an account is made up, and says so.",
+    );
+    // Nothing to fill in, and nothing to follow.
+    expect(container.querySelector("form, input, button, a")).toBeNull();
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("ends with the day the site was last updated, from the build, and this site's own stamp at the bottom left", () => {
+    const { container } = render(<Closing />);
+    const cell = container.querySelector(".closing") as HTMLElement;
+    const foot = cell.lastElementChild as HTMLElement;
+    expect(foot).toHaveClass("closing__foot");
+    const [stamp, updated] = [...foot.children] as HTMLElement[];
+    expect(stamp).toHaveClass("stamp", "closing__release");
+    expect(stamp).toHaveTextContent(/^This site is release GIFcommit00017$/);
+    expect(stamp?.querySelector(".visually-hidden")).toHaveTextContent(/^This site is release$/);
+    // The day is the build's, written as a study's day is, and is not part of the stamp.
+    expect(site.updated).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(updated).toHaveClass("closing__updated");
+    expect(updated).toHaveTextContent(`Last updated ${writeDate(site.updated)}`);
+    expect(updated?.querySelector("time")).toHaveAttribute("datetime", site.updated);
+    expect(stamp?.querySelector("time")).toBeNull();
+    expect(container.textContent?.match(/GIFcommit\d{5}/g)).toEqual(["GIFcommit00017"]);
   });
 });
 
 describe("buildCells", () => {
-  const cells = buildCells(studies, "https://example.beehiiv.com/subscribe");
+  const cells = buildCells(studies);
 
-  it("runs introduction, gallery, studies in order, then the sign-up", () => {
+  it("runs introduction, gallery, studies in order, then the closing", () => {
     expect(cells.map((cell) => cell.id)).toEqual([
       "title",
       "vision",
       "parameters",
       "gallery",
       ...studies.map((study) => `study-${study.number}`),
-      "signup",
+      "closing",
     ]);
     expect(new Set(cells.map((cell) => cell.id)).size).toBe(cells.length);
   });
@@ -1109,19 +1093,17 @@ describe("buildCells", () => {
     expect(screen.getByRole("heading", { level: 2, name: study.brand })).toBeInTheDocument();
   });
 
-  it("puts the email field in the last cell and nowhere else", () => {
-    cells.forEach((cell, i) => {
+  it("has no form and no field in any cell, and ends on the closing", () => {
+    cells.forEach((cell) => {
       const { container, unmount } = render(<>{cell.content}</>);
-      const fields = within(container).queryAllByRole("textbox");
-      expect(fields).toHaveLength(i === cells.length - 1 ? 1 : 0);
-      expect(container.querySelectorAll("form")).toHaveLength(i === cells.length - 1 ? 1 : 0);
+      expect(within(container).queryAllByRole("textbox")).toHaveLength(0);
+      expect(container.querySelectorAll("form, input")).toHaveLength(0);
       unmount();
     });
-    render(<>{cells.at(-1)?.content}</>);
-    expect(document.querySelector("form")).toHaveAttribute("action", "https://example.beehiiv.com/subscribe");
+    expect(cells.at(-1)).toMatchObject({ id: "closing", label: "For the record", ground: "#14100c" });
   });
 
   it("is a dial of two cells or more even with no studies", () => {
-    expect(buildCells([], "").map((cell) => cell.id)).toEqual(["title", "vision", "parameters", "gallery", "signup"]);
+    expect(buildCells([]).map((cell) => cell.id)).toEqual(["title", "vision", "parameters", "gallery", "closing"]);
   });
 });

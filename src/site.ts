@@ -11,6 +11,8 @@ export const site = {
     "Golden Grids is a responsive layout library driven by the Fibonacci Sequence. Instead of traditional rows and columns you get proportionally aligned boxes that follow the golden ratio. What you do with those boxes is your business, but at least you won't be boring.",
   /** The library's version, from the copy this site is built against. */
   version: __LIBRARY_VERSION__,
+  /** The day the site was last updated: the day it was built, which is the day it was deployed. */
+  updated: __UPDATED__,
   /**
    * This site's place among GIFcommit's releases, and the library's. They are
    * given on GIFcommit's master list, kept with the GIFcommit site, and are
@@ -20,12 +22,6 @@ export const site = {
   libraryRelease: 1,
   npm: "https://www.npmjs.com/package/@gifcommit/golden-grids",
   github: "https://github.com/gregoryedgerton/golden-grids",
-  /**
-   * Where the sign-up form sends an address: the Beehiiv publication's
-   * subscribe page, which takes it as `email`. Empty until the publication
-   * exists, and the form says so.
-   */
-  subscribe: "",
 } as const;
 
 /**

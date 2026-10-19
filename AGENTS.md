@@ -10,9 +10,11 @@ signal. These are the things CI cannot see.
 and `trailToRotateDeg` throw below two squares, and a throw during render
 unmounts the whole page. Flag any path that can hand either fewer than two.
 
-**The sign-up form is reached only at the last cell.** No link, shortcut or
-focus order may put the email field in front of a reader anywhere else, and
-only the focused cell may hold focusable content: every other cell is inert.
+**Nothing on the page asks for anything.** By the owner's direction
+(2026-10-19) the mailing-list form is gone, and the last cell is a closing
+disclaimer. Flag any form, field or request for an address or any other
+detail, anywhere on the page. Only the focused cell may hold focusable
+content: every other cell is inert.
 
 **A study opens through its notice.** By the owner's direction a click on a
 study's link asks first, in a modal dialog in the study's colours and face,
@@ -164,7 +166,9 @@ serial, alone, as fine print where a disclaimer would be
 across the cell's whole width, with everything else in the cell above it and
 a little room over it. There are three kinds: each study's on its own cell;
 the library's on the title, which is the library's; and the site's own on the
-last cell, with the sign-up.
+last cell, the closing, where it keeps the bottom left and the day the site
+was last updated (the build's day, `__UPDATED__`) has the right of the same
+line. That day is not part of the stamp.
 
 The stamp is small and light, by the owner's direction: release numbers are
 to be discreet. The stamp carries no date. The owner tried the serial at the
@@ -212,9 +216,8 @@ animation brought here.
 analytics or tracking script, a changed ID, and the tag moved into the
 studies or the root page, which get tags of their own.
 
-**Email addresses are not handled here.** The form posts straight to the
-mailing-list provider. Flag any code that stores, logs or sends an address
-anywhere else.
+**Email addresses are not handled here.** There is no form to take one.
+Flag any code that asks for, stores, logs or sends an address.
 
 **The built site does not know where it is served.** GitHub Pages serves it
 from `/golden-grids-site/` on github.io and from the root of a domain of its
