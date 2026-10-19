@@ -53,7 +53,8 @@ export function StudyCell({ study }: { study: Study }) {
       <h2 className="visually-hidden">{brand}</h2>
       {/* The name, and right under it the site it is inspired by, as one lockup in the middle of the cell. */}
       <div className="study__lockup">
-        <FitText className="study__name" lines={brand.split(" ")} leading={0.9} tints={colors.letters} start />
+        {/* The box ends where the letters do, so the line under the name is as far from GIFflix as from GIF;gov's tails. */}
+        <FitText className="study__name" lines={brand.split(" ")} leading={0.9} tints={colors.letters} start toInk />
         <p className="study__inspired">Inspired by {reference}</p>
       </div>
       <div className="study__foot">

@@ -846,6 +846,24 @@ describe("StudyCell", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
+  it("ends the name's box where its letters end, so the line under it is as close to GIFflix as to GIF;gov's tails", () => {
+    const descents: Record<string, number> = { GIFflix: 0, "GIF;gov": 21 };
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+      font: "",
+      measureText: (line: string) => ({ actualBoundingBoxDescent: descents[line] as number }) as TextMetrics,
+    } as unknown as CanvasRenderingContext2D);
+    // Each name is 7 glyphs of 50 units, scaled to 1000 wide: its baseline 80 down the line, and the box 100 deep.
+    const scale = 1000 / 350;
+    const depth = (brand: string) => {
+      const { container, unmount } = render(<StudyCell study={{ ...espn, brand }} />);
+      const viewBox = (container.querySelector(".study__name") as SVGElement).getAttribute("viewBox") as string;
+      unmount();
+      return Number(viewBox.split(" ")[3]);
+    };
+    expect(depth("GIFflix")).toBeCloseTo(80 * scale);
+    expect(depth("GIF;gov")).toBeCloseTo((80 + 21) * scale);
+  });
+
   it("carries the study's own colours and face, and asks for the face", () => {
     const { container } = render(<StudyCell study={espn} />);
     const style = (container.querySelector(".study") as HTMLElement).style;

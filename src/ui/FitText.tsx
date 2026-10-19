@@ -109,7 +109,14 @@ function paintOf(spans: Span[], crossed: number[], box: Box, from: string, to: s
  * span the full width; with `uniform`, all take the scale of the longest, so
  * the letters are one size and the shorter lines stop short.
  */
-function stack(lines: string[], boxes: Box[] | undefined, leading: number, indent: number[], uniform: boolean) {
+function stack(
+  lines: string[],
+  boxes: Box[] | undefined,
+  leading: number,
+  indent: number[],
+  uniform: boolean,
+  descent?: number,
+) {
   const measured = lines.map((line, i) => {
     const box = boxes?.[i] ?? guess(line);
     const inset = (indent[i] ?? 0) * MEASURED_AT;
@@ -119,6 +126,7 @@ function stack(lines: string[], boxes: Box[] | undefined, leading: number, inden
   let cursor = 0;
   let height = 0;
   let baseline = 0;
+  let scaled = 1;
   const placed = measured.map(({ line, box, inset, span }) => {
     const scale = WIDTH / (uniform ? longest : span);
     const top = cursor;
@@ -126,9 +134,26 @@ function stack(lines: string[], boxes: Box[] | undefined, leading: number, inden
     height = top + box.height * scale;
     // A line is drawn from its baseline, which the measured box starts above.
     baseline = top - box.y * scale;
+    scaled = scale;
     return { line, box, scale, x: (inset - box.x) * scale, y: baseline };
   });
-  return { placed, height, baseline };
+  // Where the last line's letters end: its baseline, and as far below it as its own letters reach.
+  const ink = descent === undefined ? height : baseline + descent * scaled;
+  return { placed, height, baseline, ink };
+}
+
+/**
+ * How far below the baseline a line's own letters reach, at the size the
+ * lines are measured at, in the face the line is drawn in: the ink, not the
+ * face's descent, which is room kept for letters that hang and is empty under
+ * a word with none. Null where there is no canvas to measure with.
+ */
+function inkDescent(element: SVGTextElement, line: string): number | null {
+  const context = document.createElement("canvas").getContext("2d");
+  if (!context) return null;
+  const { fontStyle, fontWeight, fontFamily } = getComputedStyle(element);
+  context.font = `${fontStyle} ${fontWeight} ${MEASURED_AT}px ${fontFamily}`;
+  return Math.max(0, context.measureText(line).actualBoundingBoxDescent);
 }
 
 /** A point in the drawing, as shares of its width and height. It may lie outside it. */
@@ -167,6 +192,12 @@ export type Vanish = { x: number; y: number };
  * under its descenders, which then hang below it: what follows can be spaced
  * from where the letters sit, not from the tail of a p.
  *
+ * `toInk` ends it where the last line's letters end instead: at the baseline
+ * for a word with nothing below it, at the foot of its tails for one with
+ * some. The face's descent is room kept for letters that hang, and a deep one
+ * leaves a wide gap under a word without them. Measured in the face the line
+ * is drawn in; with nothing to measure with, the box keeps the whole descent.
+ *
  * `start` keeps the letters at the box's left when the box is too short for
  * them to fill its width, so they line up with type set under them; by
  * default they are centred.
@@ -183,6 +214,7 @@ export function FitText({
   tints = NO_TINTS,
   wipe,
   toBaseline = false,
+  toInk = false,
   start = false,
 }: {
   lines: string[];
@@ -196,10 +228,11 @@ export function FitText({
   tints?: string[];
   wipe?: Wipe;
   toBaseline?: boolean;
+  toInk?: boolean;
   start?: boolean;
 }) {
   const refs = useRef<(SVGTextElement | null)[]>([]);
-  const [fitted, setFitted] = useState<{ key: string; boxes: Box[]; spans?: Span[][] } | null>(null);
+  const [fitted, setFitted] = useState<{ key: string; boxes: Box[]; spans?: Span[][]; descent?: number } | null>(null);
   const text = lines.join("\n");
   /** Whether the words are told apart, which is only when a colour is to cross them. */
   const worded = wipe !== undefined;
@@ -214,18 +247,21 @@ export function FitText({
     const spans = worded
       ? elements.map((element, i) => spansOf(element, lines[i] as string, measured[i] as Box))
       : undefined;
+    const last = lines.length - 1;
+    const descent = toInk ? (inkDescent(elements[last] as SVGTextElement, lines[last] as string) ?? undefined) : undefined;
     // The same measurement is the same state, so a face that changes nothing draws nothing.
     const key = [
       ...measured.map(({ x, y, width, height }) => [x, y, width, height].join()),
       ...(spans ?? []).map((line) => line.map(({ start, end }) => [start, end].join()).join("/")),
+      descent ?? "",
     ].join(";");
-    setFitted((before) => (before?.key === key ? before : { key, boxes: measured, spans }));
+    setFitted((before) => (before?.key === key ? before : { key, boxes: measured, spans, descent }));
     // `text` stands for `lines`: the same words are the same measurement,
     // unless more or fewer of their letters are set apart, which can move
     // the others, or the words start or stop being told apart. Colours, and
     // how far one has come across a word, move nothing.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, tints.length, worded]);
+  }, [text, tints.length, worded, toInk]);
 
   useLayoutEffect(measure, [measure]);
 
@@ -243,9 +279,9 @@ export function FitText({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [measure]);
 
-  const stacked = stack(lines, fitted?.boxes, leading, indent, uniform);
+  const stacked = stack(lines, fitted?.boxes, leading, indent, uniform, fitted?.descent);
   const { placed } = stacked;
-  const height = toBaseline ? stacked.baseline : stacked.height;
+  const height = toInk ? stacked.ink : toBaseline ? stacked.baseline : stacked.height;
   /** A line's letters, the first few of the first line each in a colour of its own if any were given. */
   const letters = (line: string, i: number) =>
     i === 0 && tints.length > 0 ? (
