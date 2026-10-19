@@ -95,7 +95,7 @@ describe("Title", () => {
     expect(cell.querySelector(".title__foot .stamp")).toBeNull();
     expect(stamp).toHaveTextContent(/^Library release GIFcommit00001$/);
     expect(stamp.querySelector(".visually-hidden")).toHaveTextContent(/^Library release$/);
-    // No day here: only a study's cell shows one.
+    // No day here: a study's cell shows the day it was published, and the closing the day the site was last updated.
     expect(cell.querySelector("time")).toBeNull();
     // Nothing is put before the presenter's line: the title opens as it did.
     const said = [...cell.children].filter((child) => !child.classList.contains("backdrop"));
