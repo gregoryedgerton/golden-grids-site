@@ -67,7 +67,7 @@ describe("the analytics", () => {
   it("is the owner's Google tag, once, in the head, and nothing else", () => {
     const head = /<head>([\s\S]*)<\/head>/.exec(html)?.[1] as string;
     expect(head).toContain('<script async src="https://www.googletagmanager.com/gtag/js?id=G-G0REMGKSWQ"></script>');
-    expect(head).toContain("gtag('config', 'G-G0REMGKSWQ');");
+    expect(head).toContain("gtag('config', 'G-G0REMGKSWQ', { site_name: 'site' });");
     expect(html.match(/googletagmanager\.com\/gtag\/js/g)).toHaveLength(1);
     expect(html.match(/G-[A-Z0-9]+/g)).toEqual(["G-G0REMGKSWQ", "G-G0REMGKSWQ"]);
   });

@@ -217,9 +217,14 @@ animation brought here.
 
 **One analytics script: the owner's Google tag.** By the owner's direction
 (2026-10-19) `index.html` carries Google's gtag.js for measurement ID
-`G-G0REMGKSWQ`, as Google gives it, at the top of the head. Flag a second
-analytics or tracking script, a changed ID, and the tag moved into the
-studies or the root page, which get tags of their own.
+`G-G0REMGKSWQ`, as Google gives it, at the top of the head, with
+`site_name: 'site'` on its config line. Since 2026-10-30 it is the Golden
+Grids web stream (GIFcommit account, Golden Grids property) that the library,
+the deck and every study also send to, each under its own `site_name` (a
+study's is its repository's name after `golden-grids-`, written by its
+`study.meta.ts`), so one stream holds the whole program and reports break it
+down by site. Flag a second analytics or tracking script, a changed ID or
+`site_name`, and the tag written into a study from this repository.
 
 **Email addresses are not handled here.** There is no form to take one.
 Flag any code that asks for, stores, logs or sends an address.
