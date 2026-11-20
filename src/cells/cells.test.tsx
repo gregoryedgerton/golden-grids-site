@@ -21,6 +21,13 @@ import { Closing } from "./Closing";
 import { Title } from "./Title";
 import { Vision } from "./Vision";
 
+/** Reads a transform back through the DOM's CSS parser, so it compares as the tile's own style serializes. */
+function css(transform: string) {
+  const probe = document.createElement("div");
+  probe.style.transform = transform;
+  return probe.style.transform;
+}
+
 const espn = parseStudy(
   {
     number: 6,
@@ -1015,13 +1022,13 @@ describe("StudyNotice", () => {
       const tile = () => document.querySelector('.dial__tile[data-current="true"]') as HTMLElement;
       fireEvent.keyDown(document.body, { key: "End" });
       while (announced() !== "GIFspn, 2 of 4") act(() => void vi.advanceTimersByTime(16));
-      expect(tile().style.transform).not.toBe(paintTile(1, 1, 1440, 900).transform);
+      expect(tile().style.transform).not.toBe(css(paintTile(1, 1, 1440, 900).transform));
       open();
       expect(notice()).toHaveAttribute("open");
-      expect(tile().style.transform).toBe(paintTile(1, 1, 1440, 900).transform);
+      expect(tile().style.transform).toBe(css(paintTile(1, 1, 1440, 900).transform));
       for (let i = 0; i < 300; i++) act(() => void vi.advanceTimersByTime(16));
       expect(announced()).toBe("GIFspn, 2 of 4");
-      expect(tile().style.transform).toBe(paintTile(1, 1, 1440, 900).transform);
+      expect(tile().style.transform).toBe(css(paintTile(1, 1, 1440, 900).transform));
     } finally {
       vi.useRealTimers();
     }
