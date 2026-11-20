@@ -8,6 +8,13 @@ import type { Cell } from "./Dial";
 import { AHEAD, BEHIND, TEXTURE_PX, paintTile } from "./geometry";
 import { DRAG_SHARE } from "./input";
 
+/** Reads a transform back through the DOM's CSS parser, so it compares as the tile's own style serializes. */
+function css(transform: string) {
+  const probe = document.createElement("div");
+  probe.style.transform = transform;
+  return probe.style.transform;
+}
+
 const followed = vi.fn();
 
 function makeCells(count: number): Cell[] {
@@ -116,9 +123,9 @@ describe("Dial", () => {
       // About half way there, a few frames in. The dial goes on moving for most of a second after this.
       expect(lands()).toEqual(["waiting", "landing", "waiting"]);
       expect(frames).toBeLessThan(10);
-      expect(current().style.transform).not.toBe(paintTile(1, 1, 1440, 900).transform);
+      expect(current().style.transform).not.toBe(css(paintTile(1, 1, 1440, 900).transform));
       for (let i = 0; i < 200; i++) act(() => void vi.advanceTimersByTime(16));
-      expect(current().style.transform).toBe(paintTile(1, 1, 1440, 900).transform);
+      expect(current().style.transform).toBe(css(paintTile(1, 1, 1440, 900).transform));
       expect(lands()).toEqual(["waiting", "landing", "waiting"]);
     } finally {
       vi.useRealTimers();
@@ -199,7 +206,7 @@ describe("Dial", () => {
       }
       // The dial arrived on the cell beneath the finger, and at no point was it landing there.
       expect(announced()).toBe("Cell 2, 2 of 3");
-      expect(current().style.transform).toBe(paintTile(1, 1, 1440, 900).transform);
+      expect(current().style.transform).toBe(css(paintTile(1, 1, 1440, 900).transform));
       expect([...seen]).toEqual(["focused,waiting,waiting", "waiting,focused,waiting"]);
 
       fireEvent.pointerUp(window, { ...finger, clientX: 200, clientY: 400 });
@@ -227,14 +234,14 @@ describe("Dial", () => {
       fireEvent.keyDown(document.body, { key: "End" });
       // Until the second cell is the nearest, and only just.
       while (announced() !== "Cell 2, 2 of 8") act(() => void vi.advanceTimersByTime(16));
-      expect(current().style.transform).not.toBe(paintTile(1, 1, 1440, 900).transform);
+      expect(current().style.transform).not.toBe(css(paintTile(1, 1, 1440, 900).transform));
       fireEvent.click(screen.getByRole("button", { name: "Rest" }));
       // On the cell exactly, and landed there.
-      expect(current().style.transform).toBe(paintTile(1, 1, 1440, 900).transform);
+      expect(current().style.transform).toBe(css(paintTile(1, 1, 1440, 900).transform));
       expect(lands()).toEqual(["waiting", "waiting", "waiting", "waiting", "waiting", "waiting", "waiting"]);
       for (let i = 0; i < 300; i++) act(() => void vi.advanceTimersByTime(16));
       expect(announced()).toBe("Cell 2, 2 of 8");
-      expect(current().style.transform).toBe(paintTile(1, 1, 1440, 900).transform);
+      expect(current().style.transform).toBe(css(paintTile(1, 1, 1440, 900).transform));
       // A step from rest goes one cell on, not to where the dial had been going.
       fireEvent.keyDown(document.body, { key: "ArrowDown" });
       for (let i = 0; i < 300; i++) act(() => void vi.advanceTimersByTime(16));
@@ -278,7 +285,7 @@ describe("Dial", () => {
       // The second cell's button is still there to be pressed, as it is in a browser for the frame before it draws.
       fireEvent.click(screen.getByRole("button", { name: "Rest", hidden: true }));
       expect(announced()).toBe("Cell 2, 2 of 8");
-      expect(current().style.transform).toBe(paintTile(1, 1, 1440, 900).transform);
+      expect(current().style.transform).toBe(css(paintTile(1, 1, 1440, 900).transform));
       for (let i = 0; i < 300; i++) act(() => void vi.advanceTimersByTime(16));
       expect(announced()).toBe("Cell 2, 2 of 8");
     } finally {
@@ -343,10 +350,10 @@ describe("Dial", () => {
     render(<Dial cells={makeCells(5)} />);
     tiles().forEach((tile, index) => {
       const expected = paintTile(index, 0, 1440, 900);
-      expect(tile.style.transform).toBe(expected.transform);
+      expect(tile.style.transform).toBe(css(expected.transform));
       expect(tile.style.opacity).toBe(String(expected.opacity));
       expect(tile.style.visibility).toBe("visible");
-      expect((tile.firstElementChild as HTMLElement).style.transform).toBe(expected.content);
+      expect((tile.firstElementChild as HTMLElement).style.transform).toBe(css(expected.content));
       expect(tile.style.width).toBe(`${TEXTURE_PX}px`);
       expect(tile.style.height).toBe(`${TEXTURE_PX}px`);
       expect(tile.style.background).toBe("rgb(18, 52, 86)");
@@ -372,7 +379,7 @@ describe("Dial", () => {
     size(390, 800);
     act(() => observer?.callback());
     expect(observer?.observed).toEqual([document.querySelector(".dial"), stage()]);
-    expect(current().style.transform).toBe(paintTile(0, 0, 390, 800).transform);
+    expect(current().style.transform).toBe(css(paintTile(0, 0, 390, 800).transform));
   });
 
   it("keeps the buttons off the focused cell: in its spare corner where there is one, in a bar where there is not", () => {
@@ -403,7 +410,7 @@ describe("Dial", () => {
     fireEvent.click(next);
     expect(announced()).toBe("Cell 2, 2 of 3");
     expect(screen.getByRole("region", { name: "Cell 2" })).toBe(current());
-    expect(current().style.transform).toBe(paintTile(1, 1, 1440, 900).transform);
+    expect(current().style.transform).toBe(css(paintTile(1, 1, 1440, 900).transform));
     expect(previous).toBeEnabled();
     fireEvent.click(next);
     expect(next).toBeDisabled();
@@ -507,7 +514,7 @@ describe("Dial", () => {
       act(() => void vi.advanceTimersByTime(3000));
       expect(announced()).toBe("Cell 2, 2 of 12");
       // At rest exactly on the cell, not between two.
-      expect(current().style.transform).toBe(paintTile(1, 1, 1440, 900).transform);
+      expect(current().style.transform).toBe(css(paintTile(1, 1, 1440, 900).transform));
       // The next scroll is the next cell.
       fireEvent.wheel(stage(), { deltaY: 100 });
       act(() => void vi.advanceTimersByTime(3000));
@@ -606,9 +613,9 @@ describe("Dial", () => {
     // 62 px up: the 8 px of slop, then 54 px, which on a 900 px stage at 0.6
     // of the side per step is a tenth of a step.
     fireEvent.pointerMove(window, { ...init, clientX: 200, clientY: 138 });
-    expect(current().style.transform).toBe(paintTile(0, 0.1, 1440, 900).transform);
+    expect(current().style.transform).toBe(css(paintTile(0, 0.1, 1440, 900).transform));
     fireEvent.pointerMove(window, { ...init, clientX: 200, clientY: 84 });
-    expect(current().style.transform).toBe(paintTile(0, 0.2, 1440, 900).transform);
+    expect(current().style.transform).toBe(css(paintTile(0, 0.2, 1440, 900).transform));
     fireEvent.pointerUp(window, init);
   });
 
@@ -643,24 +650,24 @@ describe("Dial", () => {
       // A scroll has started the dial toward the next cell.
       fireEvent.wheel(stage(), { deltaY: 320 });
       act(() => void vi.advanceTimersByTime(32));
-      expect((tiles()[0] as HTMLElement).style.transform).not.toBe(paintTile(0, 0, 1440, 900).transform);
-      expect((tiles()[1] as HTMLElement).style.transform).not.toBe(paintTile(1, 1, 1440, 900).transform);
+      expect((tiles()[0] as HTMLElement).style.transform).not.toBe(css(paintTile(0, 0, 1440, 900).transform));
+      expect((tiles()[1] as HTMLElement).style.transform).not.toBe(css(paintTile(1, 1, 1440, 900).transform));
       act(() => setReducedMotion(true));
       // The next frame finishes the journey outright.
       act(() => void vi.advanceTimersByTime(16));
       expect(announced()).toBe("Cell 2, 2 of 6");
-      expect(current().style.transform).toBe(paintTile(1, 1, 1440, 900).transform);
+      expect(current().style.transform).toBe(css(paintTile(1, 1, 1440, 900).transform));
       // And a drag.
       act(() => void vi.advanceTimersByTime(WHEEL_IDLE_MS + 20));
       act(() => setReducedMotion(false));
       const init = { pointerId: 7, isPrimary: true, pointerType: "touch" };
       fireEvent.pointerDown(stage(), { ...init, clientX: 200, clientY: 400 });
       fireEvent.pointerMove(window, { ...init, clientX: 200, clientY: 68 });
-      expect((tiles()[2] as HTMLElement).style.transform).toBe(paintTile(2, 1.6, 1440, 900).transform);
+      expect((tiles()[2] as HTMLElement).style.transform).toBe(css(paintTile(2, 1.6, 1440, 900).transform));
       act(() => setReducedMotion(true));
       fireEvent.pointerUp(window, init);
       expect(announced()).toBe("Cell 3, 3 of 6");
-      expect(current().style.transform).toBe(paintTile(2, 2, 1440, 900).transform);
+      expect(current().style.transform).toBe(css(paintTile(2, 2, 1440, 900).transform));
     } finally {
       vi.useRealTimers();
     }
@@ -794,12 +801,12 @@ describe("Dial", () => {
     fireEvent.keyDown(document.body, { key: "End" });
     expect(announced()).toBe("Cell 120, 120 of 120");
     expect(tiles().map((tile) => tile.getAttribute("aria-label"))).toEqual(["Cell 118", "Cell 119", "Cell 120"]);
-    expect(current().style.transform).toBe(paintTile(119, 119, 1440, 900).transform);
+    expect(current().style.transform).toBe(css(paintTile(119, 119, 1440, 900).transform));
     for (let i = 0; i < 50; i++) fireEvent.keyDown(document.body, { key: "ArrowUp" });
     expect(tiles()).toHaveLength(BEHIND + AHEAD + 1);
     expect(tiles()[0]).toHaveAttribute("aria-label", `Cell ${70 - BEHIND}`);
     tiles().forEach((tile, i) => {
-      expect(tile.style.transform).toBe(paintTile(69 - BEHIND + i, 69, 1440, 900).transform);
+      expect(tile.style.transform).toBe(css(paintTile(69 - BEHIND + i, 69, 1440, 900).transform));
     });
   });
 
@@ -817,7 +824,7 @@ describe("Dial", () => {
       // Many positions on the way, ending exactly on the cell.
       expect(seen.size).toBeGreaterThan(10);
       expect(announced()).toBe("Cell 2, 2 of 6");
-      expect(current().style.transform).toBe(paintTile(1, 1, 1440, 900).transform);
+      expect(current().style.transform).toBe(css(paintTile(1, 1, 1440, 900).transform));
       // A scroll turns it one cell, over several frames too.
       fireEvent.wheel(stage(), { deltaY: 400 });
       const turning = new Set<string>();
@@ -827,7 +834,7 @@ describe("Dial", () => {
       }
       expect(turning.size).toBeGreaterThan(10);
       expect(announced()).toBe("Cell 3, 3 of 6");
-      expect(current().style.transform).toBe(paintTile(2, 2, 1440, 900).transform);
+      expect(current().style.transform).toBe(css(paintTile(2, 2, 1440, 900).transform));
     } finally {
       vi.useRealTimers();
     }
@@ -840,7 +847,7 @@ describe("Dial", () => {
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     // No frames were needed.
     expect(announced()).toBe("Cell 2, 2 of 6");
-    expect(current().style.transform).toBe(paintTile(1, 1, 1440, 900).transform);
+    expect(current().style.transform).toBe(css(paintTile(1, 1, 1440, 900).transform));
   });
 
   it("starts again from the first cell when the list changes length", () => {
